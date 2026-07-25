@@ -4,41 +4,41 @@ export type MechanismType = {
   key: string;
   label: string;
   examples: string;
+  description: string;
   generator: string;
 };
 
-// A functional/mechanism-based taxonomy from biomimicry architecture literature —
-// deliberately independent of the app's own category/variant tree, so it reads the
-// same way regardless of which category you drilled in from.
+// Self-Shading Perforated Skin — a functional/mechanism-based taxonomy from
+// biomimicry architecture literature, deliberately independent of the app's own
+// category/variant tree, so it reads the same way regardless of which category
+// you drilled in from.
 export const mechanismTypes: MechanismType[] = [
   {
     key: "static-shading",
     label: "Static Shading Type",
-    examples: "Coral, Cactus ridges",
+    examples: "Coral skeleton, Cactus ridges",
+    description: "Fixed geometric form creates shading; does not respond to changing light.",
     generator: "staticShading",
   },
   {
     key: "kinetic-responsive",
     label: "Kinetic / Climate-Responsive Type",
-    examples: "Al Bahar Towers, pangolin-inspired kinetic panels",
+    examples: "Al Bahar Towers",
+    description: "Opens and closes automatically based on sun angle.",
     generator: "kineticResponsive",
-  },
-  {
-    key: "passive-ventilation",
-    label: "Passive Ventilation Type",
-    examples: "Termite mound, Eastgate Centre",
-    generator: "passiveVentilation",
   },
   {
     key: "graded-porosity",
     label: "Graded Porosity Type",
-    examples: "Esplanade spines, shell spiral porosity",
+    examples: "Esplanade Theatre",
+    description: "Perforation density varies continuously by orientation/solar intensity.",
     generator: "gradedPorosity",
   },
   {
     key: "layered-overlapping",
     label: "Layered / Overlapping Type",
-    examples: "Pangolin scales",
+    examples: "Pangolin scale-inspired panels",
+    description: "Scale-like layering creates mutual shading.",
     generator: "layeredOverlapping",
   },
 ];

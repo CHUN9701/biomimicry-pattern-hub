@@ -155,6 +155,7 @@
   .mechanism-preview canvas { width: 100%; height: 100%; display: block; }
   .mechanism-info h4 { margin: 0; font-size: 14px; font-weight: 600; color: #fff; line-height: 1.3; }
   .mechanism-info p { margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.55); }
+  .mechanism-info p.mechanism-desc { margin-top: 4px; line-height: 1.3; color: rgba(255,255,255,0.4); }
   .playground-col { flex: 1; min-width: 0; }
 
   .playground { display: flex; flex-direction: column; gap: 24px; }
@@ -472,11 +473,10 @@
   // deliberately independent of the categories above, so it reads the same on every
   // variant's detail page regardless of which category you drilled in from.
   const mechanismTypes = [
-    { key: "static-shading", label: "Static Shading Type", examples: "Coral, Cactus ridges", generator: "staticShading" },
-    { key: "kinetic-responsive", label: "Kinetic / Climate-Responsive Type", examples: "Al Bahar Towers, pangolin-inspired kinetic panels", generator: "kineticResponsive" },
-    { key: "passive-ventilation", label: "Passive Ventilation Type", examples: "Termite mound, Eastgate Centre", generator: "passiveVentilation" },
-    { key: "graded-porosity", label: "Graded Porosity Type", examples: "Esplanade spines, shell spiral porosity", generator: "gradedPorosity" },
-    { key: "layered-overlapping", label: "Layered / Overlapping Type", examples: "Pangolin scales", generator: "layeredOverlapping" },
+    { key: "static-shading", label: "Static Shading Type", examples: "Coral skeleton, Cactus ridges", description: "Fixed geometric form creates shading; does not respond to changing light.", generator: "staticShading" },
+    { key: "kinetic-responsive", label: "Kinetic / Climate-Responsive Type", examples: "Al Bahar Towers", description: "Opens and closes automatically based on sun angle.", generator: "kineticResponsive" },
+    { key: "graded-porosity", label: "Graded Porosity Type", examples: "Esplanade Theatre", description: "Perforation density varies continuously by orientation/solar intensity.", generator: "gradedPorosity" },
+    { key: "layered-overlapping", label: "Layered / Overlapping Type", examples: "Pangolin scale-inspired panels", description: "Scale-like layering creates mutual shading.", generator: "layeredOverlapping" },
   ];
 
   const universalSliders = [
@@ -498,6 +498,29 @@
   function defaultUniversalParams() {
     const init = {};
     universalSliders.forEach(function (s) { init[s.key] = s.default; });
+    return init;
+  }
+
+  // Climate-Responsive Shape-Memory Membrane — the second taxonomy, covering
+  // material-level phase-change and moisture/pressure-driven skins.
+  const shapeMemoryTypes = [
+    { key: "sma", label: "Shape Memory Alloy (SMA) Type", examples: "Nickel-titanium alloy panels", description: "Alloy undergoes phase transformation and deforms when heated.", generator: "shapeMemoryAlloy" },
+    { key: "hygromorphic", label: "Hygromorphic Membrane Type", examples: "Wood-veneer composite panels", description: "Wood fiber composites bend in response to humidity (passive).", generator: "hygromorphicMembrane" },
+    { key: "bimetallic", label: "Bimetallic / Thermobimetal Type", examples: "Thermobimetal louvre facades", description: "Bimetallic strips bend naturally when heated.", generator: "bimetallicStrip" },
+    { key: "pneumatic", label: "Pneumatic Responsive Membrane Type", examples: "ETFE pneumatic cushion facades", description: "Inflation/deflation changes membrane tension and light transmission.", generator: "pneumaticMembrane" },
+  ];
+
+  const shapeMemorySliders = [
+    { key: "temperature", label: "Temperature", min: -10, max: 60, step: 1, default: 24, unit: "°C" },
+    { key: "humidity", label: "Humidity", min: 0, max: 100, step: 1, default: 50, unit: "%" },
+    { key: "pressure", label: "Air Pressure / Inflation", min: 0, max: 100, step: 1, default: 45, unit: "%" },
+  ];
+
+  function getMembraneType(key) { return shapeMemoryTypes.find((m) => m.key === key) || shapeMemoryTypes[0]; }
+
+  function defaultShapeMemoryParams() {
+    const init = {};
+    shapeMemorySliders.forEach(function (s) { init[s.key] = s.default; });
     return init;
   }
 
@@ -1385,6 +1408,140 @@
         },
       };
     },
+
+    // ---- Climate-Responsive Shape-Memory Membrane generators (universal
+    // temperature/humidity/pressure) ----
+
+    shapeMemoryAlloy: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cols = 10, rows = 6;
+          const cellW = w / cols, cellH = h / rows;
+          const tempNorm = clamp((p.temperature + 10) / 70, 0, 1);
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const cx = col * cellW + cellW / 2;
+              const cy = row * cellH + cellH / 2;
+              const wobble = Math.sin(t * 0.5 + row * 0.6 + col * 0.4) * 0.05;
+              const curlAmount = clamp(tempNorm + wobble, 0, 1);
+              const curlRad = curlAmount * Math.PI * 0.9;
+              ctx.save();
+              ctx.translate(cx, cy);
+              ctx.beginPath();
+              const strips = 6;
+              for (let s = 0; s <= strips; s++) {
+                const a = (s / strips) * curlRad - curlRad / 2;
+                const rr = cellH * 0.45;
+                const x = Math.sin(a) * rr;
+                const y = -Math.cos(a) * rr + rr;
+                if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+              }
+              ctx.strokeStyle = lerpColor(palette[1], palette[3], tempNorm);
+              ctx.lineWidth = cellW * 0.5;
+              ctx.lineCap = "round";
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+        },
+      };
+    },
+
+    hygromorphicMembrane: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cols = 8, rows = 5;
+          const cellW = w / cols, cellH = h / rows;
+          const humidityNorm = clamp(p.humidity / 100, 0, 1);
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const baseX = col * cellW + cellW / 2;
+              const topY = row * cellH + cellH * 0.1;
+              const bottomY = row * cellH + cellH * 0.9;
+              const sway = Math.sin(t * 0.4 + row * 0.5 + col * 0.3) * 0.12;
+              const bend = clamp(humidityNorm + sway, 0, 1) * cellW * 0.4;
+              const midY = (topY + bottomY) / 2;
+              ctx.beginPath();
+              ctx.moveTo(baseX - cellW * 0.3, topY);
+              ctx.quadraticCurveTo(baseX - cellW * 0.3 + bend, midY, baseX - cellW * 0.3, bottomY);
+              ctx.lineTo(baseX + cellW * 0.3, bottomY);
+              ctx.quadraticCurveTo(baseX + cellW * 0.3 + bend, midY, baseX + cellW * 0.3, topY);
+              ctx.closePath();
+              ctx.fillStyle = lerpColor(palette[1], palette[2], row / rows);
+              ctx.fill();
+              ctx.strokeStyle = rgba(palette[0], 0.35);
+              ctx.lineWidth = 1;
+              for (let g = 1; g < 4; g++) {
+                const gx = baseX - cellW * 0.3 + (cellW * 0.6 * g) / 4;
+                ctx.beginPath();
+                ctx.moveTo(gx, topY);
+                ctx.quadraticCurveTo(gx + bend, midY, gx, bottomY);
+                ctx.stroke();
+              }
+            }
+          }
+        },
+      };
+    },
+
+    bimetallicStrip: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const rows = 10;
+          const rowH = h / rows;
+          const tempNorm = clamp((p.temperature + 10) / 70, 0, 1);
+          const cx = w / 2, len = w * 0.92;
+          for (let row = 0; row < rows; row++) {
+            const cy = row * rowH + rowH / 2;
+            const wobble = Math.sin(t * 0.5 + row * 0.7) * 0.05;
+            const tilt = clamp(tempNorm + wobble, 0, 1) * (Math.PI / 2.4) - Math.PI / 4.8;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(tilt);
+            ctx.fillStyle = lerpColor(palette[1], palette[3], tempNorm);
+            ctx.fillRect(-len / 2, -rowH * 0.22, len, rowH * 0.22);
+            ctx.fillStyle = rgba(palette[0], 0.55);
+            ctx.fillRect(-len / 2, 0, len, rowH * 0.18);
+            ctx.restore();
+          }
+        },
+      };
+    },
+
+    pneumaticMembrane: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cols = 5, rows = 4;
+          const cellW = w / cols, cellH = h / rows;
+          const pressureNorm = clamp(p.pressure / 100, 0, 1);
+          const pad = Math.min(cellW, cellH) * 0.08;
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const cx = col * cellW + cellW / 2;
+              const cy = row * cellH + cellH / 2;
+              const breathe = 1 + 0.03 * Math.sin(t * 0.8 + row + col);
+              const inflate = (0.35 + pressureNorm * 0.55) * breathe;
+              const rw = (cellW / 2 - pad) * (0.7 + inflate * 0.3);
+              const rh = (cellH / 2 - pad) * (0.7 + inflate * 0.3);
+              const grad = ctx.createRadialGradient(cx - rw * 0.3, cy - rh * 0.3, 1, cx, cy, Math.max(rw, rh));
+              grad.addColorStop(0, lerpColor(palette[3], "#ffffff", 0.15 + inflate * 0.25));
+              grad.addColorStop(1, lerpColor(palette[1], palette[2], 1 - inflate));
+              ctx.beginPath();
+              ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2);
+              ctx.fillStyle = grad;
+              ctx.fill();
+              ctx.strokeStyle = rgba(palette[0], 0.4);
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
+          }
+        },
+      };
+    },
   };
 
   function createGenerator(key) {
@@ -1504,6 +1661,16 @@
     if (!cat || !v) { location.hash = ""; return; }
     setScene(cat.colors, "variant");
 
+    // The "shape-memory-membrane" variant is the one page actually about
+    // Climate-Responsive Shape-Memory Membrane — it gets that taxonomy's
+    // explorer (temperature/humidity/pressure) instead of the skin-shading one.
+    const isMembraneVariant = variantSlug === "shape-memory-membrane";
+    const explorerTypes = isMembraneVariant ? shapeMemoryTypes : mechanismTypes;
+    const explorerSliders = isMembraneVariant ? shapeMemorySliders : universalSliders;
+    const explorerTitle = isMembraneVariant ? "MEMBRANE MECHANISM TYPE" : "SKIN MECHANISM TYPE";
+    const explorerDefaultKey = isMembraneVariant ? "sma" : defaultMechanismForCategory(cat.slug);
+    const getExplorerType = isMembraneVariant ? getMembraneType : getMechanismType;
+
     appEl.innerHTML =
       '<div class="variant-screen">' +
       '<button class="glass-panel back-btn enter" id="back-btn"><span aria-hidden="true">&larr;</span> Back</button>' +
@@ -1514,7 +1681,7 @@
       "</div>" +
       '<div class="variant-body enter" style="animation-delay:.15s">' +
       '<div class="mechanism-list">' +
-      '<div class="mechanism-title">MECHANISM TYPE</div>' +
+      '<div class="mechanism-title">' + explorerTitle + "</div>" +
       '<div id="mechanism-cards"></div>' +
       "</div>" +
       '<div class="playground-col">' +
@@ -1527,12 +1694,12 @@
 
     document.getElementById("back-btn").addEventListener("click", function () { location.hash = "#/category/" + cat.slug; });
 
-    // Shared params object: read live by the main canvas AND all 5 mini previews,
+    // Shared params object: read live by the main canvas AND all mini previews,
     // so dragging a slider updates every preview at once.
-    const params = defaultUniversalParams();
+    const params = isMembraneVariant ? defaultShapeMemoryParams() : defaultUniversalParams();
 
     const list = document.getElementById("params-list");
-    universalSliders.forEach(function (s) {
+    explorerSliders.forEach(function (s) {
       const row = document.createElement("div");
       row.className = "param-row";
       row.innerHTML =
@@ -1579,16 +1746,18 @@
     cleanupFns.push(function () { cancelAnimationFrame(mainRaf); });
 
     // Left-panel mechanism cards, each with its own tiny live preview.
-    let activeTypeKey = defaultMechanismForCategory(cat.slug);
+    let activeTypeKey = explorerDefaultKey;
     const cardsEl = document.getElementById("mechanism-cards");
     const cardButtons = {};
 
-    mechanismTypes.forEach(function (type) {
+    explorerTypes.forEach(function (type) {
       const card = document.createElement("button");
       card.className = "glass-panel glass-panel-glow mechanism-card";
       card.innerHTML =
         '<div class="mechanism-preview"><canvas></canvas></div>' +
-        '<div class="mechanism-info"><h4>' + type.label + "</h4><p>" + type.examples + "</p></div>";
+        '<div class="mechanism-info"><h4>' + type.label + "</h4><p>" + type.examples + "</p>" +
+        (type.description ? '<p class="mechanism-desc">' + type.description + "</p>" : "") +
+        "</div>";
       card.addEventListener("click", function () {
         if (activeTypeKey === type.key) return;
         activeTypeKey = type.key;
@@ -1625,7 +1794,7 @@
     });
 
     cardButtons[activeTypeKey].classList.add("active");
-    startMainCanvas(getMechanismType(activeTypeKey).generator);
+    startMainCanvas(getExplorerType(activeTypeKey).generator);
   }
 
   function renderAbout() {

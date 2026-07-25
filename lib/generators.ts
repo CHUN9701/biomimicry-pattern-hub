@@ -830,6 +830,161 @@ const layeredOverlapping: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Climate-Responsive Shape-Memory Membrane generators — universal params:
+// temperature (-10 to 60°C), humidity (0-100%), pressure (0-100% inflation).
+// Each type mainly reacts to the one stimulus its real mechanism responds to.
+// ---------------------------------------------------------------------------
+
+// Shape Memory Alloy (SMA) Type — a grid of alloy strips that curl as they
+// heat through their phase-transformation temperature.
+const shapeMemoryAlloy: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cols = 10;
+    const rows = 6;
+    const cellW = w / cols;
+    const cellH = h / rows;
+    const tempNorm = clamp((p.temperature + 10) / 70, 0, 1);
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cx = col * cellW + cellW / 2;
+        const cy = row * cellH + cellH / 2;
+        const wobble = Math.sin(t * 0.5 + row * 0.6 + col * 0.4) * 0.05;
+        const curlAmount = clamp(tempNorm + wobble, 0, 1);
+        const curlRad = curlAmount * Math.PI * 0.9;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.beginPath();
+        const strips = 6;
+        for (let s = 0; s <= strips; s++) {
+          const a = (s / strips) * curlRad - curlRad / 2;
+          const rr = cellH * 0.45;
+          const x = Math.sin(a) * rr;
+          const y = -Math.cos(a) * rr + rr;
+          if (s === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = lerpColor(palette[1], palette[3], tempNorm);
+        ctx.lineWidth = cellW * 0.5;
+        ctx.lineCap = "round";
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  },
+});
+
+// Hygromorphic Membrane Type — wood-fiber composite slats that bow sideways
+// as humidity rises, grain lines included for the material read.
+const hygromorphicMembrane: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cols = 8;
+    const rows = 5;
+    const cellW = w / cols;
+    const cellH = h / rows;
+    const humidityNorm = clamp(p.humidity / 100, 0, 1);
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const baseX = col * cellW + cellW / 2;
+        const topY = row * cellH + cellH * 0.1;
+        const bottomY = row * cellH + cellH * 0.9;
+        const sway = Math.sin(t * 0.4 + row * 0.5 + col * 0.3) * 0.12;
+        const bend = clamp(humidityNorm + sway, 0, 1) * cellW * 0.4;
+        const midY = (topY + bottomY) / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(baseX - cellW * 0.3, topY);
+        ctx.quadraticCurveTo(baseX - cellW * 0.3 + bend, midY, baseX - cellW * 0.3, bottomY);
+        ctx.lineTo(baseX + cellW * 0.3, bottomY);
+        ctx.quadraticCurveTo(baseX + cellW * 0.3 + bend, midY, baseX + cellW * 0.3, topY);
+        ctx.closePath();
+        ctx.fillStyle = lerpColor(palette[1], palette[2], row / rows);
+        ctx.fill();
+
+        ctx.strokeStyle = rgba(palette[0], 0.35);
+        ctx.lineWidth = 1;
+        for (let g = 1; g < 4; g++) {
+          const gx = baseX - cellW * 0.3 + (cellW * 0.6 * g) / 4;
+          ctx.beginPath();
+          ctx.moveTo(gx, topY);
+          ctx.quadraticCurveTo(gx + bend, midY, gx, bottomY);
+          ctx.stroke();
+        }
+      }
+    }
+  },
+});
+
+// Bimetallic / Thermobimetal Type — laminated horizontal strips that tilt like
+// louvres as they heat, each rendered as two bonded colour bands.
+const bimetallicStrip: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const rows = 10;
+    const rowH = h / rows;
+    const tempNorm = clamp((p.temperature + 10) / 70, 0, 1);
+    const cx = w / 2;
+    const len = w * 0.92;
+
+    for (let row = 0; row < rows; row++) {
+      const cy = row * rowH + rowH / 2;
+      const wobble = Math.sin(t * 0.5 + row * 0.7) * 0.05;
+      const tilt = clamp(tempNorm + wobble, 0, 1) * (Math.PI / 2.4) - Math.PI / 4.8;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(tilt);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], tempNorm);
+      ctx.fillRect(-len / 2, -rowH * 0.22, len, rowH * 0.22);
+      ctx.fillStyle = rgba(palette[0], 0.55);
+      ctx.fillRect(-len / 2, 0, len, rowH * 0.18);
+      ctx.restore();
+    }
+  },
+});
+
+// Pneumatic Responsive Membrane Type — a grid of inflatable cushions that puff
+// up and brighten as internal pressure rises, like an ETFE pillow facade.
+const pneumaticMembrane: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cols = 5;
+    const rows = 4;
+    const cellW = w / cols;
+    const cellH = h / rows;
+    const pressureNorm = clamp(p.pressure / 100, 0, 1);
+    const pad = Math.min(cellW, cellH) * 0.08;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cx = col * cellW + cellW / 2;
+        const cy = row * cellH + cellH / 2;
+        const breathe = 1 + 0.03 * Math.sin(t * 0.8 + row + col);
+        const inflate = (0.35 + pressureNorm * 0.55) * breathe;
+        const rw = (cellW / 2 - pad) * (0.7 + inflate * 0.3);
+        const rh = (cellH / 2 - pad) * (0.7 + inflate * 0.3);
+
+        const grad = ctx.createRadialGradient(cx - rw * 0.3, cy - rh * 0.3, 1, cx, cy, Math.max(rw, rh));
+        grad.addColorStop(0, lerpColor(palette[3], "#ffffff", 0.15 + inflate * 0.25));
+        grad.addColorStop(1, lerpColor(palette[1], palette[2], 1 - inflate));
+
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = rgba(palette[0], 0.4);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -848,6 +1003,10 @@ const registry: Record<string, Factory> = {
   passiveVentilation,
   gradedPorosity,
   layeredOverlapping,
+  shapeMemoryAlloy,
+  hygromorphicMembrane,
+  bimetallicStrip,
+  pneumaticMembrane,
 };
 
 export function createGenerator(key: string): GeneratorInstance {

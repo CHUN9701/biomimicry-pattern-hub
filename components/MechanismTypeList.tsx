@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, type MutableRefObject } from "react";
 import { createGenerator } from "@/lib/generators";
-import type { MechanismType } from "@/lib/mechanismTypes";
+
+// Deliberately not importing MechanismType from lib/mechanismTypes — this list
+// is reused for both the Self-Shading Perforated Skin and the Climate-
+// Responsive Shape-Memory Membrane taxonomies, so the prop shape is generic.
+type ExplorerType = {
+  key: string;
+  label: string;
+  examples: string;
+  description?: string;
+  generator: string;
+};
 
 type MiniPreviewProps = {
   generatorKey: string;
@@ -51,13 +61,15 @@ function MiniPreview({ generatorKey, colors, paramsRef }: MiniPreviewProps) {
 }
 
 export default function MechanismTypeList({
+  title = "MECHANISM TYPE",
   types,
   activeKey,
   onSelect,
   colors,
   paramsRef,
 }: {
-  types: MechanismType[];
+  title?: string;
+  types: ExplorerType[];
   activeKey: string;
   onSelect: (key: string) => void;
   colors: [string, string, string, string];
@@ -65,7 +77,7 @@ export default function MechanismTypeList({
 }) {
   return (
     <div className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">
-      <h3 className="font-mono text-xs tracking-[0.25em] text-white/50">MECHANISM TYPE</h3>
+      <h3 className="font-mono text-xs tracking-[0.25em] text-white/50">{title}</h3>
       {types.map((type) => {
         const active = type.key === activeKey;
         return (
@@ -82,6 +94,9 @@ export default function MechanismTypeList({
             <div className="min-w-0">
               <div className="text-sm font-semibold leading-snug text-white">{type.label}</div>
               <div className="mt-1 text-xs text-white/55">{type.examples}</div>
+              {type.description ? (
+                <div className="mt-1 text-xs leading-snug text-white/40">{type.description}</div>
+              ) : null}
             </div>
           </button>
         );
