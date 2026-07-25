@@ -17,7 +17,7 @@ export interface GeneratorInstance {
 type Factory = () => GeneratorInstance;
 
 // ---------------------------------------------------------------------------
-// 01A Self-Shading Perforated Skin
+// 01A Static Shading Perforated Skin
 // ---------------------------------------------------------------------------
 const selfShadingSkin: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {

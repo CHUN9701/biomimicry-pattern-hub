@@ -41,8 +41,8 @@ export const categories: Category[] = [
       {
         slug: "self-shading-skin",
         index: "A",
-        title: "Self-Shading Perforated Skin",
-        titleZh: "自遮蔽穿孔表皮",
+        title: "Static Shading Perforated Skin",
+        titleZh: "靜態遮蔭穿孔表皮",
         description:
           "Aperture size scales inversely with solar incidence, casting deep shadow wells that keep the interior cool.",
         generator: "selfShadingSkin",
@@ -55,7 +55,7 @@ export const categories: Category[] = [
       {
         slug: "thermal-mass-undulation",
         index: "B",
-        title: "Climate-Responsive Shape-Memory Membrane",
+        title: "Thermal Mass Undulation",
         titleZh: "熱塊體波狀起伏",
         description:
           "A thick relief skin that stores and releases heat slowly, its ripple depth tuned to ambient temperature.",
@@ -94,7 +94,7 @@ export const categories: Category[] = [
       {
         slug: "shape-memory-membrane",
         index: "B",
-        title: "Climate-Responsive Shape-Memory Membrane",
+        title: "Shape-Memory Alloy Membrane",
         titleZh: "形狀記憶薄膜",
         description:
           "A grid of shape-memory alloy strips that curl progressively as temperature rises, self-shading the surface.",
