@@ -620,6 +620,216 @@ const sensoryHealingPattern: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Mechanism-type generators for the split-screen explorer — each reads the
+// same three universal params: sunAngle (0-180°), windSpeed (0-30 m/s),
+// textureScale (5-100%).
+// ---------------------------------------------------------------------------
+
+// Static Shading Type — e.g. coral, cactus ridges: fixed apertures whose size
+// is set by texture scale, self-shadowed in the direction of the light.
+const staticShading: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cols = Math.max(4, Math.round(6 + (p.textureScale / 100) * 30));
+    const rows = Math.max(2, Math.round(cols * (h / w)));
+    const cellW = w / cols;
+    const cellH = h / rows;
+    const angleRad = (p.sunAngle / 180) * Math.PI;
+    const shimmerSpeed = 0.3 + p.windSpeed * 0.03;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cx = col * cellW + cellW / 2;
+        const cy = row * cellH + cellH / 2;
+        const shimmer = 1 + 0.05 * Math.sin(t * shimmerSpeed + col * 0.9 + row * 1.3);
+        const r = Math.min(cellW, cellH) * 0.5 * 0.55 * shimmer;
+        const offsetX = Math.cos(angleRad) * cellW * 0.5;
+        const offsetY = Math.sin(angleRad) * cellH * 0.5;
+
+        ctx.beginPath();
+        ctx.ellipse(cx + offsetX * 0.4, cy + offsetY * 0.4, r * 1.15, r * 0.65, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = lerpColor(palette[2], palette[3], (row + col) / (rows + cols));
+        ctx.fill();
+      }
+    }
+  },
+});
+
+// Kinetic / Climate-Responsive Type — e.g. Al Bahar Towers, pangolin-inspired
+// panels: petals fold/unfold in real time in response to wind, resting more
+// open under stronger light.
+const kineticResponsive: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const R = Math.min(w, h) * 0.38;
+    const count = Math.max(5, Math.round(6 + (p.textureScale / 100) * 12));
+    const baseFold = (p.sunAngle / 180) * 90;
+
+    for (let i = 0; i < count; i++) {
+      const baseAngle = (i * (2 * Math.PI)) / count;
+      const windPhase = Math.sin(t * (0.5 + p.windSpeed * 0.06) + i * 0.8);
+      const fold = clamp(baseFold + windPhase * p.windSpeed * 1.4, 0, 90);
+      const foldRad = (fold / 180) * Math.PI;
+      const closeAmount = Math.cos(foldRad);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(baseAngle);
+      ctx.scale(1, Math.max(0.15, closeAmount));
+
+      const grad = ctx.createLinearGradient(0, 0, R, 0);
+      grad.addColorStop(0, lerpColor(palette[1], palette[3], i / count));
+      grad.addColorStop(1, palette[2]);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(R * 0.5, R * 0.22, R, 0);
+      ctx.quadraticCurveTo(R * 0.5, -R * 0.22, 0, 0);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.14, 0, Math.PI * 2);
+    ctx.fillStyle = palette[0];
+    ctx.fill();
+  },
+});
+
+// Passive Ventilation Type — e.g. termite mound, Eastgate Centre: tapered
+// stack-effect flues with particles rising through them, driven by wind speed.
+const passiveVentilation: Factory = () => {
+  type Particle = { channel: number; y: number; speed: number };
+  let particles: Particle[] = [];
+  let lastChannels = -1;
+
+  const seedParticles = (channels: number) => {
+    const rand = mulberry32(channels * 733 + 11);
+    particles = [];
+    for (let c = 0; c < channels; c++) {
+      for (let i = 0; i < 6; i++) {
+        particles.push({ channel: c, y: rand(), speed: 0.3 + rand() * 0.4 });
+      }
+    }
+    lastChannels = channels;
+  };
+
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      const channels = Math.max(3, Math.round(3 + (p.textureScale / 100) * 9));
+      if (channels !== lastChannels) seedParticles(channels);
+
+      ctx.clearRect(0, 0, w, h);
+      const chW = w / channels;
+      const tilt = ((p.sunAngle - 90) / 90) * 0.25;
+      const speedMul = 0.4 + p.windSpeed * 0.05;
+
+      for (let c = 0; c < channels; c++) {
+        const x0 = c * chW + chW * 0.15;
+        const x1 = c * chW + chW * 0.85;
+        const topOffset = h * tilt;
+        ctx.beginPath();
+        ctx.moveTo(x0, h);
+        ctx.lineTo(x0 + topOffset, 0);
+        ctx.lineTo(x1 + topOffset, 0);
+        ctx.lineTo(x1, h);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, h, 0, 0);
+        grad.addColorStop(0, rgba(palette[1], 0.35));
+        grad.addColorStop(1, rgba(palette[3], 0.08));
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      ctx.fillStyle = rgba(palette[3], 0.85);
+      for (const particle of particles) {
+        particle.y -= particle.speed * speedMul * 0.01;
+        if (particle.y < 0) particle.y = 1;
+        const xShift = (1 - particle.y) * h * tilt;
+        const cx = particle.channel * chW + chW * 0.5 + xShift;
+        const cy = particle.y * h;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  };
+};
+
+// Graded Porosity Type — e.g. Esplanade spines, shell spiral porosity: a pore
+// field whose size grades continuously along the light direction axis.
+const gradedPorosity: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const angleRad = (p.sunAngle / 180) * Math.PI;
+    const dir = { x: Math.cos(angleRad), y: Math.sin(angleRad) };
+    const baseSize = 4 + (p.textureScale / 100) * 26;
+    const cell = Math.max(10, baseSize * 0.9);
+    const cols = Math.ceil(w / cell);
+    const rows = Math.ceil(h / cell);
+    const jitterAmt = 0.15 + p.windSpeed * 0.01;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cx = col * cell + cell / 2 + Math.sin(t * 0.4 + row) * jitterAmt * cell * 0.2;
+        const cy = row * cell + cell / 2 + Math.cos(t * 0.4 + col) * jitterAmt * cell * 0.2;
+        const proj = (cx / w) * dir.x + (cy / h) * dir.y;
+        const grade = clamp((proj + 1) / 2, 0, 1);
+        const r = baseSize * (0.25 + grade * 0.9) * 0.5;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = lerpColor(palette[1], palette[3], grade);
+        ctx.globalAlpha = 0.85;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+  },
+});
+
+// Layered / Overlapping Type — e.g. pangolin scales: overlapping scale rows
+// that catch a directional highlight and lift in a wind-driven ripple.
+const layeredOverlapping: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const scaleSize = 10 + (p.textureScale / 100) * 40;
+    const rows = Math.ceil(h / (scaleSize * 0.6)) + 1;
+    const cols = Math.ceil(w / scaleSize) + 2;
+    const lightRad = (p.sunAngle / 180) * Math.PI;
+    const waveSpeed = 0.3 + p.windSpeed * 0.05;
+
+    for (let row = 0; row < rows; row++) {
+      const rowOffset = (row % 2) * (scaleSize * 0.5);
+      for (let col = -1; col < cols; col++) {
+        const cx = col * scaleSize + rowOffset;
+        const cy = row * scaleSize * 0.6;
+        const wave = Math.sin(t * waveSpeed - row * 0.5 + col * 0.3);
+        const lift = Math.max(0, wave) * 6 * (0.3 + p.windSpeed * 0.03);
+        const shade = clamp(0.5 + 0.5 * Math.cos(lightRad - row * 0.15), 0, 1);
+
+        ctx.beginPath();
+        ctx.ellipse(cx + scaleSize / 2, cy + scaleSize / 2 - lift, scaleSize * 0.55, scaleSize * 0.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = lerpColor(palette[1], palette[3], shade);
+        ctx.strokeStyle = rgba(palette[0], 0.4);
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -633,6 +843,11 @@ const registry: Record<string, Factory> = {
   structuralGeometry,
   organicBoundary,
   sensoryHealingPattern,
+  staticShading,
+  kineticResponsive,
+  passiveVentilation,
+  gradedPorosity,
+  layeredOverlapping,
 };
 
 export function createGenerator(key: string): GeneratorInstance {

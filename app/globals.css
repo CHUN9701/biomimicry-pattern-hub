@@ -12,6 +12,20 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.leaf-texture {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url("/textures/leaf-dark.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  mix-blend-mode: soft-light;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
 @layer components {
   .glass-panel {
     position: relative;

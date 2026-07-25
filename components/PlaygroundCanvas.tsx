@@ -1,25 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createGenerator } from "@/lib/generators";
-import type { Category, Variant } from "@/lib/data";
+import type { SliderConfig } from "@/lib/data";
 
 export default function PlaygroundCanvas({
-  category,
-  variant,
+  colors,
+  generatorKey,
+  sliders,
+  params,
+  onParamsChange,
 }: {
-  category: Category;
-  variant: Variant;
+  colors: [string, string, string, string];
+  generatorKey: string;
+  sliders: SliderConfig[];
+  params: Record<string, number>;
+  onParamsChange: (updater: (prev: Record<string, number>) => Record<string, number>) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const paramsRef = useRef<Record<string, number>>({});
-  const [params, setParams] = useState<Record<string, number>>(() => {
-    const init: Record<string, number> = {};
-    variant.sliders.forEach((s) => {
-      init[s.key] = s.default;
-    });
-    return init;
-  });
+  const paramsRef = useRef<Record<string, number>>(params);
   paramsRef.current = params;
 
   useEffect(() => {
@@ -28,7 +27,7 @@ export default function PlaygroundCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const generator = createGenerator(variant.generator);
+    const generator = createGenerator(generatorKey);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const resize = () => {
@@ -45,7 +44,7 @@ export default function PlaygroundCanvas({
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const t = (now - start) / 1000;
-      generator.draw(ctx, canvas.width, canvas.height, t, paramsRef.current, category.colors);
+      generator.draw(ctx, canvas.width, canvas.height, t, paramsRef.current, colors);
     };
     raf = requestAnimationFrame(loop);
 
@@ -53,7 +52,7 @@ export default function PlaygroundCanvas({
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
     };
-  }, [variant.generator, category.colors]);
+  }, [generatorKey, colors]);
 
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-stretch">
@@ -63,7 +62,7 @@ export default function PlaygroundCanvas({
       <div className="glass-panel w-full shrink-0 p-6 lg:w-80">
         <h3 className="font-mono text-xs tracking-[0.25em] text-white/50">PARAMETERS</h3>
         <div className="mt-5 flex flex-col gap-6">
-          {variant.sliders.map((slider) => (
+          {sliders.map((slider) => (
             <div key={slider.key}>
               <div className="mb-2 flex items-center justify-between text-sm text-white/80">
                 <label htmlFor={slider.key}>{slider.label}</label>
@@ -79,11 +78,12 @@ export default function PlaygroundCanvas({
                 max={slider.max}
                 step={slider.step}
                 value={params[slider.key]}
-                onChange={(e) =>
-                  setParams((prev) => ({ ...prev, [slider.key]: parseFloat(e.target.value) }))
-                }
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  onParamsChange((prev) => ({ ...prev, [slider.key]: val }));
+                }}
                 className="range-slider w-full"
-                style={{ accentColor: category.colors[2] }}
+                style={{ accentColor: colors[2] }}
               />
             </div>
           ))}

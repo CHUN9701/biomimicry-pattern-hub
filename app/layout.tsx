@@ -13,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-void font-sans text-white antialiased">
+        <div className="leaf-texture" aria-hidden="true" />
         <SceneProvider>
           <BackgroundField />
           <Header />

@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import { getVariant } from "@/lib/data";
+import {
+  defaultMechanismForCategory,
+  defaultUniversalParams,
+  getMechanismType,
+  mechanismTypes,
+  universalSliders,
+} from "@/lib/mechanismTypes";
 import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
+import MechanismTypeList from "@/components/MechanismTypeList";
 
 export default function VariantPage({
   params,
@@ -16,12 +24,25 @@ export default function VariantPage({
   const { category, variant } = getVariant(params.slug, params.variant);
   const { setScene } = useScene();
 
+  const [activeTypeKey, setActiveTypeKey] = useState(() =>
+    defaultMechanismForCategory(params.slug)
+  );
+  const [sliderParams, setSliderParams] = useState<Record<string, number>>(defaultUniversalParams);
+  const sliderParamsRef = useRef(sliderParams);
+  sliderParamsRef.current = sliderParams;
+
   useEffect(() => {
     if (category && variant) setScene({ level: "variant", category, variant });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category?.slug, variant?.slug]);
 
+  useEffect(() => {
+    setActiveTypeKey(defaultMechanismForCategory(params.slug));
+  }, [params.slug]);
+
   if (!category || !variant) notFound();
+
+  const activeMechanism = getMechanismType(activeTypeKey);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-28 md:px-10 md:py-32">
@@ -47,8 +68,24 @@ export default function VariantPage({
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="flex w-full flex-col gap-6 lg:flex-row lg:items-start"
       >
-        <PlaygroundCanvas category={category} variant={variant} />
+        <MechanismTypeList
+          types={mechanismTypes}
+          activeKey={activeTypeKey}
+          onSelect={setActiveTypeKey}
+          colors={category.colors}
+          paramsRef={sliderParamsRef}
+        />
+        <div className="flex-1">
+          <PlaygroundCanvas
+            colors={category.colors}
+            generatorKey={activeMechanism.generator}
+            sliders={universalSliders}
+            params={sliderParams}
+            onParamsChange={setSliderParams}
+          />
+        </div>
       </motion.div>
     </div>
   );
