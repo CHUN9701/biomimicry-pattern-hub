@@ -925,6 +925,153 @@ const pneumaticMembrane: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// CellularLattice engine — shared grid-iteration helper for the
+// self-shading-skin subcategory's 4 types (biomimicry-subcategories.json).
+// Each type below is a thin per-cell renderer reusing this same iteration
+// logic, rather than a from-scratch grid implementation.
+// ---------------------------------------------------------------------------
+function forEachApertureCell(
+  w: number,
+  h: number,
+  density: number,
+  cb: (
+    cx: number,
+    cy: number,
+    cellW: number,
+    cellH: number,
+    row: number,
+    col: number,
+    rows: number,
+    cols: number
+  ) => void
+) {
+  const cols = Math.max(4, Math.round(density));
+  const rows = Math.max(2, Math.round(cols * (h / w)));
+  const cellW = w / cols;
+  const cellH = h / rows;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * cellW + cellW / 2;
+      const cy = row * cellH + cellH / 2;
+      cb(cx, cy, cellW, cellH, row, col, rows, cols);
+    }
+  }
+}
+
+// Fixed Aperture Grid Type — apertures stay a constant size; only the
+// direction/length of their cast shadow reacts to sun angle.
+const fixedApertureGrid: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const angleRad = (p.sunAngle / 180) * Math.PI;
+    forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col, rows, cols) => {
+      const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
+      const r = Math.min(cellW, cellH) * 0.5 * (p.apertureSize / 100) * shimmer;
+      const offsetX = Math.cos(angleRad) * cellW * 0.5;
+      const offsetY = Math.sin(angleRad) * cellH * 0.5;
+
+      ctx.beginPath();
+      ctx.ellipse(cx + offsetX * 0.4, cy + offsetY * 0.4, r * 1.15, r * 0.65, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = lerpColor(palette[2], palette[3], (row + col) / (rows + cols));
+      ctx.fill();
+    });
+  },
+});
+
+// Deep-Well Shadow Type — apertures recede into concentric dark rings; the
+// well floor only brightens as the sun climbs toward zenith.
+const deepWellShadow: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const angleRad = (p.sunAngle / 180) * Math.PI;
+    const depth = clamp(p.wellDepth / 100, 0, 1);
+    const noonFactor = Math.sin(angleRad);
+
+    forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col) => {
+      const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
+      const r = Math.min(cellW, cellH) * 0.42 * shimmer;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fill();
+
+      const rings = 1 + Math.round(depth * 3);
+      for (let ring = rings; ring >= 1; ring--) {
+        const ringR = r * (1 - ring / (rings + 1));
+        ctx.beginPath();
+        ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,0,0,${0.75 - ring * 0.12})`;
+        ctx.fill();
+      }
+
+      const floorR = r * Math.max(0.08, (1 - depth) * 0.5);
+      ctx.beginPath();
+      ctx.arc(cx, cy, floorR, 0, Math.PI * 2);
+      ctx.fillStyle = lerpColor(palette[0], palette[3], noonFactor);
+      ctx.globalAlpha = 0.3 + noonFactor * 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  },
+});
+
+// Directional Louver Aperture Type — slit-shaped apertures rotated to one
+// azimuth, only letting light through within their own narrow angle range.
+const directionalLouverAperture: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const angleRad = (p.louverAngle / 180) * Math.PI;
+    const slitFrac = clamp(p.slitWidth / 100, 0.05, 1);
+
+    forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col) => {
+      const wobble = Math.sin(t * 0.4 + row * 0.6 + col * 0.3) * 0.02;
+      const len = Math.min(cellW, cellH) * 0.85;
+      const thick = Math.min(cellW, cellH) * 0.5 * slitFrac;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angleRad + wobble);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-len / 2, -thick * 0.6, len, thick * 0.6);
+      ctx.fillStyle = lerpColor(palette[2], palette[3], (row + col) / 20);
+      ctx.fillRect(-len / 2, 0, len, thick * 0.4);
+      ctx.restore();
+    });
+  },
+});
+
+// Graduated Pinhole Type — a dense pinhole field whose size grades
+// continuously along one direction (reuses the Graded Porosity gradient math).
+const graduatedPinhole: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const angleRad = (p.gradientAngle / 180) * Math.PI;
+    const dir = { x: Math.cos(angleRad), y: Math.sin(angleRad) };
+    const contrast = clamp(p.contrastRange / 100, 0, 1);
+
+    forEachApertureCell(w, h, p.pinholeDensity, (cx, cy, cellW, cellH, row, col) => {
+      const proj = (cx / w) * dir.x + (cy / h) * dir.y;
+      const grade = clamp((proj + 1) / 2, 0, 1);
+      const jitter = 1 + 0.05 * Math.sin(t * 0.5 + row + col);
+      const r = Math.min(cellW, cellH) * 0.5 * (0.08 + grade * contrast) * jitter;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], grade);
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -946,6 +1093,10 @@ const registry: Record<string, Factory> = {
   hygromorphicMembrane,
   bimetallicStrip,
   pneumaticMembrane,
+  fixedApertureGrid,
+  deepWellShadow,
+  directionalLouverAperture,
+  graduatedPinhole,
 };
 
 export function createGenerator(key: string): GeneratorInstance {

@@ -14,25 +14,73 @@
               "id": 1,
               "name": "Fixed Aperture Grid Type",
               "description": "規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果",
-              "example": "傳統阿拉伯 Mashrabiya 木格窗"
+              "example": "傳統阿拉伯 Mashrabiya 木格窗",
+              "slug": "fixed-aperture-grid",
+              "generator": "fixedApertureGrid",
+              "climateInput": "太陽角度 (sun angle)",
+              "sliders": [
+                { "key": "sunAngle", "label": "Sun Angle", "min": 0, "max": 90, "default": 35, "unit": "°" },
+                { "key": "apertureDensity", "label": "Aperture Density", "min": 8, "max": 40, "default": 20 },
+                { "key": "apertureSize", "label": "Aperture Size", "min": 20, "max": 80, "default": 50, "unit": "%" }
+              ],
+              "visualPrimitive": "規則格網排列的固定大小圓形孔徑，陰影橢圓依日照角度偏移",
+              "mappingRule": "apertureDensity 越高 → 格數越多、孔徑越密；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統阿拉伯 Mashrabiya 木格窗 — 規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果"
             },
             {
               "id": 2,
               "name": "Deep-Well Shadow Type",
               "description": "孔洞加深形成井狀凹陷，利用孔壁本身遮蔽低角度日照，僅正午高角度光線能穿透",
-              "example": "傳統清真寺深凹窗龕"
+              "example": "傳統清真寺深凹窗龕",
+              "slug": "deep-well-shadow",
+              "generator": "deepWellShadow",
+              "climateInput": "太陽高度角 (solar altitude)",
+              "sliders": [
+                { "key": "sunAngle", "label": "Sun Angle", "min": 0, "max": 90, "default": 25, "unit": "°" },
+                { "key": "wellDepth", "label": "Well Depth", "min": 0, "max": 100, "default": 70, "unit": "%" },
+                { "key": "apertureDensity", "label": "Aperture Density", "min": 8, "max": 30, "default": 14 }
+              ],
+              "visualPrimitive": "格網孔徑，每個孔洞內縮出多層同心暗環模擬井壁，井底一塊隨光線角度變亮的圓面代表可見的井底",
+              "mappingRule": "wellDepth 越高 → 內縮同心暗環層數越多、顏色越深，模擬凹陷越深；sunAngle 越低（接近水平）→ 井底可見亮度越低（低角度光被井壁完全遮蔽）；sunAngle 越高（接近 90° 正午）→ 井底亮度趨近最大（正午光線可直射井底），此非線性關係用 sin(sunAngle) 直接映射亮度。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統清真寺深凹窗龕 — 孔洞加深形成井狀凹陷，利用孔壁本身遮蔽低角度日照，僅正午高角度光線能穿透"
             },
             {
               "id": 3,
               "name": "Directional Louver Aperture Type",
               "description": "孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽",
-              "example": "恆定角度太陽能遮陽格柵"
+              "example": "恆定角度太陽能遮陽格柵",
+              "slug": "directional-louver-aperture",
+              "generator": "directionalLouverAperture",
+              "climateInput": "方位角 (azimuth / directional angle)",
+              "sliders": [
+                { "key": "louverAngle", "label": "Louver Angle", "min": 0, "max": 90, "default": 30, "unit": "°" },
+                { "key": "slitWidth", "label": "Slit Width", "min": 10, "max": 60, "default": 30, "unit": "%" },
+                { "key": "apertureDensity", "label": "Aperture Density", "min": 6, "max": 24, "default": 12 }
+              ],
+              "visualPrimitive": "格網排列的斜向長條縫隙（非圓孔），縫隙方向整體依 louverAngle 旋轉",
+              "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；apertureDensity 控制格數／每列縫隙數量。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "恆定角度太陽能遮陽格柵 — 孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽"
             },
             {
               "id": 4,
               "name": "Graduated Pinhole Type",
               "description": "孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果",
-              "example": "沖孔金屬板立面（perforated metal facade）"
+              "example": "沖孔金屬板立面（perforated metal facade）",
+              "slug": "graduated-pinhole",
+              "generator": "graduatedPinhole",
+              "climateInput": "表面曲率／日照強度梯度 (surface curvature / solar intensity gradient)",
+              "sliders": [
+                { "key": "gradientAngle", "label": "Gradient Direction", "min": 0, "max": 180, "default": 45, "unit": "°" },
+                { "key": "pinholeDensity", "label": "Pinhole Density", "min": 20, "max": 80, "default": 45 },
+                { "key": "contrastRange", "label": "Size Contrast", "min": 0, "max": 100, "default": 70, "unit": "%" }
+              ],
+              "visualPrimitive": "密集針孔狀孔徑場，孔徑大小依 gradientAngle 方向連續漸變（沿用既有 Graded Porosity / Density-Graded Voronoi 的漸層演算法）",
+              "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholeDensity 控制孔徑總數／場的精細度。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "沖孔金屬板立面（perforated metal facade） — 孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果"
             }
           ]
         },
