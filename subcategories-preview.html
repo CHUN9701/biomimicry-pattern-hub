@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>biomimicry-subcategories.json</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141311;
+    --surface-2: #1b1a17;
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #f5f4f2;
+    --text-dim: rgba(245,244,242,0.62);
+    --text-faint: rgba(245,244,242,0.4);
+    --mono: "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    --cat1-a: #c5451f; --cat1-b: #f2884a; --cat1-glow: rgba(242,136,74,0.16);
+    --cat2-a: #2946c9; --cat2-b: #9b86ff; --cat2-glow: rgba(124,92,240,0.18);
+    --cat3-a: #0a4a6b; --cat3-b: #3ec3e6; --cat3-glow: rgba(31,166,201,0.16);
+    --cat4-a: #586b1f; --cat4-b: #b6d47f; --cat4-glow: rgba(166,201,107,0.16);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  @media (min-width: 768px) {
+    .page { padding: 72px 40px 120px; }
+  }
+
+  header.top {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filepath {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(24px, 3.4vw, 32px);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    max-width: 62ch;
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    margin-top: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+  }
+  .status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #e8b23d;
+    box-shadow: 0 0 0 3px rgba(232,178,61,0.18);
+  }
+
+  nav.jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 28px 0 48px;
+  }
+  nav.jump a {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  nav.jump a:hover { border-color: var(--border-strong); color: var(--text); }
+  nav.jump a:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  section.category {
+    margin-bottom: 56px;
+    scroll-margin-top: 24px;
+  }
+
+  .category-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding-left: 18px;
+    border-left: 3px solid var(--accent-b);
+    margin-bottom: 20px;
+  }
+
+  .category-head h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 620;
+    color: var(--text);
+  }
+
+  .category-head .zh {
+    font-size: 14px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  .category-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    margin: 4px 0 20px 18px;
+  }
+
+  .subcat-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  @media (min-width: 720px) {
+    .subcat-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .subcat-card {
+    background: linear-gradient(160deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+  }
+
+  .subcat-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .subcat-title-row h3 {
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 600;
+  }
+
+  .subcat-zh {
+    font-size: 12.5px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  .subcat-id {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--accent-b);
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+    opacity: 0.85;
+  }
+
+  ol.types {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .type-item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .type-item:first-child { padding-top: 0; border-top: none; }
+
+  .type-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    padding-top: 2px;
+  }
+
+  .type-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+
+  .type-desc {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin: 0 0 6px;
+  }
+
+  .type-example {
+    font-size: 11.5px;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+  .type-example::before {
+    content: "— ";
+    font-style: normal;
+  }
+
+  footer.note {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-faint);
+    max-width: 62ch;
+  }
+
+  ::selection { background: rgba(255,255,255,0.18); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="filepath">lib/biomimicry-subcategories.json</div>
+    <h1>10 分類2, each with its own 4 mechanism types</h1>
+    <p class="lede">
+      Full content of the corrected data file — 4 大分類1 (top-level categories),
+      each containing the 分類2 (sub-categories) that were previously showing the
+      same generic 4 types. Every 分類2 below now has its own distinct set.
+    </p>
+    <span class="status">Not yet wired into the site — data only</span>
+  </header>
+
+  <nav class="jump" aria-label="Jump to category">
+    <a href="#cat-1">01 Static Climate-Regulating</a>
+    <a href="#cat-2">02 Kinetic &amp; Responsive</a>
+    <a href="#cat-3">03 Algorithmic &amp; Generative</a>
+    <a href="#cat-4">04 Biophilic &amp; Sensory</a>
+  </nav>
+
+  <section class="category" id="cat-1" style="--accent-a: var(--cat1-a); --accent-b: var(--cat1-b);">
+    <div class="category-head">
+      <h2>Static Climate-Regulating Morphology</h2>
+      <span class="zh">靜態氣候調節形態</span>
+    </div>
+    <div class="category-id">static-climate-regulating-morphology</div>
+    <div class="subcat-grid">
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Thermal Mass Undulation</h3>
+          <span class="subcat-zh">熱塊體波狀起伏</span>
+        </div>
+        <div class="subcat-id">thermal-mass-undulation</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Wave-Section Wall Type</p>
+            <p class="type-desc">波浪斷面增加牆體表面積與蓄熱體積，日夜溫差調節不需機械輔助</p>
+            <p class="type-example">傳統夯土波形牆、Termite mound 外殼曲面</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Corrugated Thermal Skin Type</p>
+            <p class="type-desc">規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收</p>
+            <p class="type-example">沙漠建築的摺板式外牆</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Ribbed Mass Buffer Type</p>
+            <p class="type-desc">肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間</p>
+            <p class="type-example">傳統土坯建築的肋狀牆體構造</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Rolling Topography Type</p>
+            <p class="type-desc">建築量體本身模擬地形起伏，藉高低差產生自然通風與遮蔭區</p>
+            <p class="type-example">Heatherwick studio 地景式建築量體語彙</p>
+          </div></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="category" id="cat-2" style="--accent-a: var(--cat2-a); --accent-b: var(--cat2-b);">
+    <div class="category-head">
+      <h2>Kinetic &amp; Responsive Morphology</h2>
+      <span class="zh">動態與響應形態</span>
+    </div>
+    <div class="category-id">kinetic-responsive-morphology</div>
+    <div class="subcat-grid">
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Kinetic Folding Petals</h3>
+          <span class="subcat-zh">動態摺疊花瓣</span>
+        </div>
+        <div class="subcat-id">kinetic-folding-petals</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Radial Bloom Type</p>
+            <p class="type-desc">中心軸放射狀花瓣依光照角度整體開合，類似花朵向光性</p>
+            <p class="type-example">Al Bahar Towers 的放射狀摺疊單元邏輯延伸</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Origami Fold Type</p>
+            <p class="type-desc">摺紙式硬摺線結構，透過摺疊角度變化控制開口大小</p>
+            <p class="type-example">建築摺紙立面實驗原型</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Layered Petal Cascade Type</p>
+            <p class="type-desc">多層花瓣狀單元錯位堆疊，逐層展開產生漸進式遮蔭</p>
+            <p class="type-example">仿生動態遮陽百葉系統</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Pneumatic Petal Type</p>
+            <p class="type-desc">氣壓驅動花瓣狀薄膜開合，反應速度快且可逆</p>
+            <p class="type-example">ETFE 氣墊式動態遮陽單元</p>
+          </div></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="category" id="cat-3" style="--accent-a: var(--cat3-a); --accent-b: var(--cat3-b);">
+    <div class="category-head">
+      <h2>Algorithmic &amp; Generative Structure</h2>
+      <span class="zh">演算法生成結構</span>
+    </div>
+    <div class="category-id">algorithmic-generative-structure</div>
+    <div class="subcat-grid">
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Voronoi Tessellation</h3>
+          <span class="subcat-zh">泰森多邊形</span>
+        </div>
+        <div class="subcat-id">voronoi</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Cellular Skin Type</p>
+            <p class="type-desc">表皮以泰森多邊形切割產生不規則孔洞，模擬細胞組織分佈邏輯</p>
+            <p class="type-example">Beijing National Aquatics Centre「水立方」的氣泡結構</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Structural Voronoi Shell Type</p>
+            <p class="type-desc">結構外殼直接以泰森多邊形做承重分割，兼具結構效率與視覺紋理</p>
+            <p class="type-example">仿生殼體結構實驗案例</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Density-Graded Voronoi Type</p>
+            <p class="type-desc">泰森多邊形密度依結構受力或日照強度漸變</p>
+            <p class="type-example">參數化立面的應力視覺化設計</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Bone-Inspired Voronoi Type</p>
+            <p class="type-desc">靈感取自骨骼小樑（trabecular bone）的多孔分佈邏輯，兼顧輕量化與強度</p>
+            <p class="type-example">3D 列印骨骼結構建築構件研究</p>
+          </div></li>
+        </ol>
+      </article>
+
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Fibonacci Spiral</h3>
+          <span class="subcat-zh">斐波那契螺旋</span>
+        </div>
+        <div class="subcat-id">fibonacci</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Logarithmic Shell Spiral Type</p>
+            <p class="type-desc">依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構</p>
+            <p class="type-example">螺旋狀樓梯/中庭採光井設計</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Phyllotaxis Facade Type</p>
+            <p class="type-desc">立面開孔排列模擬植物葉序生長角度（約137.5°黃金角），達到均勻採光與遮蔭</p>
+            <p class="type-example">向日葵花序啟發的參數化立面</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Spiral Growth Tower Type</p>
+            <p class="type-desc">塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律</p>
+            <p class="type-example">螺旋形高層建築量體邏輯</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Radial Fibonacci Louver Type</p>
+            <p class="type-desc">遮陽百葉依螺旋角度漸變排列，兼顧不同方位的遮陽效率</p>
+            <p class="type-example">參數化遮陽格柵設計</p>
+          </div></li>
+        </ol>
+      </article>
+
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Fractal Tree</h3>
+          <span class="subcat-zh">分形樹形</span>
+        </div>
+        <div class="subcat-id">fractal-tree</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Branching Structural Column Type</p>
+            <p class="type-desc">柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距</p>
+            <p class="type-example">Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Recursive Canopy Type</p>
+            <p class="type-desc">屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽</p>
+            <p class="type-example">機場/車站樹狀屋頂結構</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Fractal Ventilation Type</p>
+            <p class="type-desc">通風管道模擬樹木維管束的分形分岔，提升自然對流效率</p>
+            <p class="type-example">仿生被動通風系統研究</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Root-System Foundation Type</p>
+            <p class="type-desc">基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性</p>
+            <p class="type-example">生物啟發式深基礎設計原型</p>
+          </div></li>
+        </ol>
+      </article>
+
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Reaction-Diffusion</h3>
+          <span class="subcat-zh">反應擴散</span>
+        </div>
+        <div class="subcat-id">reaction-diffusion</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Turing Pattern Skin Type</p>
+            <p class="type-desc">表皮紋理依 Turing 反應擴散演算法生成，模擬動物斑紋（斑馬紋、豹紋）的自然生成邏輯</p>
+            <p class="type-example">參數化立面紋理設計</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Cellular Growth Simulation Type</p>
+            <p class="type-desc">結構或表皮圖案透過模擬細胞增殖演算法生成有機分佈</p>
+            <p class="type-example">生成式設計立面研究</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Coral Growth Pattern Type</p>
+            <p class="type-desc">模擬珊瑚生長的擴散演算法生成多孔曲面結構</p>
+            <p class="type-example">3D 列印珊瑚啟發構造實驗</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Diffusion-Limited Aggregation Type</p>
+            <p class="type-desc">依擴散限制聚集演算法生成樹枝狀/珊瑚狀不規則紋理，常用於裝飾性遮陽構件</p>
+            <p class="type-example">參數化裝飾隔柵設計</p>
+          </div></li>
+        </ol>
+      </article>
+
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Vein Flow</h3>
+          <span class="subcat-zh">葉脈流體</span>
+        </div>
+        <div class="subcat-id">vein-flow</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Leaf Venation Structural Type</p>
+            <p class="type-desc">結構肋條模擬葉脈分佈邏輯，達到輕量化與力學效率的平衡</p>
+            <p class="type-example">仿生葉脈屋頂結構研究</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Fluid Dynamic Facade Type</p>
+            <p class="type-desc">立面線條模擬葉脈中水分輸送路徑，兼具視覺流動感與結構導向</p>
+            <p class="type-example">參數化流線型立面</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Capillary Drainage Type</p>
+            <p class="type-desc">排水系統模擬葉脈微血管網絡，分散雨水逕流路徑</p>
+            <p class="type-example">仿生屋頂排水系統設計</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Branching Load Path Type</p>
+            <p class="type-desc">結構受力路徑依葉脈分岔邏輯層層分散，減少單點應力集中</p>
+            <p class="type-example">仿生結構力學分析應用</p>
+          </div></li>
+        </ol>
+      </article>
+
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Structural Geometry</h3>
+          <span class="subcat-zh">結構幾何</span>
+        </div>
+        <div class="subcat-id">structural-geometry</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Geodesic Dome Type</p>
+            <p class="type-desc">三角形網格構成短程線穹頂，以最少材料達最大跨距</p>
+            <p class="type-example">Buckminster Fuller 的 Geodesic Dome</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Tensegrity Type</p>
+            <p class="type-desc">張力與壓力元件分離並互相平衡，形成輕量自撐結構</p>
+            <p class="type-example">張拉整體結構橋樑/裝置藝術</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Honeycomb Panel Type</p>
+            <p class="type-desc">蜂巢六邊形結構提供高強度重量比，常用於複合板材</p>
+            <p class="type-example">蜂巢複合結構外牆板</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Minimal Surface Shell Type</p>
+            <p class="type-desc">依最小曲面數學原理生成薄殼結構，兼具結構效率與有機造型</p>
+            <p class="type-example">肥皂膜啟發的薄殼屋頂設計</p>
+          </div></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="category" id="cat-4" style="--accent-a: var(--cat4-a); --accent-b: var(--cat4-b);">
+    <div class="category-head">
+      <h2>Biophilic Geometry &amp; Sensory Healing</h2>
+      <span class="zh">親生物幾何與感官療癒</span>
+    </div>
+    <div class="category-id">biophilic-geometry-sensory-healing</div>
+    <div class="subcat-grid">
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Organic Spatial Boundary</h3>
+          <span class="subcat-zh">有機空間邊界</span>
+        </div>
+        <div class="subcat-id">organic-spatial-boundary</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Curvilinear Threshold Type</p>
+            <p class="type-desc">空間邊界以自然曲線取代直角分隔，降低視覺壓迫感</p>
+            <p class="type-example">親生物設計中的圓弧牆體轉角</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Membrane-Like Partition Type</p>
+            <p class="type-desc">隔間如生物薄膜般半透明、可滲透，模糊室內外邊界</p>
+            <p class="type-example">仿生半透膜式室內隔屏</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Nested Enclosure Type</p>
+            <p class="type-desc">空間如生物巢穴般層層內縮包覆，營造安全感與私密層次</p>
+            <p class="type-example">鳥巢/蜂窩啟發的內縮式包廂空間</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Flowing Boundary Type</p>
+            <p class="type-desc">地坪、牆面、天花以連續曲面過渡，消弭傳統房間邊界感</p>
+            <p class="type-example">仿生流動式室內空間設計</p>
+          </div></li>
+        </ol>
+      </article>
+
+      <article class="subcat-card">
+        <div class="subcat-title-row">
+          <h3>Sensory Healing Pattern</h3>
+          <span class="subcat-zh">感官療癒紋理</span>
+        </div>
+        <div class="subcat-id">sensory-healing-pattern</div>
+        <ol class="types">
+          <li class="type-item"><span class="type-num">01</span><div>
+            <p class="type-name">Biomorphic Texture Type</p>
+            <p class="type-desc">表面紋理模擬自然生物形態（水波、樹皮、雲紋），提供視覺放鬆效果</p>
+            <p class="type-example">療癒空間牆面紋理設計</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">02</span><div>
+            <p class="type-name">Fractal Visual Rhythm Type</p>
+            <p class="type-desc">依自然分形比例設計重複性視覺節奏，已有研究顯示可降低壓力反應</p>
+            <p class="type-example">醫療空間分形圖案應用</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">03</span><div>
+            <p class="type-name">Acoustic Diffusion Pattern Type</p>
+            <p class="type-desc">表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果</p>
+            <p class="type-example">仿生聲學牆板設計</p>
+          </div></li>
+          <li class="type-item"><span class="type-num">04</span><div>
+            <p class="type-name">Tactile Nature Surface Type</p>
+            <p class="type-desc">觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗</p>
+            <p class="type-example">療癒空間觸覺牆面設計</p>
+          </div></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <footer class="note">
+    Accent colors on each section border match that category's existing mesh-gradient
+    palette in <code style="font-family: var(--mono);">lib/data.ts</code>. This page mirrors
+    <code style="font-family: var(--mono);">lib/biomimicry-subcategories.json</code> exactly —
+    it is a read-only preview, not yet connected to the live site's variant pages.
+  </footer>
+</div>
+</body>
+</html>
