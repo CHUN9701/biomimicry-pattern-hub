@@ -1,19 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import { getVariant } from "@/lib/data";
+import type { SliderConfig } from "@/lib/data";
 import {
   defaultMechanismForCategory,
-  defaultUniversalParams,
-  getMechanismType,
   mechanismTypes,
   universalSliders,
 } from "@/lib/mechanismTypes";
 import {
-  defaultShapeMemoryParams,
-  getMembraneType,
   shapeMemorySliders,
   shapeMemoryTypes,
 } from "@/lib/shapeMemoryTypes";
@@ -21,6 +18,11 @@ import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
 import MechanismTypeList from "@/components/MechanismTypeList";
+
+// Build a fully-resolved default-params object from any slider list.
+function defaultParamsFromSliders(sliders: SliderConfig[]): Record<string, number> {
+  return Object.fromEntries(sliders.map((s) => [s.key, s.default]));
+}
 
 export default function VariantPage({
   params,
@@ -30,44 +32,61 @@ export default function VariantPage({
   const { category, variant } = getVariant(params.slug, params.variant);
   const { setScene } = useScene();
 
-  // The "shape-memory-membrane" variant is the one page that's actually about
-  // Climate-Responsive Shape-Memory Membrane — it gets that taxonomy's explorer
-  // (temperature/humidity/pressure) instead of the skin-shading one.
   const isMembraneVariant = params.variant === "shape-memory-membrane";
 
-  const [activeTypeKey, setActiveTypeKey] = useState(() =>
-    isMembraneVariant ? "sma" : defaultMechanismForCategory(params.slug)
-  );
+  // The taxonomy this variant's 4 cards come from, plus the sliders to fall
+  // back on when a type doesn't define its own. Today, every entry in
+  // mechanismTypes.ts / shapeMemoryTypes.ts shares one universal slider set
+  // (sliders is undefined on each of them) — future JSON-driven types will
+  // carry their own `sliders` array per type, and this same code path picks
+  // that up automatically without further changes here.
+  const rawTypes = isMembraneVariant ? shapeMemoryTypes : mechanismTypes;
+  const fallbackSliders = isMembraneVariant ? shapeMemorySliders : universalSliders;
+
+  // Resolve every type to always have a concrete `sliders` array. This is the
+  // single place fallback logic lives — downstream components never need to
+  // know about "shared" vs "per-type" sliders, they just read `.sliders`.
+  const resolvedTypes = rawTypes.map((t) => ({
+    ...t,
+    sliders: t.sliders ?? fallbackSliders,
+  }));
+
+  const initialKey = isMembraneVariant ? "sma" : defaultMechanismForCategory(params.slug);
+  const initialType = resolvedTypes.find((t) => t.key === initialKey) ?? resolvedTypes[0];
+
+  const [activeTypeKey, setActiveTypeKey] = useState(initialKey);
   const [sliderParams, setSliderParams] = useState<Record<string, number>>(() =>
-    isMembraneVariant ? defaultShapeMemoryParams() : defaultUniversalParams()
+    defaultParamsFromSliders(initialType.sliders)
   );
-  const sliderParamsRef = useRef(sliderParams);
-  sliderParamsRef.current = sliderParams;
 
   useEffect(() => {
     if (category && variant) setScene({ level: "variant", category, variant });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category?.slug, variant?.slug]);
 
+  // Navigated to a different variant entirely — reset everything.
   useEffect(() => {
-    if (isMembraneVariant) {
-      setActiveTypeKey("sma");
-      setSliderParams(defaultShapeMemoryParams());
-    } else {
-      setActiveTypeKey(defaultMechanismForCategory(params.slug));
-      setSliderParams(defaultUniversalParams());
-    }
+    const key = isMembraneVariant ? "sma" : defaultMechanismForCategory(params.slug);
+    const type = resolvedTypes.find((t) => t.key === key) ?? resolvedTypes[0];
+    setActiveTypeKey(key);
+    setSliderParams(defaultParamsFromSliders(type.sliders));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug, params.variant]);
 
   if (!category || !variant) notFound();
 
-  const explorerTypes = isMembraneVariant ? shapeMemoryTypes : mechanismTypes;
-  const explorerSliders = isMembraneVariant ? shapeMemorySliders : universalSliders;
+  // FIX (blocking issue 1): switching cards now updates activeKey AND resets
+  // sliders + params to that type's own defaults, in the same event handler.
+  // React batches these state updates, so there's never a render where the
+  // slider list and params object have mismatched keys.
+  const handleSelectType = (key: string) => {
+    const type = resolvedTypes.find((t) => t.key === key) ?? resolvedTypes[0];
+    setActiveTypeKey(key);
+    setSliderParams(defaultParamsFromSliders(type.sliders));
+  };
+
   const explorerTitle = isMembraneVariant ? "MEMBRANE MECHANISM TYPE" : "SKIN MECHANISM TYPE";
-  const activeMechanism = isMembraneVariant
-    ? getMembraneType(activeTypeKey)
-    : getMechanismType(activeTypeKey);
+  const activeMechanism = resolvedTypes.find((t) => t.key === activeTypeKey) ?? resolvedTypes[0];
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-28 md:px-10 md:py-32">
@@ -97,17 +116,16 @@ export default function VariantPage({
       >
         <MechanismTypeList
           title={explorerTitle}
-          types={explorerTypes}
+          types={resolvedTypes}
           activeKey={activeTypeKey}
-          onSelect={setActiveTypeKey}
+          onSelect={handleSelectType}
           colors={category.colors}
-          paramsRef={sliderParamsRef}
         />
         <div className="flex-1">
           <PlaygroundCanvas
             colors={category.colors}
             generatorKey={activeMechanism.generator}
-            sliders={explorerSliders}
+            sliders={activeMechanism.sliders}
             params={sliderParams}
             onParamsChange={setSliderParams}
           />

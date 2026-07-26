@@ -706,66 +706,6 @@ const kineticResponsive: Factory = () => ({
   },
 });
 
-// Passive Ventilation Type — e.g. termite mound, Eastgate Centre: tapered
-// stack-effect flues with particles rising through them, driven by wind speed.
-const passiveVentilation: Factory = () => {
-  type Particle = { channel: number; y: number; speed: number };
-  let particles: Particle[] = [];
-  let lastChannels = -1;
-
-  const seedParticles = (channels: number) => {
-    const rand = mulberry32(channels * 733 + 11);
-    particles = [];
-    for (let c = 0; c < channels; c++) {
-      for (let i = 0; i < 6; i++) {
-        particles.push({ channel: c, y: rand(), speed: 0.3 + rand() * 0.4 });
-      }
-    }
-    lastChannels = channels;
-  };
-
-  return {
-    draw(ctx, w, h, t, p, palette) {
-      const channels = Math.max(3, Math.round(3 + (p.textureScale / 100) * 9));
-      if (channels !== lastChannels) seedParticles(channels);
-
-      ctx.clearRect(0, 0, w, h);
-      const chW = w / channels;
-      const tilt = ((p.sunAngle - 90) / 90) * 0.25;
-      const speedMul = 0.4 + p.windSpeed * 0.05;
-
-      for (let c = 0; c < channels; c++) {
-        const x0 = c * chW + chW * 0.15;
-        const x1 = c * chW + chW * 0.85;
-        const topOffset = h * tilt;
-        ctx.beginPath();
-        ctx.moveTo(x0, h);
-        ctx.lineTo(x0 + topOffset, 0);
-        ctx.lineTo(x1 + topOffset, 0);
-        ctx.lineTo(x1, h);
-        ctx.closePath();
-        const grad = ctx.createLinearGradient(0, h, 0, 0);
-        grad.addColorStop(0, rgba(palette[1], 0.35));
-        grad.addColorStop(1, rgba(palette[3], 0.08));
-        ctx.fillStyle = grad;
-        ctx.fill();
-      }
-
-      ctx.fillStyle = rgba(palette[3], 0.85);
-      for (const particle of particles) {
-        particle.y -= particle.speed * speedMul * 0.01;
-        if (particle.y < 0) particle.y = 1;
-        const xShift = (1 - particle.y) * h * tilt;
-        const cx = particle.channel * chW + chW * 0.5 + xShift;
-        const cy = particle.y * h;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    },
-  };
-};
-
 // Graded Porosity Type — e.g. Esplanade spines, shell spiral porosity: a pore
 // field whose size grades continuously along the light direction axis.
 const gradedPorosity: Factory = () => ({
@@ -1000,7 +940,6 @@ const registry: Record<string, Factory> = {
   sensoryHealingPattern,
   staticShading,
   kineticResponsive,
-  passiveVentilation,
   gradedPorosity,
   layeredOverlapping,
   shapeMemoryAlloy,

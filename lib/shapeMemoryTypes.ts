@@ -6,6 +6,7 @@ export type MembraneType = {
   examples: string;
   description: string;
   generator: string;
+  sliders?: SliderConfig[]; // optional — falls back to shapeMemorySliders when unset
 };
 
 // Climate-Responsive Shape-Memory Membrane — the second biomimicry taxonomy,

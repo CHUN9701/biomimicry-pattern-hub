@@ -6,6 +6,7 @@ export type MechanismType = {
   examples: string;
   description: string;
   generator: string;
+  sliders?: SliderConfig[]; // optional — falls back to universalSliders when unset
 };
 
 // Self-Shading Perforated Skin — a functional/mechanism-based taxonomy from

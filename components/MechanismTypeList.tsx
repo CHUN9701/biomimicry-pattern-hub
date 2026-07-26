@@ -1,27 +1,34 @@
 "use client";
 
-import { useEffect, useRef, type MutableRefObject } from "react";
+import { useEffect, useRef } from "react";
 import { createGenerator } from "@/lib/generators";
+import type { SliderConfig } from "@/lib/data";
 
-// Deliberately not importing MechanismType from lib/mechanismTypes — this list
-// is reused for both the Self-Shading Perforated Skin and the Climate-
-// Responsive Shape-Memory Membrane taxonomies, so the prop shape is generic.
+// `sliders` is now required — the caller (page.tsx) is responsible for
+// resolving each type to a concrete slider list (its own, or a fallback)
+// before passing it down. This component never has to know which case it is.
 type ExplorerType = {
   key: string;
   label: string;
   examples: string;
   description?: string;
   generator: string;
+  sliders: SliderConfig[];
 };
 
-type MiniPreviewProps = {
-  generatorKey: string;
-  colors: [string, string, string, string];
-  paramsRef: MutableRefObject<Record<string, number>>;
-};
+type Palette = [string, string, string, string];
 
-function MiniPreview({ generatorKey, colors, paramsRef }: MiniPreviewProps) {
+function MiniPreview({ type, colors }: { type: ExplorerType; colors: Palette }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // FIX (blocking issue 2): each card previews itself with its OWN default
+  // params — never the params the user is currently editing for whichever
+  // type happens to be active. This guarantees this card's generator always
+  // receives the param keys it actually expects, regardless of which of the
+  // other 3 cards is selected.
+  const defaultParamsRef = useRef<Record<string, number>>(
+    Object.fromEntries(type.sliders.map((s) => [s.key, s.default]))
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,8 +36,8 @@ function MiniPreview({ generatorKey, colors, paramsRef }: MiniPreviewProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const generator = createGenerator(generatorKey);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const generator = createGenerator(type.generator);
+    const dpr = 1; // mini previews don't need retina resolution
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -46,7 +53,7 @@ function MiniPreview({ generatorKey, colors, paramsRef }: MiniPreviewProps) {
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const t = (now - start) / 1000;
-      generator.draw(ctx, canvas.width, canvas.height, t, paramsRef.current, colors);
+      generator.draw(ctx, canvas.width, canvas.height, t, defaultParamsRef.current, colors);
     };
     raf = requestAnimationFrame(loop);
 
@@ -55,7 +62,7 @@ function MiniPreview({ generatorKey, colors, paramsRef }: MiniPreviewProps) {
       resizeObserver.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generatorKey, colors]);
+  }, [type.generator, colors]);
 
   return <canvas ref={canvasRef} className="h-full w-full" />;
 }
@@ -66,14 +73,12 @@ export default function MechanismTypeList({
   activeKey,
   onSelect,
   colors,
-  paramsRef,
 }: {
   title?: string;
   types: ExplorerType[];
   activeKey: string;
   onSelect: (key: string) => void;
-  colors: [string, string, string, string];
-  paramsRef: MutableRefObject<Record<string, number>>;
+  colors: Palette;
 }) {
   return (
     <div className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">
@@ -89,7 +94,7 @@ export default function MechanismTypeList({
             }`}
           >
             <div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl">
-              <MiniPreview generatorKey={type.generator} colors={colors} paramsRef={paramsRef} />
+              <MiniPreview type={type} colors={colors} />
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold leading-snug text-white">{type.label}</div>
