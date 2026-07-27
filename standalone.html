@@ -525,6 +525,573 @@
   }
 
   // ---------------------------------------------------------------------
+  // Per-分類2 mechanism-type data (Part 2 rollout) — mirrors
+  // lib/biomimicry-subcategories.json. Fields past "example" only exist on
+  // variants that have been fully speced; isVariantExplorerReady() below is
+  // the sole gate for whether a variant shows the new 4-card explorer.
+  // ---------------------------------------------------------------------
+  const subcategoryData = {
+  "categories": [
+    {
+      "category1_id": "static-climate",
+      "category1_name": "Static Climate-Regulating Morphology",
+      "category1_name_zh": "靜態氣候調節形態",
+      "subcategories": [
+        {
+          "category2_id": "self-shading-skin",
+          "category2_name": "Self-Shading Perforated Skin",
+          "category2_name_zh": "自遮蔽穿孔表皮",
+          "types": [
+            {
+              "id": 1,
+              "name": "Fixed Aperture Grid Type",
+              "description": "規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果",
+              "example": "傳統阿拉伯 Mashrabiya 木格窗",
+              "slug": "fixed-aperture-grid",
+              "generator": "fixedApertureGrid",
+              "climateInput": "太陽角度 (sun angle)",
+              "sliders": [
+                {
+                  "key": "sunAngle",
+                  "label": "Sun Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 35,
+                  "unit": "°"
+                },
+                {
+                  "key": "apertureDensity",
+                  "label": "Aperture Density",
+                  "min": 8,
+                  "max": 40,
+                  "default": 20
+                },
+                {
+                  "key": "apertureSize",
+                  "label": "Aperture Size",
+                  "min": 20,
+                  "max": 80,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "規則格網排列的固定大小圓形孔徑，陰影橢圓依日照角度偏移",
+              "mappingRule": "apertureDensity 越高 → 格數越多、孔徑越密；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統阿拉伯 Mashrabiya 木格窗 — 規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果"
+            },
+            {
+              "id": 2,
+              "name": "Deep-Well Shadow Type",
+              "description": "孔洞加深形成井狀凹陷，利用孔壁本身遮蔽低角度日照，僅正午高角度光線能穿透",
+              "example": "傳統清真寺深凹窗龕",
+              "slug": "deep-well-shadow",
+              "generator": "deepWellShadow",
+              "climateInput": "太陽高度角 (solar altitude)",
+              "sliders": [
+                {
+                  "key": "sunAngle",
+                  "label": "Sun Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 25,
+                  "unit": "°"
+                },
+                {
+                  "key": "wellDepth",
+                  "label": "Well Depth",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                },
+                {
+                  "key": "apertureDensity",
+                  "label": "Aperture Density",
+                  "min": 8,
+                  "max": 30,
+                  "default": 14
+                }
+              ],
+              "visualPrimitive": "格網孔徑，每個孔洞內縮出多層同心暗環模擬井壁，井底一塊隨光線角度變亮的圓面代表可見的井底",
+              "mappingRule": "wellDepth 越高 → 內縮同心暗環層數越多、顏色越深，模擬凹陷越深；sunAngle 越低（接近水平）→ 井底可見亮度越低（低角度光被井壁完全遮蔽）；sunAngle 越高（接近 90° 正午）→ 井底亮度趨近最大（正午光線可直射井底），此非線性關係用 sin(sunAngle) 直接映射亮度。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統清真寺深凹窗龕 — 孔洞加深形成井狀凹陷，利用孔壁本身遮蔽低角度日照，僅正午高角度光線能穿透"
+            },
+            {
+              "id": 3,
+              "name": "Directional Louver Aperture Type",
+              "description": "孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽",
+              "example": "恆定角度太陽能遮陽格柵",
+              "slug": "directional-louver-aperture",
+              "generator": "directionalLouverAperture",
+              "climateInput": "方位角 (azimuth / directional angle)",
+              "sliders": [
+                {
+                  "key": "louverAngle",
+                  "label": "Louver Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 30,
+                  "unit": "°"
+                },
+                {
+                  "key": "slitWidth",
+                  "label": "Slit Width",
+                  "min": 10,
+                  "max": 60,
+                  "default": 30,
+                  "unit": "%"
+                },
+                {
+                  "key": "apertureDensity",
+                  "label": "Aperture Density",
+                  "min": 6,
+                  "max": 24,
+                  "default": 12
+                }
+              ],
+              "visualPrimitive": "格網排列的斜向長條縫隙（非圓孔），縫隙方向整體依 louverAngle 旋轉",
+              "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；apertureDensity 控制格數／每列縫隙數量。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "恆定角度太陽能遮陽格柵 — 孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽"
+            },
+            {
+              "id": 4,
+              "name": "Graduated Pinhole Type",
+              "description": "孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果",
+              "example": "沖孔金屬板立面（perforated metal facade）",
+              "slug": "graduated-pinhole",
+              "generator": "graduatedPinhole",
+              "climateInput": "表面曲率／日照強度梯度 (surface curvature / solar intensity gradient)",
+              "sliders": [
+                {
+                  "key": "gradientAngle",
+                  "label": "Gradient Direction",
+                  "min": 0,
+                  "max": 180,
+                  "default": 45,
+                  "unit": "°"
+                },
+                {
+                  "key": "pinholeDensity",
+                  "label": "Pinhole Density",
+                  "min": 20,
+                  "max": 80,
+                  "default": 45
+                },
+                {
+                  "key": "contrastRange",
+                  "label": "Size Contrast",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "密集針孔狀孔徑場，孔徑大小依 gradientAngle 方向連續漸變（沿用既有 Graded Porosity / Density-Graded Voronoi 的漸層演算法）",
+              "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholeDensity 控制孔徑總數／場的精細度。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "沖孔金屬板立面（perforated metal facade） — 孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果"
+            }
+          ]
+        },
+        {
+          "category2_id": "thermal-mass-undulation",
+          "category2_name": "Thermal Mass Undulation",
+          "category2_name_zh": "熱塊體波狀起伏",
+          "types": [
+            {
+              "id": 1,
+              "name": "Wave-Section Wall Type",
+              "description": "波浪斷面增加牆體表面積與蓄熱體積，日夜溫差調節不需機械輔助",
+              "example": "傳統夯土波形牆、Termite mound 外殼曲面"
+            },
+            {
+              "id": 2,
+              "name": "Corrugated Thermal Skin Type",
+              "description": "規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收",
+              "example": "沙漠建築的摺板式外牆"
+            },
+            {
+              "id": 3,
+              "name": "Ribbed Mass Buffer Type",
+              "description": "肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間",
+              "example": "傳統土坯建築的肋狀牆體構造"
+            },
+            {
+              "id": 4,
+              "name": "Rolling Topography Type",
+              "description": "建築量體本身模擬地形起伏，藉高低差產生自然通風與遮蔭區",
+              "example": "Heatherwick studio 地景式建築量體語彙"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category1_id": "kinetic-responsive",
+      "category1_name": "Kinetic & Responsive Morphology",
+      "category1_name_zh": "動態與響應形態",
+      "subcategories": [
+        {
+          "category2_id": "kinetic-folding-petals",
+          "category2_name": "Kinetic Folding Petals",
+          "category2_name_zh": "動態摺疊花瓣",
+          "types": [
+            {
+              "id": 1,
+              "name": "Radial Bloom Type",
+              "description": "中心軸放射狀花瓣依光照角度整體開合，類似花朵向光性",
+              "example": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸"
+            },
+            {
+              "id": 2,
+              "name": "Origami Fold Type",
+              "description": "摺紙式硬摺線結構，透過摺疊角度變化控制開口大小",
+              "example": "建築摺紙立面實驗原型"
+            },
+            {
+              "id": 3,
+              "name": "Layered Petal Cascade Type",
+              "description": "多層花瓣狀單元錯位堆疊，逐層展開產生漸進式遮蔭",
+              "example": "仿生動態遮陽百葉系統"
+            },
+            {
+              "id": 4,
+              "name": "Pneumatic Petal Type",
+              "description": "氣壓驅動花瓣狀薄膜開合，反應速度快且可逆",
+              "example": "ETFE 氣墊式動態遮陽單元"
+            }
+          ]
+        },
+        {
+          "category2_id": "shape-memory-membrane",
+          "category2_name": "Shape-Memory Alloy Membrane",
+          "category2_name_zh": "形狀記憶薄膜",
+          "types": [
+            {
+              "id": 1,
+              "name": "Curling Strip Array Type",
+              "description": "合金薄條規律排列，受熱後同步捲曲，形成連續波浪狀開闔表面",
+              "example": "NiTi 記憶合金遮陽百葉原型"
+            },
+            {
+              "id": 2,
+              "name": "Iris Aperture Type",
+              "description": "合金葉片以中心放射方式收合，模擬相機光圈開闔邏輯，反應速度快",
+              "example": "仿生虹膜式動態遮陽裝置"
+            },
+            {
+              "id": 3,
+              "name": "Bistable Snap Type",
+              "description": "合金薄膜在兩個穩定形態間瞬間切換，不需連續能量輸入即可維持開或關",
+              "example": "雙穩態形狀記憶合金天窗"
+            },
+            {
+              "id": 4,
+              "name": "Gradient Thickness Membrane Type",
+              "description": "薄膜厚度漸變，較薄處先反應捲曲，較厚處反應較慢，形成漸進式開闔波紋",
+              "example": "變厚度合金薄膜立面實驗"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category1_id": "algorithmic-generative",
+      "category1_name": "Algorithmic & Generative Structure",
+      "category1_name_zh": "演算法生成結構",
+      "subcategories": [
+        {
+          "category2_id": "voronoi",
+          "category2_name": "Voronoi Tessellation",
+          "category2_name_zh": "泰森多邊形",
+          "types": [
+            {
+              "id": 1,
+              "name": "Cellular Skin Type",
+              "description": "表皮以泰森多邊形切割產生不規則孔洞，模擬細胞組織分佈邏輯",
+              "example": "Beijing National Aquatics Centre「水立方」的氣泡結構"
+            },
+            {
+              "id": 2,
+              "name": "Structural Voronoi Shell Type",
+              "description": "結構外殼直接以泰森多邊形做承重分割，兼具結構效率與視覺紋理",
+              "example": "仿生殼體結構實驗案例"
+            },
+            {
+              "id": 3,
+              "name": "Density-Graded Voronoi Type",
+              "description": "泰森多邊形密度依結構受力或日照強度漸變",
+              "example": "參數化立面的應力視覺化設計"
+            },
+            {
+              "id": 4,
+              "name": "Bone-Inspired Voronoi Type",
+              "description": "靈感取自骨骼小樑（trabecular bone）的多孔分佈邏輯，兼顧輕量化與強度",
+              "example": "3D 列印骨骼結構建築構件研究"
+            }
+          ]
+        },
+        {
+          "category2_id": "fibonacci",
+          "category2_name": "Fibonacci Spiral",
+          "category2_name_zh": "斐波那契螺旋",
+          "types": [
+            {
+              "id": 1,
+              "name": "Logarithmic Shell Spiral Type",
+              "description": "依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構",
+              "example": "螺旋狀樓梯/中庭採光井設計"
+            },
+            {
+              "id": 2,
+              "name": "Phyllotaxis Facade Type",
+              "description": "立面開孔排列模擬植物葉序生長角度（約137.5°黃金角），達到均勻採光與遮蔭",
+              "example": "向日葵花序啟發的參數化立面"
+            },
+            {
+              "id": 3,
+              "name": "Spiral Growth Tower Type",
+              "description": "塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律",
+              "example": "螺旋形高層建築量體邏輯"
+            },
+            {
+              "id": 4,
+              "name": "Radial Fibonacci Louver Type",
+              "description": "遮陽百葉依螺旋角度漸變排列，兼顧不同方位的遮陽效率",
+              "example": "參數化遮陽格柵設計"
+            }
+          ]
+        },
+        {
+          "category2_id": "fractal-tree",
+          "category2_name": "Fractal Tree",
+          "category2_name_zh": "分形樹形",
+          "types": [
+            {
+              "id": 1,
+              "name": "Branching Structural Column Type",
+              "description": "柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距",
+              "example": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱"
+            },
+            {
+              "id": 2,
+              "name": "Recursive Canopy Type",
+              "description": "屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽",
+              "example": "機場/車站樹狀屋頂結構"
+            },
+            {
+              "id": 3,
+              "name": "Fractal Ventilation Type",
+              "description": "通風管道模擬樹木維管束的分形分岔，提升自然對流效率",
+              "example": "仿生被動通風系統研究"
+            },
+            {
+              "id": 4,
+              "name": "Root-System Foundation Type",
+              "description": "基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性",
+              "example": "生物啟發式深基礎設計原型"
+            }
+          ]
+        },
+        {
+          "category2_id": "reaction-diffusion",
+          "category2_name": "Reaction-Diffusion",
+          "category2_name_zh": "反應擴散",
+          "types": [
+            {
+              "id": 1,
+              "name": "Turing Pattern Skin Type",
+              "description": "表皮紋理依 Turing 反應擴散演算法生成，模擬動物斑紋（斑馬紋、豹紋）的自然生成邏輯",
+              "example": "參數化立面紋理設計"
+            },
+            {
+              "id": 2,
+              "name": "Cellular Growth Simulation Type",
+              "description": "結構或表皮圖案透過模擬細胞增殖演算法生成有機分佈",
+              "example": "生成式設計立面研究"
+            },
+            {
+              "id": 3,
+              "name": "Coral Growth Pattern Type",
+              "description": "模擬珊瑚生長的擴散演算法生成多孔曲面結構",
+              "example": "3D 列印珊瑚啟發構造實驗"
+            },
+            {
+              "id": 4,
+              "name": "Diffusion-Limited Aggregation Type",
+              "description": "依擴散限制聚集演算法生成樹枝狀/珊瑚狀不規則紋理，常用於裝飾性遮陽構件",
+              "example": "參數化裝飾隔柵設計"
+            }
+          ]
+        },
+        {
+          "category2_id": "vein-flow",
+          "category2_name": "Vein Flow",
+          "category2_name_zh": "葉脈流體",
+          "types": [
+            {
+              "id": 1,
+              "name": "Leaf Venation Structural Type",
+              "description": "結構肋條模擬葉脈分佈邏輯，達到輕量化與力學效率的平衡",
+              "example": "仿生葉脈屋頂結構研究"
+            },
+            {
+              "id": 2,
+              "name": "Fluid Dynamic Facade Type",
+              "description": "立面線條模擬葉脈中水分輸送路徑，兼具視覺流動感與結構導向",
+              "example": "參數化流線型立面"
+            },
+            {
+              "id": 3,
+              "name": "Capillary Drainage Type",
+              "description": "排水系統模擬葉脈微血管網絡，分散雨水逕流路徑",
+              "example": "仿生屋頂排水系統設計"
+            },
+            {
+              "id": 4,
+              "name": "Branching Load Path Type",
+              "description": "結構受力路徑依葉脈分岔邏輯層層分散，減少單點應力集中",
+              "example": "仿生結構力學分析應用"
+            }
+          ]
+        },
+        {
+          "category2_id": "structural-geometry",
+          "category2_name": "Structural Geometry",
+          "category2_name_zh": "結構幾何",
+          "types": [
+            {
+              "id": 1,
+              "name": "Geodesic Dome Type",
+              "description": "三角形網格構成短程線穹頂，以最少材料達最大跨距",
+              "example": "Buckminster Fuller 的 Geodesic Dome"
+            },
+            {
+              "id": 2,
+              "name": "Tensegrity Type",
+              "description": "張力與壓力元件分離並互相平衡，形成輕量自撐結構",
+              "example": "張拉整體結構橋樑/裝置藝術"
+            },
+            {
+              "id": 3,
+              "name": "Honeycomb Panel Type",
+              "description": "蜂巢六邊形結構提供高強度重量比，常用於複合板材",
+              "example": "蜂巢複合結構外牆板"
+            },
+            {
+              "id": 4,
+              "name": "Minimal Surface Shell Type",
+              "description": "依最小曲面數學原理生成薄殼結構，兼具結構效率與有機造型",
+              "example": "肥皂膜啟發的薄殼屋頂設計"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category1_id": "biophilic-sensory",
+      "category1_name": "Biophilic Geometry & Sensory Healing",
+      "category1_name_zh": "親生物幾何與感官療癒",
+      "subcategories": [
+        {
+          "category2_id": "organic-spatial-boundary",
+          "category2_name": "Organic Spatial Boundary",
+          "category2_name_zh": "有機空間邊界",
+          "types": [
+            {
+              "id": 1,
+              "name": "Curvilinear Threshold Type",
+              "description": "空間邊界以自然曲線取代直角分隔，降低視覺壓迫感",
+              "example": "親生物設計中的圓弧牆體轉角"
+            },
+            {
+              "id": 2,
+              "name": "Membrane-Like Partition Type",
+              "description": "隔間如生物薄膜般半透明、可滲透，模糊室內外邊界",
+              "example": "仿生半透膜式室內隔屏"
+            },
+            {
+              "id": 3,
+              "name": "Nested Enclosure Type",
+              "description": "空間如生物巢穴般層層內縮包覆，營造安全感與私密層次",
+              "example": "鳥巢/蜂窩啟發的內縮式包廂空間"
+            },
+            {
+              "id": 4,
+              "name": "Flowing Boundary Type",
+              "description": "地坪、牆面、天花以連續曲面過渡，消弭傳統房間邊界感",
+              "example": "仿生流動式室內空間設計"
+            }
+          ]
+        },
+        {
+          "category2_id": "sensory-healing-pattern",
+          "category2_name": "Sensory Healing Pattern",
+          "category2_name_zh": "感官療癒紋理",
+          "types": [
+            {
+              "id": 1,
+              "name": "Biomorphic Texture Type",
+              "description": "表面紋理模擬自然生物形態（水波、樹皮、雲紋），提供視覺放鬆效果",
+              "example": "療癒空間牆面紋理設計"
+            },
+            {
+              "id": 2,
+              "name": "Fractal Visual Rhythm Type",
+              "description": "依自然分形比例設計重複性視覺節奏，已有研究顯示可降低壓力反應",
+              "example": "醫療空間分形圖案應用"
+            },
+            {
+              "id": 3,
+              "name": "Acoustic Diffusion Pattern Type",
+              "description": "表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果",
+              "example": "仿生聲學牆板設計"
+            },
+            {
+              "id": 4,
+              "name": "Tactile Nature Surface Type",
+              "description": "觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗",
+              "example": "療癒空間觸覺牆面設計"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+  function findSubcategory(variantSlug) {
+    for (const cat of subcategoryData.categories) {
+      const match = cat.subcategories.find(function (s) { return s.category2_id === variantSlug; });
+      if (match) return match;
+    }
+    return null;
+  }
+
+  function getSubcategoryTypes(variantSlug) {
+    const sub = findSubcategory(variantSlug);
+    return sub ? sub.types : null;
+  }
+
+  // A variant only gets the new 4-card explorer once ALL 4 of its JSON types
+  // carry a generator that actually exists in generatorRegistry, plus their
+  // own non-empty sliders. Falling short on any of the 4 falls back to the
+  // variant own single baseline generator/sliders (from the categories data
+  // above) — never a partial explorer, never a generic stand-in.
+  function isVariantExplorerReady(variantSlug) {
+    const sub = findSubcategory(variantSlug);
+    if (!sub || sub.types.length !== 4) return false;
+    return sub.types.every(function (t) {
+      return typeof t.generator === "string" &&
+        Object.prototype.hasOwnProperty.call(generatorRegistry, t.generator) &&
+        Array.isArray(t.sliders) && t.sliders.length > 0;
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // WebGL mesh-gradient shader
   // ---------------------------------------------------------------------
   const VERT_SHADER =
@@ -725,6 +1292,22 @@
         gl.deleteBuffer(positionBuffer);
       },
     };
+  }
+
+  // Shared grid-iteration helper — the actual "CellularLattice engine" for
+  // self-shading-skin's 4 types below. Each factory is a thin per-cell
+  // renderer on top of this, not an independent grid implementation.
+  function forEachApertureCell(w, h, density, cb) {
+    const cols = Math.max(4, Math.round(density));
+    const rows = Math.max(2, Math.round(cols * (h / w)));
+    const cellW = w / cols, cellH = h / rows;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cx = col * cellW + cellW / 2;
+        const cy = row * cellH + cellH / 2;
+        cb(cx, cy, cellW, cellH, row, col, rows, cols);
+      }
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -1298,58 +1881,6 @@
       };
     },
 
-    passiveVentilation: function () {
-      let particles = [];
-      let lastChannels = -1;
-      function seedParticles(channels) {
-        const rand = mulberry32(channels * 733 + 11);
-        particles = [];
-        for (let c = 0; c < channels; c++) {
-          for (let i = 0; i < 6; i++) {
-            particles.push({ channel: c, y: rand(), speed: 0.3 + rand() * 0.4 });
-          }
-        }
-        lastChannels = channels;
-      }
-      return {
-        draw: function (ctx, w, h, t, p, palette) {
-          const channels = Math.max(3, Math.round(3 + (p.textureScale / 100) * 9));
-          if (channels !== lastChannels) seedParticles(channels);
-          ctx.clearRect(0, 0, w, h);
-          const chW = w / channels;
-          const tilt = ((p.sunAngle - 90) / 90) * 0.25;
-          const speedMul = 0.4 + p.windSpeed * 0.05;
-          for (let c = 0; c < channels; c++) {
-            const x0 = c * chW + chW * 0.15, x1 = c * chW + chW * 0.85;
-            const topOffset = h * tilt;
-            ctx.beginPath();
-            ctx.moveTo(x0, h);
-            ctx.lineTo(x0 + topOffset, 0);
-            ctx.lineTo(x1 + topOffset, 0);
-            ctx.lineTo(x1, h);
-            ctx.closePath();
-            const grad = ctx.createLinearGradient(0, h, 0, 0);
-            grad.addColorStop(0, rgba(palette[1], 0.35));
-            grad.addColorStop(1, rgba(palette[3], 0.08));
-            ctx.fillStyle = grad;
-            ctx.fill();
-          }
-          ctx.fillStyle = rgba(palette[3], 0.85);
-          for (let i = 0; i < particles.length; i++) {
-            const particle = particles[i];
-            particle.y -= particle.speed * speedMul * 0.01;
-            if (particle.y < 0) particle.y = 1;
-            const xShift = (1 - particle.y) * h * tilt;
-            const cx = particle.channel * chW + chW * 0.5 + xShift;
-            const cy = particle.y * h;
-            ctx.beginPath();
-            ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        },
-      };
-    },
-
     gradedPorosity: function () {
       return {
         draw: function (ctx, w, h, t, p, palette) {
@@ -1542,6 +2073,97 @@
         },
       };
     },
+
+    // ---- CellularLattice engine: self-shading-skin's 4 types ----
+
+    fixedApertureGrid: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const angleRad = (p.sunAngle / 180) * Math.PI;
+          forEachApertureCell(w, h, p.apertureDensity, function (cx, cy, cellW, cellH, row, col, rows, cols) {
+            const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
+            const r = Math.min(cellW, cellH) * 0.5 * (p.apertureSize / 100) * shimmer;
+            const offsetX = Math.cos(angleRad) * cellW * 0.5;
+            const offsetY = Math.sin(angleRad) * cellH * 0.5;
+            ctx.beginPath();
+            ctx.ellipse(cx + offsetX * 0.4, cy + offsetY * 0.4, r * 1.15, r * 0.65, 0, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0,0,0,0.45)";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = lerpColor(palette[2], palette[3], (row + col) / (rows + cols));
+            ctx.fill();
+          });
+        },
+      };
+    },
+
+    deepWellShadow: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const angleRad = (p.sunAngle / 180) * Math.PI;
+          const depth = clamp(p.wellDepth / 100, 0, 1);
+          const noonFactor = Math.sin(angleRad);
+          forEachApertureCell(w, h, p.apertureDensity, function (cx, cy, cellW, cellH, row, col) {
+            const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
+            const r = Math.min(cellW, cellH) * 0.42 * shimmer;
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fill();
+            const rings = 1 + Math.round(depth * 3);
+            for (let ring = rings; ring >= 1; ring--) {
+              const ringR = r * (1 - ring / (rings + 1));
+              ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+              ctx.fillStyle = "rgba(0,0,0," + (0.75 - ring * 0.12) + ")"; ctx.fill();
+            }
+            const floorR = r * Math.max(0.08, (1 - depth) * 0.5);
+            ctx.beginPath(); ctx.arc(cx, cy, floorR, 0, Math.PI * 2);
+            ctx.fillStyle = lerpColor(palette[0], palette[3], noonFactor);
+            ctx.globalAlpha = 0.3 + noonFactor * 0.7; ctx.fill(); ctx.globalAlpha = 1;
+          });
+        },
+      };
+    },
+
+    directionalLouverAperture: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const angleRad = (p.louverAngle / 180) * Math.PI;
+          const slitFrac = clamp(p.slitWidth / 100, 0.05, 1);
+          forEachApertureCell(w, h, p.apertureDensity, function (cx, cy, cellW, cellH, row, col) {
+            const wobble = Math.sin(t * 0.4 + row * 0.6 + col * 0.3) * 0.02;
+            const len = Math.min(cellW, cellH) * 0.85;
+            const thick = Math.min(cellW, cellH) * 0.5 * slitFrac;
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(angleRad + wobble);
+            ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(-len / 2, -thick * 0.6, len, thick * 0.6);
+            ctx.fillStyle = lerpColor(palette[2], palette[3], (row + col) / 20);
+            ctx.fillRect(-len / 2, 0, len, thick * 0.4);
+            ctx.restore();
+          });
+        },
+      };
+    },
+
+    graduatedPinhole: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const angleRad = (p.gradientAngle / 180) * Math.PI;
+          const dir = { x: Math.cos(angleRad), y: Math.sin(angleRad) };
+          const contrast = clamp(p.contrastRange / 100, 0, 1);
+          forEachApertureCell(w, h, p.pinholeDensity, function (cx, cy, cellW, cellH, row, col) {
+            const proj = (cx / w) * dir.x + (cy / h) * dir.y;
+            const grade = clamp((proj + 1) / 2, 0, 1);
+            const jitter = 1 + 0.05 * Math.sin(t * 0.5 + row + col);
+            const r = Math.min(cellW, cellH) * 0.5 * (0.08 + grade * contrast) * jitter;
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = lerpColor(palette[1], palette[3], grade);
+            ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+          });
+        },
+      };
+    },
   };
 
   function createGenerator(key) {
@@ -1661,15 +2283,26 @@
     if (!cat || !v) { location.hash = ""; return; }
     setScene(cat.colors, "variant");
 
-    // The "shape-memory-membrane" variant is the one page actually about
-    // Climate-Responsive Shape-Memory Membrane — it gets that taxonomy's
-    // explorer (temperature/humidity/pressure) instead of the skin-shading one.
-    const isMembraneVariant = variantSlug === "shape-memory-membrane";
-    const explorerTypes = isMembraneVariant ? shapeMemoryTypes : mechanismTypes;
-    const explorerSliders = isMembraneVariant ? shapeMemorySliders : universalSliders;
-    const explorerTitle = isMembraneVariant ? "MEMBRANE MECHANISM TYPE" : "SKIN MECHANISM TYPE";
-    const explorerDefaultKey = isMembraneVariant ? "sma" : defaultMechanismForCategory(cat.slug);
-    const getExplorerType = isMembraneVariant ? getMembraneType : getMechanismType;
+    // This variant only gets the JSON-driven 4-card explorer if ALL 4 of its
+    // types have a real registered generator + their own sliders. Otherwise
+    // it falls back to its own single baseline generator/sliders (from the
+    // categories data) — never a partial explorer, never a generic stand-in.
+    const explorerReady = isVariantExplorerReady(variantSlug);
+    const jsonTypes = explorerReady ? getSubcategoryTypes(variantSlug) : null;
+    const explorerTypes = (jsonTypes || []).map(function (t) {
+      return {
+        key: t.slug || String(t.id),
+        label: t.name,
+        examples: t.example,
+        description: t.description,
+        generator: t.generator,
+        sliders: t.sliders,
+      };
+    });
+
+    const fallbackGenerator = v.generator;
+    const fallbackSliders = v.sliders;
+    const explorerSliders = explorerReady ? explorerTypes[0].sliders : fallbackSliders;
 
     appEl.innerHTML =
       '<div class="variant-screen">' +
@@ -1680,11 +2313,13 @@
       "<p>" + v.description + "</p>" +
       "</div>" +
       '<div class="variant-body enter" style="animation-delay:.15s">' +
-      '<div class="mechanism-list">' +
-      '<div class="mechanism-title">' + explorerTitle + "</div>" +
-      '<div id="mechanism-cards"></div>' +
-      "</div>" +
-      '<div class="playground-col">' +
+      (explorerReady
+        ? '<div class="mechanism-list">' +
+          '<div class="mechanism-title">MECHANISM TYPE</div>' +
+          '<div id="mechanism-cards"></div>' +
+          "</div>"
+        : "") +
+      '<div class="playground-col"' + (explorerReady ? "" : ' style="width:100%;"') + '>' +
       '<div class="playground">' +
       '<div class="glass-panel playground-canvas-wrap"><canvas id="playground-canvas"></canvas></div>' +
       '<div class="glass-panel params-panel">' +
@@ -1694,29 +2329,35 @@
 
     document.getElementById("back-btn").addEventListener("click", function () { location.hash = "#/category/" + cat.slug; });
 
-    // Shared params object: read live by the main canvas AND all mini previews,
-    // so dragging a slider updates every preview at once.
-    const params = isMembraneVariant ? defaultShapeMemoryParams() : defaultUniversalParams();
+    // Shared params object: read live by the main canvas AND all mini previews
+    // (when the explorer is showing), so dragging a slider updates everything.
+    const params = {};
+    explorerSliders.forEach(function (s) { params[s.key] = s.default; });
 
-    const list = document.getElementById("params-list");
-    explorerSliders.forEach(function (s) {
-      const row = document.createElement("div");
-      row.className = "param-row";
-      row.innerHTML =
-        '<div class="param-label-row"><label>' + s.label + '</label><span class="param-value" id="val-' + s.key + '">' +
-        formatVal(params[s.key], s) + "</span></div>" +
-        '<input type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + params[s.key] + '" id="input-' + s.key + '">';
-      list.appendChild(row);
-      row.querySelector("input").addEventListener("input", function (e) {
-        const val = parseFloat(e.target.value);
-        params[s.key] = val;
-        document.getElementById("val-" + s.key).textContent = formatVal(val, s);
+    function rebuildParamsPanel(sliders) {
+      const list = document.getElementById("params-list");
+      list.innerHTML = "";
+      Object.keys(params).forEach(function (k) { delete params[k]; });
+      sliders.forEach(function (s) {
+        params[s.key] = s.default;
+        const row = document.createElement("div");
+        row.className = "param-row";
+        row.innerHTML =
+          '<div class="param-label-row"><label>' + s.label + '</label><span class="param-value" id="val-' + s.key + '">' +
+          formatVal(params[s.key], s) + "</span></div>" +
+          '<input type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + params[s.key] + '" id="input-' + s.key + '">';
+        list.appendChild(row);
+        row.querySelector("input").addEventListener("input", function (e) {
+          const val = parseFloat(e.target.value);
+          params[s.key] = val;
+          document.getElementById("val-" + s.key).textContent = formatVal(val, s);
+        });
       });
-    });
+    }
+    rebuildParamsPanel(explorerSliders);
 
-    // Main preview canvas: generator instance is (re)created whenever the active
-    // mechanism type changes, so stateful generators (e.g. passive ventilation's
-    // particles) reset cleanly on switch.
+    // Main preview canvas: generator instance is (re)created whenever the
+    // active mechanism type changes, so stateful generators reset cleanly.
     const canvas = document.getElementById("playground-canvas");
     const ctx = canvas.getContext("2d");
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1745,8 +2386,13 @@
     }
     cleanupFns.push(function () { cancelAnimationFrame(mainRaf); });
 
+    if (!explorerReady) {
+      startMainCanvas(fallbackGenerator);
+      return;
+    }
+
     // Left-panel mechanism cards, each with its own tiny live preview.
-    let activeTypeKey = explorerDefaultKey;
+    let activeTypeKey = explorerTypes[0].key;
     const cardsEl = document.getElementById("mechanism-cards");
     const cardButtons = {};
 
@@ -1762,15 +2408,22 @@
         if (activeTypeKey === type.key) return;
         activeTypeKey = type.key;
         Object.keys(cardButtons).forEach(function (k) { cardButtons[k].classList.toggle("active", k === activeTypeKey); });
+        rebuildParamsPanel(type.sliders);
         startMainCanvas(type.generator);
       });
       cardsEl.appendChild(card);
       cardButtons[type.key] = card;
 
+      // Each mini preview uses its OWN static default params (computed once),
+      // never the shared `params` object — so an unselected card never reads
+      // a slider key that belongs to whichever type is currently active.
+      const miniParams = {};
+      type.sliders.forEach(function (s) { miniParams[s.key] = s.default; });
+
       const miniCanvas = card.querySelector("canvas");
       const miniCtx = miniCanvas.getContext("2d");
       const miniGenerator = createGenerator(type.generator);
-      const miniDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const miniDpr = 1;
 
       function miniResize() {
         const rect = miniCanvas.getBoundingClientRect();
@@ -1786,7 +2439,7 @@
       function miniLoop(now) {
         miniRaf = requestAnimationFrame(miniLoop);
         const t = (now - miniStart) / 1000;
-        miniGenerator.draw(miniCtx, miniCanvas.width, miniCanvas.height, t, params, cat.colors);
+        miniGenerator.draw(miniCtx, miniCanvas.width, miniCanvas.height, t, miniParams, cat.colors);
       }
       miniRaf = requestAnimationFrame(miniLoop);
 
@@ -1794,7 +2447,7 @@
     });
 
     cardButtons[activeTypeKey].classList.add("active");
-    startMainCanvas(getExplorerType(activeTypeKey).generator);
+    startMainCanvas(explorerTypes[0].generator);
   }
 
   function renderAbout() {

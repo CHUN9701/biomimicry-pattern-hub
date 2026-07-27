@@ -5,15 +5,7 @@ import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import { getVariant } from "@/lib/data";
 import type { SliderConfig } from "@/lib/data";
-import {
-  defaultMechanismForCategory,
-  mechanismTypes,
-  universalSliders,
-} from "@/lib/mechanismTypes";
-import {
-  shapeMemorySliders,
-  shapeMemoryTypes,
-} from "@/lib/shapeMemoryTypes";
+import { getSubcategoryTypes, isVariantExplorerReady } from "@/lib/subcategoryTypes";
 import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
@@ -24,6 +16,34 @@ function defaultParamsFromSliders(sliders: SliderConfig[]): Record<string, numbe
   return Object.fromEntries(sliders.map((s) => [s.key, s.default]));
 }
 
+type ResolvedType = {
+  key: string;
+  label: string;
+  examples: string;
+  description?: string;
+  generator: string;
+  sliders: SliderConfig[];
+};
+
+// mechanismTypes.ts / shapeMemoryTypes.ts (the old universal 4-type
+// taxonomies) are intentionally not imported here anymore — this page now
+// reads exclusively from lib/biomimicry-subcategories.json, per variant.
+// Those two files stay in the repo until every variant has been migrated,
+// but are no longer a live fallback: a variant that isn't fully speced yet
+// falls back to its OWN single generator (lib/data.ts), never to a generic
+// stand-in.
+function resolveExplorerTypes(variantSlug: string): ResolvedType[] {
+  const jsonTypes = getSubcategoryTypes(variantSlug) ?? [];
+  return jsonTypes.map((t) => ({
+    key: t.slug ?? String(t.id),
+    label: t.name,
+    examples: t.example,
+    description: t.description,
+    generator: t.generator as string,
+    sliders: t.sliders as SliderConfig[],
+  }));
+}
+
 export default function VariantPage({
   params,
 }: {
@@ -32,31 +52,19 @@ export default function VariantPage({
   const { category, variant } = getVariant(params.slug, params.variant);
   const { setScene } = useScene();
 
-  const isMembraneVariant = params.variant === "shape-memory-membrane";
+  const explorerReady = isVariantExplorerReady(params.variant);
+  const resolvedTypes = explorerReady ? resolveExplorerTypes(params.variant) : [];
 
-  // The taxonomy this variant's 4 cards come from, plus the sliders to fall
-  // back on when a type doesn't define its own. Today, every entry in
-  // mechanismTypes.ts / shapeMemoryTypes.ts shares one universal slider set
-  // (sliders is undefined on each of them) — future JSON-driven types will
-  // carry their own `sliders` array per type, and this same code path picks
-  // that up automatically without further changes here.
-  const rawTypes = isMembraneVariant ? shapeMemoryTypes : mechanismTypes;
-  const fallbackSliders = isMembraneVariant ? shapeMemorySliders : universalSliders;
+  const fallbackGenerator = variant?.generator ?? "voronoi";
+  const fallbackSliders = variant?.sliders ?? [];
 
-  // Resolve every type to always have a concrete `sliders` array. This is the
-  // single place fallback logic lives — downstream components never need to
-  // know about "shared" vs "per-type" sliders, they just read `.sliders`.
-  const resolvedTypes = rawTypes.map((t) => ({
-    ...t,
-    sliders: t.sliders ?? fallbackSliders,
-  }));
-
-  const initialKey = isMembraneVariant ? "sma" : defaultMechanismForCategory(params.slug);
-  const initialType = resolvedTypes.find((t) => t.key === initialKey) ?? resolvedTypes[0];
+  const initialType = resolvedTypes[0];
+  const initialKey = initialType?.key ?? "__fallback__";
+  const initialSliders = explorerReady && initialType ? initialType.sliders : fallbackSliders;
 
   const [activeTypeKey, setActiveTypeKey] = useState(initialKey);
   const [sliderParams, setSliderParams] = useState<Record<string, number>>(() =>
-    defaultParamsFromSliders(initialType.sliders)
+    defaultParamsFromSliders(initialSliders)
   );
 
   useEffect(() => {
@@ -64,29 +72,39 @@ export default function VariantPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category?.slug, variant?.slug]);
 
-  // Navigated to a different variant entirely — reset everything.
+  // Navigated to a different variant entirely — recompute readiness fresh
+  // and reset selection + params for whichever mode this variant is in.
   useEffect(() => {
-    const key = isMembraneVariant ? "sma" : defaultMechanismForCategory(params.slug);
-    const type = resolvedTypes.find((t) => t.key === key) ?? resolvedTypes[0];
-    setActiveTypeKey(key);
-    setSliderParams(defaultParamsFromSliders(type.sliders));
+    const ready = isVariantExplorerReady(params.variant);
+    const types = ready ? resolveExplorerTypes(params.variant) : [];
+    const first = types[0];
+    if (ready && first) {
+      setActiveTypeKey(first.key);
+      setSliderParams(defaultParamsFromSliders(first.sliders));
+    } else {
+      setActiveTypeKey("__fallback__");
+      setSliderParams(defaultParamsFromSliders(variant?.sliders ?? []));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug, params.variant]);
 
   if (!category || !variant) notFound();
 
-  // FIX (blocking issue 1): switching cards now updates activeKey AND resets
-  // sliders + params to that type's own defaults, in the same event handler.
-  // React batches these state updates, so there's never a render where the
-  // slider list and params object have mismatched keys.
+  // FIX (blocking issue 1, still applies): switching cards updates activeKey
+  // AND resets sliders + params to that type's own defaults in one handler.
   const handleSelectType = (key: string) => {
     const type = resolvedTypes.find((t) => t.key === key) ?? resolvedTypes[0];
+    if (!type) return;
     setActiveTypeKey(key);
     setSliderParams(defaultParamsFromSliders(type.sliders));
   };
 
-  const explorerTitle = isMembraneVariant ? "MEMBRANE MECHANISM TYPE" : "SKIN MECHANISM TYPE";
-  const activeMechanism = resolvedTypes.find((t) => t.key === activeTypeKey) ?? resolvedTypes[0];
+  const activeMechanism = explorerReady
+    ? resolvedTypes.find((t) => t.key === activeTypeKey) ?? resolvedTypes[0]
+    : null;
+
+  const activeGeneratorKey = activeMechanism?.generator ?? fallbackGenerator;
+  const activeSliders = activeMechanism?.sliders ?? fallbackSliders;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-28 md:px-10 md:py-32">
@@ -112,20 +130,22 @@ export default function VariantPage({
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="flex w-full flex-col gap-6 lg:flex-row lg:items-start"
+        className={explorerReady ? "flex w-full flex-col gap-6 lg:flex-row lg:items-start" : "w-full"}
       >
-        <MechanismTypeList
-          title={explorerTitle}
-          types={resolvedTypes}
-          activeKey={activeTypeKey}
-          onSelect={handleSelectType}
-          colors={category.colors}
-        />
-        <div className="flex-1">
+        {explorerReady && (
+          <MechanismTypeList
+            title="MECHANISM TYPE"
+            types={resolvedTypes}
+            activeKey={activeTypeKey}
+            onSelect={handleSelectType}
+            colors={category.colors}
+          />
+        )}
+        <div className={explorerReady ? "flex-1" : "w-full"}>
           <PlaygroundCanvas
             colors={category.colors}
-            generatorKey={activeMechanism.generator}
-            sliders={activeMechanism.sliders}
+            generatorKey={activeGeneratorKey}
+            sliders={activeSliders}
             params={sliderParams}
             onParamsChange={setSliderParams}
           />

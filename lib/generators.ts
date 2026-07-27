@@ -1103,3 +1103,12 @@ export function createGenerator(key: string): GeneratorInstance {
   const factory = registry[key];
   return factory ? factory() : registry.voronoi();
 }
+
+// Explicit existence check — used by the completeness gate that decides
+// whether a variant is ready for the JSON-driven explorer. createGenerator()
+// itself silently falls back to voronoi on an unknown key, which is fine for
+// rendering but would hide a typo'd/unimplemented generator name if that were
+// the only check available.
+export function hasGenerator(key: string): boolean {
+  return key in registry;
+}
