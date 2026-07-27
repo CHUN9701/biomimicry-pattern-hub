@@ -2266,6 +2266,201 @@ const branchingLoadPath: Factory = () => {
   };
 };
 
+// ---------------------------------------------------------------------------
+// structural-geometry's 4 types (Geodesic Dome, Tensegrity, Honeycomb Panel,
+// Minimal Surface Shell) are each a genuinely distinct structural-geometry
+// system — a triangulated ring-projected dome, floating strut+cable network,
+// hex tessellation, and a warped quad mesh — with no shared iteration
+// pattern that isn't a forced fit, so all 4 are standalone factories rather
+// than built on one artificial "engine", consistent with how earlier groups
+// (ribbedMassBuffer, origamiFold, logarithmicShellSpiral, etc.) diverged
+// from their siblings when the geometry genuinely didn't fit.
+// ---------------------------------------------------------------------------
+const geodesicDome: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const rings = Math.round(p.frequency);
+    const segments = Math.round(p.segments);
+    const cx = w / 2;
+    const cy = h * 0.62;
+    const R = Math.min(w, h) * 0.44;
+
+    const pts: { x: number; y: number }[][] = [];
+    for (let r = 0; r <= rings; r++) {
+      const latT = r / rings;
+      const domeY = -Math.cos((latT * Math.PI) / 2) * R;
+      const domeR = Math.sin((latT * Math.PI) / 2) * R;
+      const row: { x: number; y: number }[] = [];
+      const segCount = r === 0 ? 1 : segments;
+      for (let s = 0; s < segCount; s++) {
+        const ang = (s / segCount) * Math.PI * 2 + t * 0.05;
+        row.push({
+          x: cx + Math.cos(ang) * domeR,
+          y: cy + domeY + Math.sin(ang) * domeR * 0.35,
+        });
+      }
+      pts.push(row);
+    }
+
+    ctx.lineWidth = p.memberThickness;
+    for (let r = 0; r < rings; r++) {
+      const rowA = pts[r];
+      const rowB = pts[r + 1];
+      const na = rowA.length;
+      const nb = rowB.length;
+      for (let i = 0; i < nb; i++) {
+        const b1 = rowB[i];
+        const a1 = rowA[i % na];
+        ctx.strokeStyle = lerpColor(palette[1], palette[3], r / rings);
+        ctx.beginPath();
+        ctx.moveTo(a1.x, a1.y);
+        ctx.lineTo(b1.x, b1.y);
+        ctx.stroke();
+        const b2 = rowB[(i + 1) % nb];
+        ctx.beginPath();
+        ctx.moveTo(b1.x, b1.y);
+        ctx.lineTo(b2.x, b2.y);
+        ctx.stroke();
+      }
+    }
+  },
+});
+
+const tensegrity: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.round(p.strutCount);
+    const R = Math.min(w, h) * 0.36;
+    const strutLen = R * (p.strutLength / 100);
+    const twist = (p.twistAngle / 180) * Math.PI;
+
+    const struts: { x1: number; y1: number; x2: number; y2: number }[] = [];
+    for (let i = 0; i < count; i++) {
+      const ang = (i / count) * Math.PI * 2 + t * 0.1;
+      const cx0 = cx + Math.cos(ang) * R;
+      const cy0 = cy + Math.sin(ang) * R;
+      const dirAng = ang + Math.PI / 2 + twist;
+      struts.push({
+        x1: cx0 - (Math.cos(dirAng) * strutLen) / 2,
+        y1: cy0 - (Math.sin(dirAng) * strutLen) / 2,
+        x2: cx0 + (Math.cos(dirAng) * strutLen) / 2,
+        y2: cy0 + (Math.sin(dirAng) * strutLen) / 2,
+      });
+    }
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = lerpColor(palette[1], palette[2], 0.5);
+    for (let i = 0; i < count; i++) {
+      const a = struts[i];
+      const b = struts[(i + 1) % count];
+      ctx.beginPath();
+      ctx.moveTo(a.x2, a.y2);
+      ctx.lineTo(b.x1, b.y1);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(a.x1, a.y1);
+      ctx.lineTo(b.x2, b.y2);
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < count; i++) {
+      const s = struts[i];
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.strokeStyle = lerpColor(palette[2], palette[3], i / count);
+      ctx.lineWidth = p.memberThickness ? p.memberThickness * 2 : 3;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+  },
+});
+
+const honeycombPanel: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const size = p.cellSize;
+    const wobbleAmt = p.wobbleAmount / 100;
+    const hexW = size * 2;
+    const hexH = Math.sqrt(3) * size;
+    const cols = Math.ceil(w / (hexW * 0.75)) + 2;
+    const rows = Math.ceil(h / hexH) + 2;
+
+    ctx.lineWidth = p.wallThickness;
+    for (let row = -1; row < rows; row++) {
+      for (let col = -1; col < cols; col++) {
+        const cx = col * hexW * 0.75;
+        const cy = row * hexH + (col % 2 !== 0 ? hexH / 2 : 0);
+        const wobble = 1 + 0.06 * wobbleAmt * Math.sin(t * 0.5 + col * 0.7 + row * 1.1);
+
+        ctx.beginPath();
+        for (let k = 0; k < 6; k++) {
+          const ang = (Math.PI / 3) * k;
+          const x = cx + Math.cos(ang) * size * wobble;
+          const y = cy + Math.sin(ang) * size * wobble;
+          if (k === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = lerpColor(palette[1], palette[3], ((col + row + 100) % 7) / 7);
+        ctx.stroke();
+      }
+    }
+  },
+});
+
+const minimalSurfaceShell: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const n = Math.round(p.gridDensity);
+    const cellW = w / n;
+    const cellH = h / n;
+    const cx = w / 2;
+    const cy = h / 2;
+    const curvature = p.curvature / 100;
+    const waveCount = p.waveCount;
+
+    const grid: { x: number; y: number; z: number }[][] = [];
+    for (let j = 0; j <= n; j++) {
+      const row: { x: number; y: number; z: number }[] = [];
+      for (let i = 0; i <= n; i++) {
+        const x = i * cellW;
+        const y = j * cellH;
+        const u = (x - cx) / (w * 0.5);
+        const v = (y - cy) / (h * 0.5);
+        const z = Math.sin(u * Math.PI * waveCount + t * 0.2) * Math.cos(v * Math.PI * waveCount) * curvature;
+        row.push({ x, y: y + z * cellH * 1.2, z });
+      }
+      grid.push(row);
+    }
+
+    ctx.lineWidth = 1;
+    for (let j = 0; j <= n; j++) {
+      for (let i = 0; i <= n; i++) {
+        const node = grid[j][i];
+        const shade = clamp((node.z + 1) / 2, 0, 1);
+        ctx.strokeStyle = lerpColor(palette[1], palette[3], shade);
+        if (i < n) {
+          const right = grid[j][i + 1];
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(right.x, right.y);
+          ctx.stroke();
+        }
+        if (j < n) {
+          const down = grid[j + 1][i];
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(down.x, down.y);
+          ctx.stroke();
+        }
+      }
+    }
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -2301,6 +2496,10 @@ const registry: Record<string, Factory> = {
   fluidDynamicFacade,
   capillaryDrainage,
   branchingLoadPath,
+  geodesicDome,
+  tensegrity,
+  honeycombPanel,
+  minimalSurfaceShell,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

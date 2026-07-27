@@ -1439,25 +1439,152 @@
               "id": 1,
               "name": "Geodesic Dome Type",
               "description": "三角形網格構成短程線穹頂，以最少材料達最大跨距",
-              "example": "Buckminster Fuller 的 Geodesic Dome"
+              "example": "Buckminster Fuller 的 Geodesic Dome",
+              "slug": "geodesic-dome",
+              "generator": "geodesicDome",
+              "climateInput": "細分頻率／跨距 (subdivision frequency / span)",
+              "sliders": [
+                {
+                  "key": "frequency",
+                  "label": "Frequency",
+                  "min": 3,
+                  "max": 8,
+                  "default": 5
+                },
+                {
+                  "key": "segments",
+                  "label": "Segments",
+                  "min": 6,
+                  "max": 16,
+                  "default": 10
+                },
+                {
+                  "key": "memberThickness",
+                  "label": "Member Thickness",
+                  "min": 1,
+                  "max": 3,
+                  "default": 1.5,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "由頂點向外逐圈放射的三角網格穹頂剖面，環數與每環分段數決定三角形細分密度",
+              "mappingRule": "frequency 決定緯度環數（細分頻率），越高則三角網格越細密、越接近真實測地線穹頂；segments 決定每環經度分段數；memberThickness 決定桿件基礎粗細。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "Buckminster Fuller 的 Geodesic Dome — 三角形網格構成短程線穹頂，以最少材料達最大跨距"
             },
             {
               "id": 2,
               "name": "Tensegrity Type",
               "description": "張力與壓力元件分離並互相平衡，形成輕量自撐結構",
-              "example": "張拉整體結構橋樑/裝置藝術"
+              "example": "張拉整體結構橋樑/裝置藝術",
+              "slug": "tensegrity",
+              "generator": "tensegrity",
+              "climateInput": "支柱數量／扭轉角度 (strut count / twist angle)",
+              "sliders": [
+                {
+                  "key": "strutCount",
+                  "label": "Strut Count",
+                  "min": 4,
+                  "max": 12,
+                  "default": 6
+                },
+                {
+                  "key": "strutLength",
+                  "label": "Strut Length",
+                  "min": 30,
+                  "max": 80,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "twistAngle",
+                  "label": "Twist Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 35,
+                  "unit": "°"
+                }
+              ],
+              "visualPrimitive": "多根不相接觸的懸浮壓力支柱環繞排列，支柱兩端以細索（張力元件）交叉連接至相鄰支柱，形成自撐平衡結構",
+              "mappingRule": "strutCount 決定支柱數量；strutLength 決定支柱長度佔整體半徑比例；twistAngle 決定支柱相對切線方向的旋轉角度，越大則張力索的交叉張力感越明顯，呼應張力與壓力元件分離互相平衡的邏輯。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "張拉整體結構橋樑/裝置藝術 — 張力與壓力元件分離並互相平衡，形成輕量自撐結構"
             },
             {
               "id": 3,
               "name": "Honeycomb Panel Type",
               "description": "蜂巢六邊形結構提供高強度重量比，常用於複合板材",
-              "example": "蜂巢複合結構外牆板"
+              "example": "蜂巢複合結構外牆板",
+              "slug": "honeycomb-panel",
+              "generator": "honeycombPanel",
+              "climateInput": "蜂巢尺寸／壁厚 (cell size / wall thickness)",
+              "sliders": [
+                {
+                  "key": "cellSize",
+                  "label": "Cell Size",
+                  "min": 15,
+                  "max": 45,
+                  "default": 28,
+                  "unit": "px"
+                },
+                {
+                  "key": "wallThickness",
+                  "label": "Wall Thickness",
+                  "min": 1,
+                  "max": 4,
+                  "default": 2,
+                  "unit": "px"
+                },
+                {
+                  "key": "wobbleAmount",
+                  "label": "Wobble Amount",
+                  "min": 0,
+                  "max": 100,
+                  "default": 40,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "規則排列的正六邊形蜂巢格網鋪滿畫布，每格邊界依序漸層上色",
+              "mappingRule": "cellSize 決定六邊形尺寸，越大則格數越少、越粗獷；wallThickness 決定格壁線條粗細；wobbleAmount 決定六邊形隨時間輕微形變擺動的幅度，模擬複合板材受力時的微幅彈性反應。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "蜂巢複合結構外牆板 — 蜂巢六邊形結構提供高強度重量比，常用於複合板材"
             },
             {
               "id": 4,
               "name": "Minimal Surface Shell Type",
               "description": "依最小曲面數學原理生成薄殼結構，兼具結構效率與有機造型",
-              "example": "肥皂膜啟發的薄殼屋頂設計"
+              "example": "肥皂膜啟發的薄殼屋頂設計",
+              "slug": "minimal-surface-shell",
+              "generator": "minimalSurfaceShell",
+              "climateInput": "曲率／波紋數 (curvature / wave count)",
+              "sliders": [
+                {
+                  "key": "gridDensity",
+                  "label": "Grid Density",
+                  "min": 8,
+                  "max": 24,
+                  "default": 14
+                },
+                {
+                  "key": "curvature",
+                  "label": "Curvature",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "waveCount",
+                  "label": "Wave Count",
+                  "min": 1,
+                  "max": 4,
+                  "default": 2
+                }
+              ],
+              "visualPrimitive": "規則方格網依正弦鞍形函數上下起伏形變，形成類似肥皂膜最小曲面的薄殼網格",
+              "mappingRule": "curvature 越高 → 網格起伏幅度越大，曲面感越強烈；waveCount 決定曲面起伏的波數（鞍形分段數）；gridDensity 決定網格精細度，網格顏色依起伏高低漸層呈現曲面深淺。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "肥皂膜啟發的薄殼屋頂設計 — 依最小曲面數學原理生成薄殼結構，兼具結構效率與有機造型"
             }
           ]
         }
