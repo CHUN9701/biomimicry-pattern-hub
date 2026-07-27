@@ -1184,6 +1184,165 @@ const rollingTopography: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// RadialPhyllotaxis engine — shared radial-placement primitive for the
+// kinetic-folding-petals subcategory's 4 mechanism types. forEachRadialPetal
+// evenly spaces N elements around a center; drawPetalOutline is a thin
+// reusable "petal blade" path (a curved teardrop) used wherever a type calls
+// for a curved petal rather than a hard-edged fold panel.
+// ---------------------------------------------------------------------------
+function forEachRadialPetal(
+  cx: number,
+  cy: number,
+  count: number,
+  angleOffset: number,
+  cb: (i: number, angle: number) => void
+) {
+  const angleStep = (2 * Math.PI) / count;
+  for (let i = 0; i < count; i++) {
+    cb(i, i * angleStep + angleOffset);
+  }
+}
+
+function drawPetalOutline(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  angle: number,
+  length: number,
+  width: number
+) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.quadraticCurveTo(length * 0.4, width, length, 0);
+  ctx.quadraticCurveTo(length * 0.4, -width, 0, 0);
+  ctx.closePath();
+  ctx.restore();
+}
+
+const radialBloom: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.round(p.petalCount);
+    const openT = clamp(p.openAngle / 100, 0, 1);
+    const lightRad = (p.lightAngle / 180) * Math.PI;
+    const R = Math.min(w, h) * 0.42;
+
+    forEachRadialPetal(cx, cy, count, t * 0.12, (i, angle) => {
+      const bias = Math.cos(angle - lightRad) * 0.5 + 0.5;
+      const petalOpen = openT * (0.45 + bias * 0.55);
+      const len = R * (0.3 + petalOpen * 0.7);
+      const width = len * 0.3;
+
+      drawPetalOutline(ctx, cx, cy, angle, len, width);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], i / count);
+      ctx.fill();
+    });
+  },
+});
+
+const origamiFold: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.round(p.panelCount);
+    const foldT = clamp(p.foldAngle / 90, 0, 1);
+    const sharp = clamp(p.creaseSharpness / 100, 0, 1);
+    const R = Math.min(w, h) * 0.42;
+
+    forEachRadialPetal(cx, cy, count, t * 0.08, (i, angle) => {
+      const spread = (1 - foldT) * (Math.PI / count) * 0.9;
+      const a0 = angle - spread;
+      const a1 = angle + spread;
+      const r = R * (0.5 + foldT * 0.5);
+      const midR = r * (1 - foldT * 0.3);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a0) * r, cy + Math.sin(a0) * r);
+      ctx.lineTo(cx + Math.cos(angle) * midR, cy + Math.sin(angle) * midR);
+      ctx.lineTo(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r);
+      ctx.closePath();
+
+      const shade = i % 2 === 0 ? 0.3 : 0.7;
+      ctx.fillStyle = lerpColor(palette[1], palette[3], shade * (0.6 + sharp * 0.4));
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 1 + sharp * 1.5;
+      ctx.stroke();
+    });
+  },
+});
+
+const layeredPetalCascade: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const layers = Math.max(2, Math.round(p.layerCount));
+    const petalsPerLayer = 8;
+    const R = Math.min(w, h) * 0.42;
+    const delayT = p.cascadeDelay / 100;
+    const unfold = clamp(p.unfoldProgress / 100, 0, 1);
+
+    for (let l = 0; l < layers; l++) {
+      const layerT = l / Math.max(1, layers - 1);
+      const layerUnfold = clamp(unfold - layerT * delayT * 0.8, 0, 1);
+      const radius = R * (0.35 + layerT * 0.65) * (0.35 + layerUnfold * 0.65);
+      const rotOffset = layerT * Math.PI * 0.4 + t * 0.08;
+
+      forEachRadialPetal(cx, cy, petalsPerLayer, rotOffset, (i, angle) => {
+        const px = cx + Math.cos(angle) * radius;
+        const py = cy + Math.sin(angle) * radius;
+        const len = radius * 0.34;
+        const width = len * 0.4;
+
+        drawPetalOutline(ctx, px, py, angle, len, width);
+        ctx.fillStyle = lerpColor(palette[1], palette[3], layerT);
+        ctx.globalAlpha = 0.45 + layerUnfold * 0.55;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
+  },
+});
+
+const pneumaticPetal: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.round(p.petalCount);
+    const pressureT = clamp(p.pressure / 100, 0, 1);
+    const speed = 0.3 + (p.responseSpeed / 100) * 2.2;
+    const R = Math.min(w, h) * 0.4;
+
+    forEachRadialPetal(cx, cy, count, 0, (i, angle) => {
+      const pulse = Math.sin(t * speed + i * 0.7) * 0.5 + 0.5;
+      const inflate = clamp(pressureT * (0.5 + pulse * 0.5), 0, 1);
+      const len = R * (0.3 + inflate * 0.7);
+      const tipX = cx + Math.cos(angle) * len;
+      const tipY = cy + Math.sin(angle) * len;
+      const rad = len * 0.36;
+
+      const grad = ctx.createRadialGradient(tipX, tipY, rad * 0.1, tipX, tipY, rad);
+      grad.addColorStop(0, lerpColor(palette[3], "#ffffff", 0.2 + inflate * 0.25));
+      grad.addColorStop(1, lerpColor(palette[1], palette[2], 1 - inflate));
+
+      ctx.beginPath();
+      ctx.ellipse(tipX, tipY, rad, rad * 0.85, angle, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    });
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -1191,6 +1350,10 @@ const registry: Record<string, Factory> = {
   corrugatedThermalSkin,
   ribbedMassBuffer,
   rollingTopography,
+  radialBloom,
+  origamiFold,
+  layeredPetalCascade,
+  pneumaticPetal,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

@@ -340,25 +340,153 @@
               "id": 1,
               "name": "Radial Bloom Type",
               "description": "中心軸放射狀花瓣依光照角度整體開合，類似花朵向光性",
-              "example": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸"
+              "example": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸",
+              "slug": "radial-bloom",
+              "generator": "radialBloom",
+              "climateInput": "光照角度 (light incidence angle)",
+              "sliders": [
+                {
+                  "key": "petalCount",
+                  "label": "Petal Count",
+                  "min": 6,
+                  "max": 16,
+                  "default": 10
+                },
+                {
+                  "key": "lightAngle",
+                  "label": "Light Angle",
+                  "min": 0,
+                  "max": 180,
+                  "default": 90,
+                  "unit": "°"
+                },
+                {
+                  "key": "openAngle",
+                  "label": "Open Angle",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "中心放射狀花瓣（弧形花瓣輪廓），整體依 lightAngle 方向偏光開合，面向光源的花瓣張開角度較大",
+              "mappingRule": "petalCount 決定花瓣數量；lightAngle 決定整體「向光」的方向軸，每片花瓣依自身角度與 lightAngle 的夾角餘弦值決定額外開合幅度（面對光源的花瓣開得更大、背光的花瓣開得較小），模擬花朵向光性；openAngle 是所有花瓣共同的基礎開合幅度。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸 — 中心軸放射狀花瓣依光照角度整體開合，類似花朵向光性"
             },
             {
               "id": 2,
               "name": "Origami Fold Type",
               "description": "摺紙式硬摺線結構，透過摺疊角度變化控制開口大小",
-              "example": "建築摺紙立面實驗原型"
+              "example": "建築摺紙立面實驗原型",
+              "slug": "origami-fold",
+              "generator": "origamiFold",
+              "climateInput": "摺疊角度 (fold actuation angle)",
+              "sliders": [
+                {
+                  "key": "foldAngle",
+                  "label": "Fold Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 45,
+                  "unit": "°"
+                },
+                {
+                  "key": "panelCount",
+                  "label": "Panel Count",
+                  "min": 4,
+                  "max": 12,
+                  "default": 8
+                },
+                {
+                  "key": "creaseSharpness",
+                  "label": "Crease Sharpness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 80,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "中心放射狀硬摺線三角面板，相鄰面板交替呈現亮／暗兩種摺面色調，模擬摺紙稜線的受光差異",
+              "mappingRule": "foldAngle 越大 → 面板整體展開幅度越大、半徑越長，模擬摺紙攤開；foldAngle 越小 → 面板收攏、開口變小，模擬摺紙收合；panelCount 決定摺面數量；creaseSharpness 越高 → 相鄰摺面亮暗對比越強、稜線描邊越粗，模擬摺線越銳利分明。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "建築摺紙立面實驗原型 — 摺紙式硬摺線結構，透過摺疊角度變化控制開口大小"
             },
             {
               "id": 3,
               "name": "Layered Petal Cascade Type",
               "description": "多層花瓣狀單元錯位堆疊，逐層展開產生漸進式遮蔭",
-              "example": "仿生動態遮陽百葉系統"
+              "example": "仿生動態遮陽百葉系統",
+              "slug": "layered-petal-cascade",
+              "generator": "layeredPetalCascade",
+              "climateInput": "展開進度／時序落差 (unfold progress / cascade delay)",
+              "sliders": [
+                {
+                  "key": "layerCount",
+                  "label": "Layer Count",
+                  "min": 2,
+                  "max": 6,
+                  "default": 4
+                },
+                {
+                  "key": "cascadeDelay",
+                  "label": "Cascade Delay",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                },
+                {
+                  "key": "unfoldProgress",
+                  "label": "Unfold Progress",
+                  "min": 0,
+                  "max": 100,
+                  "default": 65,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "多層同心花瓣環，每層半徑不同、旋轉角度錯位，外層展開時序落後於內層，形成逐層展開的層疊效果",
+              "mappingRule": "layerCount 決定花瓣環層數；unfoldProgress 是整體展開進度的基礎值；cascadeDelay 越高 → 外層相對內層的展開進度落後越多，模擬逐層展開的時序差（漸進式遮蔭）；每層的透明度與展開幅度同步反映該層目前的展開程度。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "仿生動態遮陽百葉系統 — 多層花瓣狀單元錯位堆疊，逐層展開產生漸進式遮蔭"
             },
             {
               "id": 4,
               "name": "Pneumatic Petal Type",
               "description": "氣壓驅動花瓣狀薄膜開合，反應速度快且可逆",
-              "example": "ETFE 氣墊式動態遮陽單元"
+              "example": "ETFE 氣墊式動態遮陽單元",
+              "slug": "pneumatic-petal",
+              "generator": "pneumaticPetal",
+              "climateInput": "氣壓 (pneumatic pressure)",
+              "sliders": [
+                {
+                  "key": "pressure",
+                  "label": "Pressure",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "petalCount",
+                  "label": "Petal Count",
+                  "min": 4,
+                  "max": 10,
+                  "default": 6
+                },
+                {
+                  "key": "responseSpeed",
+                  "label": "Response Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "放射狀氣墊花瓣，每片以放射漸層填色模擬充氣薄膜的立體感，依 pressure 與高頻脈動即時膨脹收縮",
+              "mappingRule": "pressure 越高 → 花瓣膨脹基礎值越大，整體花瓣越飽滿張開；responseSpeed 越高 → 脈動頻率越快，模擬氣壓驅動反應速度快、可逆的特性；petalCount 決定花瓣數量。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "ETFE 氣墊式動態遮陽單元 — 氣壓驅動花瓣狀薄膜開合，反應速度快且可逆"
             }
           ]
         },

@@ -872,25 +872,153 @@
               "id": 1,
               "name": "Radial Bloom Type",
               "description": "中心軸放射狀花瓣依光照角度整體開合，類似花朵向光性",
-              "example": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸"
+              "example": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸",
+              "slug": "radial-bloom",
+              "generator": "radialBloom",
+              "climateInput": "光照角度 (light incidence angle)",
+              "sliders": [
+                {
+                  "key": "petalCount",
+                  "label": "Petal Count",
+                  "min": 6,
+                  "max": 16,
+                  "default": 10
+                },
+                {
+                  "key": "lightAngle",
+                  "label": "Light Angle",
+                  "min": 0,
+                  "max": 180,
+                  "default": 90,
+                  "unit": "°"
+                },
+                {
+                  "key": "openAngle",
+                  "label": "Open Angle",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "中心放射狀花瓣（弧形花瓣輪廓），整體依 lightAngle 方向偏光開合，面向光源的花瓣張開角度較大",
+              "mappingRule": "petalCount 決定花瓣數量；lightAngle 決定整體「向光」的方向軸，每片花瓣依自身角度與 lightAngle 的夾角餘弦值決定額外開合幅度（面對光源的花瓣開得更大、背光的花瓣開得較小），模擬花朵向光性；openAngle 是所有花瓣共同的基礎開合幅度。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "Al Bahar Towers 的放射狀摺疊單元邏輯延伸 — 中心軸放射狀花瓣依光照角度整體開合，類似花朵向光性"
             },
             {
               "id": 2,
               "name": "Origami Fold Type",
               "description": "摺紙式硬摺線結構，透過摺疊角度變化控制開口大小",
-              "example": "建築摺紙立面實驗原型"
+              "example": "建築摺紙立面實驗原型",
+              "slug": "origami-fold",
+              "generator": "origamiFold",
+              "climateInput": "摺疊角度 (fold actuation angle)",
+              "sliders": [
+                {
+                  "key": "foldAngle",
+                  "label": "Fold Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 45,
+                  "unit": "°"
+                },
+                {
+                  "key": "panelCount",
+                  "label": "Panel Count",
+                  "min": 4,
+                  "max": 12,
+                  "default": 8
+                },
+                {
+                  "key": "creaseSharpness",
+                  "label": "Crease Sharpness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 80,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "中心放射狀硬摺線三角面板，相鄰面板交替呈現亮／暗兩種摺面色調，模擬摺紙稜線的受光差異",
+              "mappingRule": "foldAngle 越大 → 面板整體展開幅度越大、半徑越長，模擬摺紙攤開；foldAngle 越小 → 面板收攏、開口變小，模擬摺紙收合；panelCount 決定摺面數量；creaseSharpness 越高 → 相鄰摺面亮暗對比越強、稜線描邊越粗，模擬摺線越銳利分明。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "建築摺紙立面實驗原型 — 摺紙式硬摺線結構，透過摺疊角度變化控制開口大小"
             },
             {
               "id": 3,
               "name": "Layered Petal Cascade Type",
               "description": "多層花瓣狀單元錯位堆疊，逐層展開產生漸進式遮蔭",
-              "example": "仿生動態遮陽百葉系統"
+              "example": "仿生動態遮陽百葉系統",
+              "slug": "layered-petal-cascade",
+              "generator": "layeredPetalCascade",
+              "climateInput": "展開進度／時序落差 (unfold progress / cascade delay)",
+              "sliders": [
+                {
+                  "key": "layerCount",
+                  "label": "Layer Count",
+                  "min": 2,
+                  "max": 6,
+                  "default": 4
+                },
+                {
+                  "key": "cascadeDelay",
+                  "label": "Cascade Delay",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                },
+                {
+                  "key": "unfoldProgress",
+                  "label": "Unfold Progress",
+                  "min": 0,
+                  "max": 100,
+                  "default": 65,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "多層同心花瓣環，每層半徑不同、旋轉角度錯位，外層展開時序落後於內層，形成逐層展開的層疊效果",
+              "mappingRule": "layerCount 決定花瓣環層數；unfoldProgress 是整體展開進度的基礎值；cascadeDelay 越高 → 外層相對內層的展開進度落後越多，模擬逐層展開的時序差（漸進式遮蔭）；每層的透明度與展開幅度同步反映該層目前的展開程度。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "仿生動態遮陽百葉系統 — 多層花瓣狀單元錯位堆疊，逐層展開產生漸進式遮蔭"
             },
             {
               "id": 4,
               "name": "Pneumatic Petal Type",
               "description": "氣壓驅動花瓣狀薄膜開合，反應速度快且可逆",
-              "example": "ETFE 氣墊式動態遮陽單元"
+              "example": "ETFE 氣墊式動態遮陽單元",
+              "slug": "pneumatic-petal",
+              "generator": "pneumaticPetal",
+              "climateInput": "氣壓 (pneumatic pressure)",
+              "sliders": [
+                {
+                  "key": "pressure",
+                  "label": "Pressure",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "petalCount",
+                  "label": "Petal Count",
+                  "min": 4,
+                  "max": 10,
+                  "default": 6
+                },
+                {
+                  "key": "responseSpeed",
+                  "label": "Response Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "放射狀氣墊花瓣，每片以放射漸層填色模擬充氣薄膜的立體感，依 pressure 與高頻脈動即時膨脹收縮",
+              "mappingRule": "pressure 越高 → 花瓣膨脹基礎值越大，整體花瓣越飽滿張開；responseSpeed 越高 → 脈動頻率越快，模擬氣壓驅動反應速度快、可逆的特性；petalCount 決定花瓣數量。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "ETFE 氣墊式動態遮陽單元 — 氣壓驅動花瓣狀薄膜開合，反應速度快且可逆"
             }
           ]
         },
@@ -1458,6 +1586,30 @@
     ctx.closePath();
   }
 
+  // Shared radial-placement helpers — the "RadialPhyllotaxis engine" for
+  // kinetic-folding-petals' 4 types below. forEachRadialPetal evenly spaces N
+  // elements around a center; drawPetalOutline is a thin reusable curved
+  // "petal blade" path used wherever a type calls for a curved petal rather
+  // than a hard-edged fold panel.
+  function forEachRadialPetal(cx, cy, count, angleOffset, cb) {
+    const angleStep = (2 * Math.PI) / count;
+    for (let i = 0; i < count; i++) {
+      cb(i, i * angleStep + angleOffset);
+    }
+  }
+
+  function drawPetalOutline(ctx, cx, cy, angle, length, width) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(length * 0.4, width, length, 0);
+    ctx.quadraticCurveTo(length * 0.4, -width, 0, 0);
+    ctx.closePath();
+    ctx.restore();
+  }
+
   // ---------------------------------------------------------------------
   // Canvas2D pattern generators (ported 1:1 from the Next.js prototype)
   // ---------------------------------------------------------------------
@@ -1601,6 +1753,123 @@
           sky.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = sky;
           ctx.fillRect(0, 0, w, baseY);
+        },
+      };
+    },
+
+    radialBloom: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cx = w / 2;
+          const cy = h / 2;
+          const count = Math.round(p.petalCount);
+          const openT = clamp(p.openAngle / 100, 0, 1);
+          const lightRad = (p.lightAngle / 180) * Math.PI;
+          const R = Math.min(w, h) * 0.42;
+          forEachRadialPetal(cx, cy, count, t * 0.12, function (i, angle) {
+            const bias = Math.cos(angle - lightRad) * 0.5 + 0.5;
+            const petalOpen = openT * (0.45 + bias * 0.55);
+            const len = R * (0.3 + petalOpen * 0.7);
+            const width = len * 0.3;
+            drawPetalOutline(ctx, cx, cy, angle, len, width);
+            ctx.fillStyle = lerpColor(palette[1], palette[3], i / count);
+            ctx.fill();
+          });
+        },
+      };
+    },
+
+    origamiFold: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cx = w / 2;
+          const cy = h / 2;
+          const count = Math.round(p.panelCount);
+          const foldT = clamp(p.foldAngle / 90, 0, 1);
+          const sharp = clamp(p.creaseSharpness / 100, 0, 1);
+          const R = Math.min(w, h) * 0.42;
+          forEachRadialPetal(cx, cy, count, t * 0.08, function (i, angle) {
+            const spread = (1 - foldT) * (Math.PI / count) * 0.9;
+            const a0 = angle - spread;
+            const a1 = angle + spread;
+            const r = R * (0.5 + foldT * 0.5);
+            const midR = r * (1 - foldT * 0.3);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(a0) * r, cy + Math.sin(a0) * r);
+            ctx.lineTo(cx + Math.cos(angle) * midR, cy + Math.sin(angle) * midR);
+            ctx.lineTo(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r);
+            ctx.closePath();
+            const shade = i % 2 === 0 ? 0.3 : 0.7;
+            ctx.fillStyle = lerpColor(palette[1], palette[3], shade * (0.6 + sharp * 0.4));
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.35)";
+            ctx.lineWidth = 1 + sharp * 1.5;
+            ctx.stroke();
+          });
+        },
+      };
+    },
+
+    layeredPetalCascade: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cx = w / 2;
+          const cy = h / 2;
+          const layers = Math.max(2, Math.round(p.layerCount));
+          const petalsPerLayer = 8;
+          const R = Math.min(w, h) * 0.42;
+          const delayT = p.cascadeDelay / 100;
+          const unfold = clamp(p.unfoldProgress / 100, 0, 1);
+          for (let l = 0; l < layers; l++) {
+            const layerT = l / Math.max(1, layers - 1);
+            const layerUnfold = clamp(unfold - layerT * delayT * 0.8, 0, 1);
+            const radius = R * (0.35 + layerT * 0.65) * (0.35 + layerUnfold * 0.65);
+            const rotOffset = layerT * Math.PI * 0.4 + t * 0.08;
+            forEachRadialPetal(cx, cy, petalsPerLayer, rotOffset, function (i, angle) {
+              const px = cx + Math.cos(angle) * radius;
+              const py = cy + Math.sin(angle) * radius;
+              const len = radius * 0.34;
+              const width = len * 0.4;
+              drawPetalOutline(ctx, px, py, angle, len, width);
+              ctx.fillStyle = lerpColor(palette[1], palette[3], layerT);
+              ctx.globalAlpha = 0.45 + layerUnfold * 0.55;
+              ctx.fill();
+              ctx.globalAlpha = 1;
+            });
+          }
+        },
+      };
+    },
+
+    pneumaticPetal: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const cx = w / 2;
+          const cy = h / 2;
+          const count = Math.round(p.petalCount);
+          const pressureT = clamp(p.pressure / 100, 0, 1);
+          const speed = 0.3 + (p.responseSpeed / 100) * 2.2;
+          const R = Math.min(w, h) * 0.4;
+          forEachRadialPetal(cx, cy, count, 0, function (i, angle) {
+            const pulse = Math.sin(t * speed + i * 0.7) * 0.5 + 0.5;
+            const inflate = clamp(pressureT * (0.5 + pulse * 0.5), 0, 1);
+            const len = R * (0.3 + inflate * 0.7);
+            const tipX = cx + Math.cos(angle) * len;
+            const tipY = cy + Math.sin(angle) * len;
+            const rad = len * 0.36;
+            const grad = ctx.createRadialGradient(tipX, tipY, rad * 0.1, tipX, tipY, rad);
+            grad.addColorStop(0, lerpColor(palette[3], "#ffffff", 0.2 + inflate * 0.25));
+            grad.addColorStop(1, lerpColor(palette[1], palette[2], 1 - inflate));
+            ctx.beginPath();
+            ctx.ellipse(tipX, tipY, rad, rad * 0.85, angle, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+          });
         },
       };
     },
