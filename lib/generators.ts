@@ -1718,6 +1718,140 @@ const radialFibonacciLouver: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// FractalBranching engine — shared recursive-branch walker for fractal-tree's
+// 4 mechanism types. Each factory supplies its own start point/direction,
+// angle spread, length ratio and branch count (2 for a binary tree, 3-4 for
+// denser canopy/root spreads); the callback receives each drawn segment so
+// the factory decides its own stroke style, color, and any extra decoration.
+// ---------------------------------------------------------------------------
+function walkFractalBranch(
+  x: number,
+  y: number,
+  len: number,
+  angle: number,
+  depth: number,
+  maxDepth: number,
+  t: number,
+  angleSpread: number,
+  lengthRatio: number,
+  branchCount: number,
+  cb: (x1: number, y1: number, x2: number, y2: number, depth: number, maxDepth: number) => void
+) {
+  if (depth <= 0 || len < 2) return;
+  const sway = Math.sin(t * 0.6 + depth * 1.3) * 0.06 * (maxDepth - depth + 1);
+  const a = angle + sway;
+  const x2 = x + Math.cos(a) * len;
+  const y2 = y + Math.sin(a) * len;
+  cb(x, y, x2, y2, depth, maxDepth);
+
+  if (branchCount <= 2) {
+    walkFractalBranch(x2, y2, len * lengthRatio, a - angleSpread, depth - 1, maxDepth, t, angleSpread, lengthRatio, branchCount, cb);
+    walkFractalBranch(x2, y2, len * lengthRatio, a + angleSpread, depth - 1, maxDepth, t, angleSpread, lengthRatio, branchCount, cb);
+  } else {
+    for (let i = 0; i < branchCount; i++) {
+      const frac = branchCount === 1 ? 0 : (i / (branchCount - 1)) * 2 - 1;
+      walkFractalBranch(x2, y2, len * lengthRatio, a + frac * angleSpread, depth - 1, maxDepth, t, angleSpread, lengthRatio, branchCount, cb);
+    }
+  }
+}
+
+const branchingStructuralColumn: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const maxDepth = Math.round(p.depth);
+    const angleRad = (p.branchAngle / 180) * Math.PI;
+
+    walkFractalBranch(w / 2, h * 0.97, h * 0.24, -Math.PI / 2, maxDepth, maxDepth, t, angleRad, p.lengthRatio, 2, (x1, y1, x2, y2, depth, maxD) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = lerpColor(palette[1], palette[3], 1 - depth / maxD);
+      ctx.lineWidth = Math.max(1.2, depth * 1.1);
+      ctx.lineCap = "round";
+      ctx.stroke();
+    });
+  },
+});
+
+const recursiveCanopy: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const maxDepth = Math.round(p.depth);
+    const angleRad = (p.spreadAngle / 180) * Math.PI;
+    const branchCount = Math.round(p.branchCount);
+
+    walkFractalBranch(w / 2, h * 0.08, h * 0.16, Math.PI / 2, maxDepth, maxDepth, t, angleRad, 0.68, branchCount, (x1, y1, x2, y2, depth, maxD) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = lerpColor(palette[1], palette[3], 1 - depth / maxD);
+      ctx.lineWidth = Math.max(1, depth * 0.9);
+      ctx.lineCap = "round";
+      ctx.stroke();
+
+      if (depth === 1) {
+        ctx.beginPath();
+        ctx.arc(x2, y2, 5, 0, Math.PI * 2);
+        ctx.fillStyle = lerpColor(palette[2], palette[3], 0.6);
+        ctx.globalAlpha = 0.5;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    });
+  },
+});
+
+const fractalVentilation: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const maxDepth = Math.round(p.depth);
+    const angleRad = (p.branchAngle / 180) * Math.PI;
+    const speed = 0.3 + (p.flowSpeed / 100) * 2;
+
+    walkFractalBranch(w * 0.5, h * 0.95, h * 0.2, -Math.PI / 2, maxDepth, maxDepth, t, angleRad, 0.74, 2, (x1, y1, x2, y2, depth, maxD) => {
+      const flow = Math.sin(t * speed - depth * 0.8) * 0.5 + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = lerpColor(palette[0], palette[3], flow);
+      ctx.lineWidth = Math.max(1.5, depth * 1.3);
+      ctx.lineCap = "round";
+      ctx.globalAlpha = 0.85;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  },
+});
+
+const rootSystemFoundation: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const maxDepth = Math.round(p.depth);
+    const angleRad = (p.spreadAngle / 180) * Math.PI;
+    const branchCount = Math.round(p.branchCount);
+
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.08);
+    ctx.lineTo(w, h * 0.08);
+    ctx.strokeStyle = lerpColor(palette[2], palette[3], 0.3);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    walkFractalBranch(w / 2, h * 0.08, h * 0.18, Math.PI / 2, maxDepth, maxDepth, t, angleRad, 0.7, branchCount, (x1, y1, x2, y2, depth, maxD) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = lerpColor(palette[1], palette[2], 1 - depth / maxD);
+      ctx.lineWidth = Math.max(0.8, depth * 0.85);
+      ctx.lineCap = "round";
+      ctx.globalAlpha = 0.5 + 0.5 * (depth / maxD);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -1741,6 +1875,10 @@ const registry: Record<string, Factory> = {
   phyllotaxisFacade,
   spiralGrowthTower,
   radialFibonacciLouver,
+  branchingStructuralColumn,
+  recursiveCanopy,
+  fractalVentilation,
+  rootSystemFoundation,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

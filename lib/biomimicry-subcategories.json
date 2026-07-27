@@ -979,25 +979,150 @@
               "id": 1,
               "name": "Branching Structural Column Type",
               "description": "柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距",
-              "example": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱"
+              "example": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱",
+              "slug": "branching-structural-column",
+              "generator": "branchingStructuralColumn",
+              "climateInput": "分岔角度／深度 (branch angle / recursion depth)",
+              "sliders": [
+                {
+                  "key": "depth",
+                  "label": "Depth",
+                  "min": 3,
+                  "max": 8,
+                  "default": 6
+                },
+                {
+                  "key": "branchAngle",
+                  "label": "Branch Angle",
+                  "min": 10,
+                  "max": 45,
+                  "default": 25,
+                  "unit": "°"
+                },
+                {
+                  "key": "lengthRatio",
+                  "label": "Length Ratio",
+                  "min": 0.5,
+                  "max": 0.85,
+                  "default": 0.72
+                }
+              ],
+              "visualPrimitive": "由畫布底部中央向上遞迴分岔的樹狀線條，線寬隨深度遞減、顏色隨深度漸層，模擬柱體向上分岔承重",
+              "mappingRule": "depth 決定遞迴分岔層數，越多層則分岔越茂密；branchAngle 決定每次分岔的左右夾角；lengthRatio 決定每一層分支相對上一層的長度縮減比例，越小則分岔收束越快。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱 — 柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距"
             },
             {
               "id": 2,
               "name": "Recursive Canopy Type",
               "description": "屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽",
-              "example": "機場/車站樹狀屋頂結構"
+              "example": "機場/車站樹狀屋頂結構",
+              "slug": "recursive-canopy",
+              "generator": "recursiveCanopy",
+              "climateInput": "分岔數量／展開角度 (branch count / spread angle)",
+              "sliders": [
+                {
+                  "key": "depth",
+                  "label": "Depth",
+                  "min": 3,
+                  "max": 7,
+                  "default": 5
+                },
+                {
+                  "key": "spreadAngle",
+                  "label": "Spread Angle",
+                  "min": 30,
+                  "max": 70,
+                  "default": 50,
+                  "unit": "°"
+                },
+                {
+                  "key": "branchCount",
+                  "label": "Branch Count",
+                  "min": 2,
+                  "max": 4,
+                  "default": 3
+                }
+              ],
+              "visualPrimitive": "由畫布頂部中央向下延伸的多分支遞迴結構，末端分支加上半透明圓點代表葉冠遮蔭範圍",
+              "mappingRule": "branchCount 決定每次分岔的分支數量（2-4），越多分支則覆蓋範圍越密集，模擬大跨距遮蔽；spreadAngle 決定分支展開的最大夾角；depth 決定遞迴層數。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "機場/車站樹狀屋頂結構 — 屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽"
             },
             {
               "id": 3,
               "name": "Fractal Ventilation Type",
               "description": "通風管道模擬樹木維管束的分形分岔，提升自然對流效率",
-              "example": "仿生被動通風系統研究"
+              "example": "仿生被動通風系統研究",
+              "slug": "fractal-ventilation",
+              "generator": "fractalVentilation",
+              "climateInput": "流速／分岔角度 (flow speed / branch angle)",
+              "sliders": [
+                {
+                  "key": "depth",
+                  "label": "Depth",
+                  "min": 4,
+                  "max": 8,
+                  "default": 6
+                },
+                {
+                  "key": "branchAngle",
+                  "label": "Branch Angle",
+                  "min": 15,
+                  "max": 40,
+                  "default": 28,
+                  "unit": "°"
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "樹狀分岔管道網絡，每段管道顏色依相位差隨時間脈動明暗變化，模擬空氣/流體沿分形管道對流",
+              "mappingRule": "flowSpeed 越高 → 管道明暗脈動的速度越快，模擬對流效率提升；branchAngle 決定分岔夾角；depth 決定管道網絡的分岔層數，越多層則微血管狀分岔越細密。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "仿生被動通風系統研究 — 通風管道模擬樹木維管束的分形分岔，提升自然對流效率"
             },
             {
               "id": 4,
               "name": "Root-System Foundation Type",
               "description": "基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性",
-              "example": "生物啟發式深基礎設計原型"
+              "example": "生物啟發式深基礎設計原型",
+              "slug": "root-system-foundation",
+              "generator": "rootSystemFoundation",
+              "climateInput": "地基穩定性／展開角度 (foundation stability / spread angle)",
+              "sliders": [
+                {
+                  "key": "depth",
+                  "label": "Depth",
+                  "min": 4,
+                  "max": 7,
+                  "default": 5
+                },
+                {
+                  "key": "spreadAngle",
+                  "label": "Spread Angle",
+                  "min": 20,
+                  "max": 60,
+                  "default": 40,
+                  "unit": "°"
+                },
+                {
+                  "key": "branchCount",
+                  "label": "Branch Count",
+                  "min": 2,
+                  "max": 3,
+                  "default": 2
+                }
+              ],
+              "visualPrimitive": "由頂部地面線向下延伸的根系分岔結構，根部隨深度變細並逐漸淡出，呼應根系向外擴散穩定地基的邏輯",
+              "mappingRule": "spreadAngle 決定根系向外擴散的夾角範圍，越大則地基覆蓋範圍越廣；branchCount 決定每次分岔數量；depth 決定根系分岔層數，末端根鬚隨深度增加而變細、透明度降低，模擬逐漸消散的細根。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "生物啟發式深基礎設計原型 — 基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性"
             }
           ]
         },
