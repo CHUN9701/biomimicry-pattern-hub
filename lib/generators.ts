@@ -1343,6 +1343,104 @@ const pneumaticPetal: Factory = () => ({
   },
 });
 
+const curlingStripArray: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const rows = Math.max(4, Math.round(p.stripCount));
+    const rowH = h / rows;
+    const tempNorm = clamp(p.temperature / 80, 0, 1);
+    const amp = rowH * 0.8 * (p.curlAmplitude / 100) * (0.3 + tempNorm * 1.2);
+
+    for (let row = 0; row < rows; row++) {
+      const midY = row * rowH + rowH * 0.5;
+      const phase = t * 0.5 + row * 0.6;
+      drawWaveBand(ctx, w, midY, (row + 1) * rowH, amp, phase, 0.03, 0.3);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], tempNorm);
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  },
+});
+
+const bistableSnap: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const trigger = clamp(p.triggerLevel / 100, 0, 1);
+    const sharpness = 1 + (p.snapSharpness / 100) * 30;
+    const snapT = 1 / (1 + Math.exp(-sharpness * (trigger - 0.5)));
+    const rows = Math.max(1, Math.round(p.waveDensity));
+    const rowH = h / rows;
+    const amp = rowH * 0.85 * snapT;
+
+    for (let row = 0; row < rows; row++) {
+      const midY = row * rowH + rowH * 0.5;
+      const phase = t * 0.4 + row * 0.9;
+      drawWaveBand(ctx, w, midY, (row + 1) * rowH, amp, phase, 0.022, 0);
+      ctx.fillStyle = lerpColor(palette[0], palette[3], snapT);
+      ctx.fill();
+    }
+  },
+});
+
+const irisAperture: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.max(4, Math.round(p.bladeCount));
+    const closeT = clamp(p.closureLevel / 100, 0, 1);
+    const speed = 0.2 + (p.responseSpeed / 100) * 0.8;
+    const R = Math.min(w, h) * 0.44;
+    const flutter = Math.sin(t * speed) * 0.02;
+    const rotate = (closeT + flutter) * Math.PI * 0.9;
+
+    forEachRadialPetal(cx, cy, count, 0, (i, angle) => {
+      const a0 = angle;
+      const a1 = angle + (2 * Math.PI) / count + rotate;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a0) * R, cy + Math.sin(a0) * R);
+      ctx.lineTo(cx + Math.cos(a1) * R, cy + Math.sin(a1) * R);
+      ctx.closePath();
+      ctx.fillStyle = lerpColor(palette[1], palette[3], i / count);
+      ctx.fill();
+    });
+
+    const apertureR = R * 0.5 * (1 - closeT);
+    if (apertureR > 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, apertureR, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.75)";
+      ctx.fill();
+    }
+  },
+});
+
+const gradientThicknessMembrane: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.max(6, Math.round(p.petalCount));
+    const gradientT = clamp(p.thicknessGradient / 100, 0, 1);
+    const lag = p.responseLag / 100;
+    const R = Math.min(w, h) * 0.42;
+
+    forEachRadialPetal(cx, cy, count, 0, (i, angle) => {
+      const dirBias = Math.cos(angle) * 0.5 + 0.5;
+      const thickness = 0.3 + dirBias * gradientT;
+      const wave = Math.sin(t * (0.6 - thickness * 0.4) - dirBias * lag * 3) * 0.5 + 0.5;
+      const len = R * (0.35 + wave * (0.65 - thickness * 0.3));
+      const width = len * 0.28;
+
+      drawPetalOutline(ctx, cx, cy, angle, len, width);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], thickness);
+      ctx.fill();
+    });
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -1354,6 +1452,10 @@ const registry: Record<string, Factory> = {
   origamiFold,
   layeredPetalCascade,
   pneumaticPetal,
+  curlingStripArray,
+  bistableSnap,
+  irisAperture,
+  gradientThicknessMembrane,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

@@ -499,25 +499,153 @@
               "id": 1,
               "name": "Curling Strip Array Type",
               "description": "合金薄條規律排列，受熱後同步捲曲，形成連續波浪狀開闔表面",
-              "example": "NiTi 記憶合金遮陽百葉原型"
+              "example": "NiTi 記憶合金遮陽百葉原型",
+              "slug": "curling-strip-array",
+              "generator": "curlingStripArray",
+              "climateInput": "溫度 (actuation temperature)",
+              "sliders": [
+                {
+                  "key": "temperature",
+                  "label": "Temperature",
+                  "min": 0,
+                  "max": 80,
+                  "default": 40,
+                  "unit": "°C"
+                },
+                {
+                  "key": "curlAmplitude",
+                  "label": "Curl Amplitude",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "stripCount",
+                  "label": "Strip Count",
+                  "min": 4,
+                  "max": 14,
+                  "default": 8
+                }
+              ],
+              "visualPrimitive": "多條水平合金薄條堆疊，每條依溫度同步捲曲成波浪狀輪廓",
+              "mappingRule": "temperature 越高 → 每條薄條的捲曲振幅越大，顏色也隨之偏向高溫色階，模擬合金受熱同步捲曲；curlAmplitude 是振幅的基礎視覺設定值；stripCount 決定薄條數量。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "NiTi 記憶合金遮陽百葉原型 — 合金薄條規律排列，受熱後同步捲曲，形成連續波浪狀開闔表面"
             },
             {
               "id": 2,
               "name": "Iris Aperture Type",
               "description": "合金葉片以中心放射方式收合，模擬相機光圈開闔邏輯，反應速度快",
-              "example": "仿生虹膜式動態遮陽裝置"
+              "example": "仿生虹膜式動態遮陽裝置",
+              "slug": "iris-aperture",
+              "generator": "irisAperture",
+              "climateInput": "光圈收合程度 (aperture closure level)",
+              "sliders": [
+                {
+                  "key": "closureLevel",
+                  "label": "Closure Level",
+                  "min": 0,
+                  "max": 100,
+                  "default": 45,
+                  "unit": "%"
+                },
+                {
+                  "key": "bladeCount",
+                  "label": "Blade Count",
+                  "min": 6,
+                  "max": 16,
+                  "default": 8
+                },
+                {
+                  "key": "responseSpeed",
+                  "label": "Response Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "中心放射狀葉片以光圈邏輯旋轉重疊，中央孔徑隨 closureLevel 縮放",
+              "mappingRule": "closureLevel 越高 → 葉片旋轉重疊幅度越大、中央可見孔徑越小，模擬光圈收合；bladeCount 決定葉片數量；responseSpeed 控制葉片微幅擺動的反應速度，呼應形狀記憶合金反應快速的特性。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "仿生虹膜式動態遮陽裝置 — 合金葉片以中心放射方式收合，模擬相機光圈開闔邏輯，反應速度快"
             },
             {
               "id": 3,
               "name": "Bistable Snap Type",
               "description": "合金薄膜在兩個穩定形態間瞬間切換，不需連續能量輸入即可維持開或關",
-              "example": "雙穩態形狀記憶合金天窗"
+              "example": "雙穩態形狀記憶合金天窗",
+              "slug": "bistable-snap",
+              "generator": "bistableSnap",
+              "climateInput": "觸發位準 (bistable trigger level)",
+              "sliders": [
+                {
+                  "key": "triggerLevel",
+                  "label": "Trigger Level",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                },
+                {
+                  "key": "snapSharpness",
+                  "label": "Snap Sharpness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 85,
+                  "unit": "%"
+                },
+                {
+                  "key": "waveDensity",
+                  "label": "Wave Density",
+                  "min": 1,
+                  "max": 6,
+                  "default": 3
+                }
+              ],
+              "visualPrimitive": "薄膜波形帶，triggerLevel 跨越中點時以陡峭的邏輯函數瞬間從平坦切換至強烈捲曲狀態，而非漸進過渡",
+              "mappingRule": "triggerLevel 越接近 50% 附近的臨界點 → 因套用陡峭邏輯函數（sigmoid），薄膜振幅在極短區間內從近乎平坦瞬間跳變為強烈捲曲，模擬雙穩態瞬間切換、不需連續能量輸入即可維持開或關；snapSharpness 越高 → 該邏輯函數越陡峭，切換越瞬間；waveDensity 決定波形帶層數。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "雙穩態形狀記憶合金天窗 — 合金薄膜在兩個穩定形態間瞬間切換，不需連續能量輸入即可維持開或關"
             },
             {
               "id": 4,
               "name": "Gradient Thickness Membrane Type",
               "description": "薄膜厚度漸變，較薄處先反應捲曲，較厚處反應較慢，形成漸進式開闔波紋",
-              "example": "變厚度合金薄膜立面實驗"
+              "example": "變厚度合金薄膜立面實驗",
+              "slug": "gradient-thickness-membrane",
+              "generator": "gradientThicknessMembrane",
+              "climateInput": "厚度梯度／反應延遲 (thickness gradient / response lag)",
+              "sliders": [
+                {
+                  "key": "thicknessGradient",
+                  "label": "Thickness Gradient",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                },
+                {
+                  "key": "responseLag",
+                  "label": "Response Lag",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                },
+                {
+                  "key": "petalCount",
+                  "label": "Petal Count",
+                  "min": 6,
+                  "max": 14,
+                  "default": 10
+                }
+              ],
+              "visualPrimitive": "放射狀花瓣環，依角度位置模擬薄膜厚度由薄到厚漸變，較薄一側花瓣開合幅度較大、反應較快，較厚一側較慢",
+              "mappingRule": "thicknessGradient 越高 → 薄膜兩側的厚度對比越明顯，對應花瓣開合幅度差異越大；responseLag 越高 → 較厚一側花瓣的反應相位延遲越明顯，形成漸進式開闔波紋（較薄處先反應捲曲、較厚處反應較慢）；petalCount 決定花瓣數量。",
+              "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
+              "refNote": "變厚度合金薄膜立面實驗 — 薄膜厚度漸變，較薄處先反應捲曲，較厚處反應較慢，形成漸進式開闔波紋"
             }
           ]
         }
