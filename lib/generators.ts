@@ -2561,6 +2561,116 @@ const flowingBoundary: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// NoiseField engine — shared layered-sine value-noise (a simple fractional
+// Brownian motion, consistent with the codebase's existing style of
+// building organic texture from summed sine layers rather than a full
+// Perlin/simplex implementation) for 3 of sensory-healing-pattern's 4
+// types. They differ only in how the same scalar field is rendered:
+// smooth gradient fill, quantized rhythm bands, or thin grain contour
+// lines. The 4th type (Acoustic Diffusion) reuses forEachApertureCell
+// (CellularLattice) instead, since a porous coral/honeycomb panel is a
+// grid-of-apertures concept, not a continuous noise field.
+// ---------------------------------------------------------------------------
+function fbmNoise2D(x: number, y: number, t: number, octaves: number): number {
+  let sum = 0;
+  let amp = 0.5;
+  let freq = 1;
+  let norm = 0;
+  for (let o = 0; o < octaves; o++) {
+    sum += Math.sin(x * freq * 0.02 + t * 0.2 * (o + 1)) * Math.cos(y * freq * 0.023 - t * 0.15) * amp;
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.1;
+  }
+  return sum / norm;
+}
+
+const biomorphicTexture: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const step = 6;
+    const scale = p.noiseScale;
+    const octaves = Math.round(p.octaves);
+    const speed = p.flowSpeed / 100;
+
+    for (let y = 0; y < h; y += step) {
+      for (let x = 0; x < w; x += step) {
+        const n = fbmNoise2D(x * scale * 0.05, y * scale * 0.05, t * speed, octaves);
+        const v = (n + 1) / 2;
+        ctx.fillStyle = lerpColor(palette[1], palette[3], v);
+        ctx.fillRect(x, y, step, step);
+      }
+    }
+  },
+});
+
+const fractalVisualRhythm: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const step = 6;
+    const scale = p.noiseScale;
+    const bands = Math.round(p.bandCount);
+    const speed = p.flowSpeed / 100;
+
+    for (let y = 0; y < h; y += step) {
+      for (let x = 0; x < w; x += step) {
+        const n = fbmNoise2D(x * scale * 0.05, y * scale * 0.05, t * speed, 3);
+        const v = (n + 1) / 2;
+        const banded = Math.floor(v * bands) / bands;
+        ctx.fillStyle = lerpColor(palette[1], palette[3], banded);
+        ctx.fillRect(x, y, step, step);
+      }
+    }
+  },
+});
+
+const acousticDiffusionPattern: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const depthT = clamp(p.poreDepth / 100, 0, 1);
+    const contrast = clamp(p.diffusionContrast / 100, 0, 1);
+
+    forEachApertureCell(w, h, p.cellDensity, (cx, cy, cellW, cellH, row, col, rows, cols) => {
+      const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + row * 0.7 + col * 0.9);
+      const r = Math.min(cellW, cellH) * 0.5 * (0.4 + depthT * 0.5) * shimmer;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 1.1, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,0,0,${0.3 + contrast * 0.4})`;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], (row + col) / (rows + cols));
+      ctx.fill();
+    });
+  },
+});
+
+const tactileNatureSurface: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const scale = p.grainScale;
+    const lineCount = Math.round(p.grainDensity);
+    const roughness = p.roughness / 100;
+
+    for (let i = 0; i < lineCount; i++) {
+      const baseY = (i / lineCount) * h;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 6) {
+        const n = fbmNoise2D(x * scale * 0.04, baseY * scale * 0.04, t * 0.2, 3);
+        const y = baseY + n * roughness * h * 0.04;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = lerpColor(palette[1], palette[3], i / lineCount);
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.7;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -2604,6 +2714,10 @@ const registry: Record<string, Factory> = {
   membraneLikePartition,
   nestedEnclosure,
   flowingBoundary,
+  biomorphicTexture,
+  fractalVisualRhythm,
+  acousticDiffusionPattern,
+  tactileNatureSurface,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

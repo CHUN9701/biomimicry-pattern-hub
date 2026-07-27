@@ -1763,25 +1763,150 @@
               "id": 1,
               "name": "Biomorphic Texture Type",
               "description": "表面紋理模擬自然生物形態（水波、樹皮、雲紋），提供視覺放鬆效果",
-              "example": "療癒空間牆面紋理設計"
+              "example": "療癒空間牆面紋理設計",
+              "slug": "biomorphic-texture",
+              "generator": "biomorphicTexture",
+              "climateInput": "噪訊尺度／流動速度 (noise scale / flow speed)",
+              "sliders": [
+                {
+                  "key": "noiseScale",
+                  "label": "Noise Scale",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                },
+                {
+                  "key": "octaves",
+                  "label": "Octaves",
+                  "min": 1,
+                  "max": 4,
+                  "default": 3
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 40,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "以多層疊加正弦噪訊場（fractional Brownian motion）生成連續流動的雲紋/水波質地",
+              "mappingRule": "octaves 決定疊加的噪訊層數，越多則紋理細節越豐富、越接近自然雲紋/樹皮的多尺度變化；noiseScale 決定基礎噪訊頻率；flowSpeed 決定紋理隨時間流動變化的速度。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "療癒空間牆面紋理設計 — 表面紋理模擬自然生物形態（水波、樹皮、雲紋），提供視覺放鬆效果"
             },
             {
               "id": 2,
               "name": "Fractal Visual Rhythm Type",
               "description": "依自然分形比例設計重複性視覺節奏，已有研究顯示可降低壓力反應",
-              "example": "醫療空間分形圖案應用"
+              "example": "醫療空間分形圖案應用",
+              "slug": "fractal-visual-rhythm",
+              "generator": "fractalVisualRhythm",
+              "climateInput": "噪訊尺度／節奏帶數 (noise scale / rhythm band count)",
+              "sliders": [
+                {
+                  "key": "noiseScale",
+                  "label": "Noise Scale",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                },
+                {
+                  "key": "bandCount",
+                  "label": "Band Count",
+                  "min": 3,
+                  "max": 10,
+                  "default": 6
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 35,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "與 Biomorphic Texture 共用同一套噪訊場，但將連續數值離散量化為 bandCount 段色帶，形成重複性節奏視覺紋理",
+              "mappingRule": "bandCount 越多 → 節奏帶越細密、視覺重複頻率越高；noiseScale 決定底層噪訊的空間頻率；flowSpeed 決定節奏帶隨時間平移的速度，呼應研究顯示可降低壓力反應的自然分形節奏。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "醫療空間分形圖案應用 — 依自然分形比例設計重複性視覺節奏，已有研究顯示可降低壓力反應"
             },
             {
               "id": 3,
               "name": "Acoustic Diffusion Pattern Type",
               "description": "表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果",
-              "example": "仿生聲學牆板設計"
+              "example": "仿生聲學牆板設計",
+              "slug": "acoustic-diffusion-pattern",
+              "generator": "acousticDiffusionPattern",
+              "climateInput": "孔隙密度／擴散對比 (pore density / diffusion contrast)",
+              "sliders": [
+                {
+                  "key": "cellDensity",
+                  "label": "Cell Density",
+                  "min": 10,
+                  "max": 30,
+                  "default": 18
+                },
+                {
+                  "key": "poreDepth",
+                  "label": "Pore Depth",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "diffusionContrast",
+                  "label": "Diffusion Contrast",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "規則格網排列的圓形孔洞陣列，模擬珊瑚/蜂巢多孔材質的聲學擴散表面",
+              "mappingRule": "poreDepth 越深 → 孔徑相對格子的比例越大，聲學擴散表面積越大；diffusionContrast 決定孔洞陰影的對比強度；cellDensity 決定格網密度。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "仿生聲學牆板設計 — 表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果"
             },
             {
               "id": 4,
               "name": "Tactile Nature Surface Type",
               "description": "觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗",
-              "example": "療癒空間觸覺牆面設計"
+              "example": "療癒空間觸覺牆面設計",
+              "slug": "tactile-nature-surface",
+              "generator": "tactileNatureSurface",
+              "climateInput": "紋理密度／粗糙度 (grain density / roughness)",
+              "sliders": [
+                {
+                  "key": "grainDensity",
+                  "label": "Grain Density",
+                  "min": 15,
+                  "max": 50,
+                  "default": 30
+                },
+                {
+                  "key": "grainScale",
+                  "label": "Grain Scale",
+                  "min": 1,
+                  "max": 6,
+                  "default": 3
+                },
+                {
+                  "key": "roughness",
+                  "label": "Roughness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 45,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "與噪訊場共用同一套 fbm 演算法，但以密集水平細紋線呈現，模擬樹皮/石紋的觸覺紋理",
+              "mappingRule": "grainDensity 決定紋理線條密度；roughness 越高 → 每條紋理線的噪訊起伏幅度越大，觸感粗糙感越明顯；grainScale 決定紋理起伏的空間頻率。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "療癒空間觸覺牆面設計 — 觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗"
             }
           ]
         }

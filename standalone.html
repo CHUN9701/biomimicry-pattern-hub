@@ -2295,25 +2295,150 @@
               "id": 1,
               "name": "Biomorphic Texture Type",
               "description": "表面紋理模擬自然生物形態（水波、樹皮、雲紋），提供視覺放鬆效果",
-              "example": "療癒空間牆面紋理設計"
+              "example": "療癒空間牆面紋理設計",
+              "slug": "biomorphic-texture",
+              "generator": "biomorphicTexture",
+              "climateInput": "噪訊尺度／流動速度 (noise scale / flow speed)",
+              "sliders": [
+                {
+                  "key": "noiseScale",
+                  "label": "Noise Scale",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                },
+                {
+                  "key": "octaves",
+                  "label": "Octaves",
+                  "min": 1,
+                  "max": 4,
+                  "default": 3
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 40,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "以多層疊加正弦噪訊場（fractional Brownian motion）生成連續流動的雲紋/水波質地",
+              "mappingRule": "octaves 決定疊加的噪訊層數，越多則紋理細節越豐富、越接近自然雲紋/樹皮的多尺度變化；noiseScale 決定基礎噪訊頻率；flowSpeed 決定紋理隨時間流動變化的速度。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "療癒空間牆面紋理設計 — 表面紋理模擬自然生物形態（水波、樹皮、雲紋），提供視覺放鬆效果"
             },
             {
               "id": 2,
               "name": "Fractal Visual Rhythm Type",
               "description": "依自然分形比例設計重複性視覺節奏，已有研究顯示可降低壓力反應",
-              "example": "醫療空間分形圖案應用"
+              "example": "醫療空間分形圖案應用",
+              "slug": "fractal-visual-rhythm",
+              "generator": "fractalVisualRhythm",
+              "climateInput": "噪訊尺度／節奏帶數 (noise scale / rhythm band count)",
+              "sliders": [
+                {
+                  "key": "noiseScale",
+                  "label": "Noise Scale",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                },
+                {
+                  "key": "bandCount",
+                  "label": "Band Count",
+                  "min": 3,
+                  "max": 10,
+                  "default": 6
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 0,
+                  "max": 100,
+                  "default": 35,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "與 Biomorphic Texture 共用同一套噪訊場，但將連續數值離散量化為 bandCount 段色帶，形成重複性節奏視覺紋理",
+              "mappingRule": "bandCount 越多 → 節奏帶越細密、視覺重複頻率越高；noiseScale 決定底層噪訊的空間頻率；flowSpeed 決定節奏帶隨時間平移的速度，呼應研究顯示可降低壓力反應的自然分形節奏。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "醫療空間分形圖案應用 — 依自然分形比例設計重複性視覺節奏，已有研究顯示可降低壓力反應"
             },
             {
               "id": 3,
               "name": "Acoustic Diffusion Pattern Type",
               "description": "表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果",
-              "example": "仿生聲學牆板設計"
+              "example": "仿生聲學牆板設計",
+              "slug": "acoustic-diffusion-pattern",
+              "generator": "acousticDiffusionPattern",
+              "climateInput": "孔隙密度／擴散對比 (pore density / diffusion contrast)",
+              "sliders": [
+                {
+                  "key": "cellDensity",
+                  "label": "Cell Density",
+                  "min": 10,
+                  "max": 30,
+                  "default": 18
+                },
+                {
+                  "key": "poreDepth",
+                  "label": "Pore Depth",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "diffusionContrast",
+                  "label": "Diffusion Contrast",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "規則格網排列的圓形孔洞陣列，模擬珊瑚/蜂巢多孔材質的聲學擴散表面",
+              "mappingRule": "poreDepth 越深 → 孔徑相對格子的比例越大，聲學擴散表面積越大；diffusionContrast 決定孔洞陰影的對比強度；cellDensity 決定格網密度。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "仿生聲學牆板設計 — 表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果"
             },
             {
               "id": 4,
               "name": "Tactile Nature Surface Type",
               "description": "觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗",
-              "example": "療癒空間觸覺牆面設計"
+              "example": "療癒空間觸覺牆面設計",
+              "slug": "tactile-nature-surface",
+              "generator": "tactileNatureSurface",
+              "climateInput": "紋理密度／粗糙度 (grain density / roughness)",
+              "sliders": [
+                {
+                  "key": "grainDensity",
+                  "label": "Grain Density",
+                  "min": 15,
+                  "max": 50,
+                  "default": 30
+                },
+                {
+                  "key": "grainScale",
+                  "label": "Grain Scale",
+                  "min": 1,
+                  "max": 6,
+                  "default": 3
+                },
+                {
+                  "key": "roughness",
+                  "label": "Roughness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 45,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "與噪訊場共用同一套 fbm 演算法，但以密集水平細紋線呈現，模擬樹皮/石紋的觸覺紋理",
+              "mappingRule": "grainDensity 決定紋理線條密度；roughness 越高 → 每條紋理線的噪訊起伏幅度越大，觸感粗糙感越明顯；grainScale 決定紋理起伏的空間頻率。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "療癒空間觸覺牆面設計 — 觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗"
             }
           ]
         }
@@ -2567,6 +2692,24 @@
         cb(cx, cy, cellW, cellH, row, col, rows, cols);
       }
     }
+  }
+
+  // NoiseField engine — shared layered-sine value-noise (a simple fractional
+  // Brownian motion) for 3 of sensory-healing-pattern's 4 types below. They
+  // differ only in how the same scalar field is rendered: smooth gradient
+  // fill, quantized rhythm bands, or thin grain contour lines.
+  function fbmNoise2D(x, y, t, octaves) {
+    let sum = 0;
+    let amp = 0.5;
+    let freq = 1;
+    let norm = 0;
+    for (let o = 0; o < octaves; o++) {
+      sum += Math.sin(x * freq * 0.02 + t * 0.2 * (o + 1)) * Math.cos(y * freq * 0.023 - t * 0.15) * amp;
+      norm += amp;
+      amp *= 0.5;
+      freq *= 2.1;
+    }
+    return sum / norm;
   }
 
   // Shared periodic-contour helper — the "WaveContour engine" for
@@ -4388,6 +4531,95 @@
             ctx.stroke();
           }
           ctx.restore();
+        },
+      };
+    },
+
+    biomorphicTexture: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const step = 6;
+          const scale = p.noiseScale;
+          const octaves = Math.round(p.octaves);
+          const speed = p.flowSpeed / 100;
+          for (let y = 0; y < h; y += step) {
+            for (let x = 0; x < w; x += step) {
+              const n = fbmNoise2D(x * scale * 0.05, y * scale * 0.05, t * speed, octaves);
+              const v = (n + 1) / 2;
+              ctx.fillStyle = lerpColor(palette[1], palette[3], v);
+              ctx.fillRect(x, y, step, step);
+            }
+          }
+        },
+      };
+    },
+
+    fractalVisualRhythm: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const step = 6;
+          const scale = p.noiseScale;
+          const bands = Math.round(p.bandCount);
+          const speed = p.flowSpeed / 100;
+          for (let y = 0; y < h; y += step) {
+            for (let x = 0; x < w; x += step) {
+              const n = fbmNoise2D(x * scale * 0.05, y * scale * 0.05, t * speed, 3);
+              const v = (n + 1) / 2;
+              const banded = Math.floor(v * bands) / bands;
+              ctx.fillStyle = lerpColor(palette[1], palette[3], banded);
+              ctx.fillRect(x, y, step, step);
+            }
+          }
+        },
+      };
+    },
+
+    acousticDiffusionPattern: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const depthT = clamp(p.poreDepth / 100, 0, 1);
+          const contrast = clamp(p.diffusionContrast / 100, 0, 1);
+          forEachApertureCell(w, h, p.cellDensity, function (cx, cy, cellW, cellH, row, col, rows, cols) {
+            const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + row * 0.7 + col * 0.9);
+            const r = Math.min(cellW, cellH) * 0.5 * (0.4 + depthT * 0.5) * shimmer;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 1.1, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0,0,0," + (0.3 + contrast * 0.4) + ")";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = lerpColor(palette[1], palette[3], (row + col) / (rows + cols));
+            ctx.fill();
+          });
+        },
+      };
+    },
+
+    tactileNatureSurface: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const scale = p.grainScale;
+          const lineCount = Math.round(p.grainDensity);
+          const roughness = p.roughness / 100;
+          for (let i = 0; i < lineCount; i++) {
+            const baseY = (i / lineCount) * h;
+            ctx.beginPath();
+            for (let x = 0; x <= w; x += 6) {
+              const n = fbmNoise2D(x * scale * 0.04, baseY * scale * 0.04, t * 0.2, 3);
+              const y = baseY + n * roughness * h * 0.04;
+              if (x === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = lerpColor(palette[1], palette[3], i / lineCount);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.7;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
         },
       };
     },
