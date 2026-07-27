@@ -1604,25 +1604,153 @@
               "id": 1,
               "name": "Curvilinear Threshold Type",
               "description": "空間邊界以自然曲線取代直角分隔，降低視覺壓迫感",
-              "example": "親生物設計中的圓弧牆體轉角"
+              "example": "親生物設計中的圓弧牆體轉角",
+              "slug": "curvilinear-threshold",
+              "generator": "curvilinearThreshold",
+              "climateInput": "曲率／分隔數量 (curvature / partition count)",
+              "sliders": [
+                {
+                  "key": "bandCount",
+                  "label": "Band Count",
+                  "min": 3,
+                  "max": 8,
+                  "default": 6
+                },
+                {
+                  "key": "curvature",
+                  "label": "Curvature",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "lineWidth",
+                  "label": "Line Width",
+                  "min": 2,
+                  "max": 12,
+                  "default": 6,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "多條垂直曲線分隔線取代直角邊界，線條沿高度以正弦曲線左右擺動",
+              "mappingRule": "curvature 越高 → 曲線擺動幅度越大，直角感越弱、有機感越強；bandCount 決定分隔線數量；lineWidth 決定線條粗細。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "親生物設計中的圓弧牆體轉角 — 空間邊界以自然曲線取代直角分隔，降低視覺壓迫感"
             },
             {
               "id": 2,
               "name": "Membrane-Like Partition Type",
               "description": "隔間如生物薄膜般半透明、可滲透，模糊室內外邊界",
-              "example": "仿生半透膜式室內隔屏"
+              "example": "仿生半透膜式室內隔屏",
+              "slug": "membrane-like-partition",
+              "generator": "membraneLikePartition",
+              "climateInput": "薄膜波動／穿透度 (membrane waviness / transparency)",
+              "sliders": [
+                {
+                  "key": "membraneWaviness",
+                  "label": "Membrane Waviness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                },
+                {
+                  "key": "transparency",
+                  "label": "Transparency",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                },
+                {
+                  "key": "waveFrequency",
+                  "label": "Wave Frequency",
+                  "min": 1,
+                  "max": 5,
+                  "default": 2
+                }
+              ],
+              "visualPrimitive": "兩片上下交疊的半透明波浪狀薄膜，依 transparency 疊層混色模擬穿透感",
+              "mappingRule": "transparency 越高 → 薄膜疊層的不透明度越低，模糊室內外邊界的滲透感越明顯；membraneWaviness 決定薄膜起伏幅度；waveFrequency 決定波紋密度。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "仿生半透膜式室內隔屏 — 隔間如生物薄膜般半透明、可滲透，模糊室內外邊界"
             },
             {
               "id": 3,
               "name": "Nested Enclosure Type",
               "description": "空間如生物巢穴般層層內縮包覆，營造安全感與私密層次",
-              "example": "鳥巢/蜂窩啟發的內縮式包廂空間"
+              "example": "鳥巢/蜂窩啟發的內縮式包廂空間",
+              "slug": "nested-enclosure",
+              "generator": "nestedEnclosure",
+              "climateInput": "層數／波動感 (layer count / waviness)",
+              "sliders": [
+                {
+                  "key": "layerCount",
+                  "label": "Layer Count",
+                  "min": 3,
+                  "max": 7,
+                  "default": 5
+                },
+                {
+                  "key": "waviness",
+                  "label": "Waviness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 45,
+                  "unit": "%"
+                },
+                {
+                  "key": "lineWidth",
+                  "label": "Line Width",
+                  "min": 1,
+                  "max": 4,
+                  "default": 2,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "多層同心不規則波浪輪廓由外而內層層縮小，模擬巢穴層層內縮包覆",
+              "mappingRule": "layerCount 決定內縮層數，越多則私密層次越豐富；waviness 決定每層輪廓的有機波動幅度；lineWidth 決定輪廓線條粗細。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "鳥巢/蜂窩啟發的內縮式包廂空間 — 空間如生物巢穴般層層內縮包覆，營造安全感與私密層次"
             },
             {
               "id": 4,
               "name": "Flowing Boundary Type",
               "description": "地坪、牆面、天花以連續曲面過渡，消弭傳統房間邊界感",
-              "example": "仿生流動式室內空間設計"
+              "example": "仿生流動式室內空間設計",
+              "slug": "flowing-boundary",
+              "generator": "flowingBoundary",
+              "climateInput": "流動振幅／過渡銳利度 (flow amplitude / transition sharpness)",
+              "sliders": [
+                {
+                  "key": "flowAmplitude",
+                  "label": "Flow Amplitude",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                },
+                {
+                  "key": "flowFrequency",
+                  "label": "Flow Frequency",
+                  "min": 1,
+                  "max": 4,
+                  "default": 2
+                },
+                {
+                  "key": "transitionSharpness",
+                  "label": "Transition Sharpness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 30,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "地坪與牆面以單一連續波形曲面過渡，並疊加地板到天花的漸層色模擬材質連續轉換",
+              "mappingRule": "flowAmplitude 越高 → 地坪與牆面之間的曲面起伏越大，邊界感越模糊；transitionSharpness 越高 → 波形從平滑正弦趨近尖銳轉折，過渡感由柔和轉為明快；flowFrequency 決定波形密度。",
+              "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
+              "refNote": "仿生流動式室內空間設計 — 地坪、牆面、天花以連續曲面過渡，消弭傳統房間邊界感"
             }
           ]
         },

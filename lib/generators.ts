@@ -2461,6 +2461,106 @@ const minimalSurfaceShell: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// organic-spatial-boundary's 4 types are WaveContour family. Membrane-Like
+// Partition and Flowing Boundary reuse drawWaveBand directly (horizontal
+// bands genuinely fit both). Curvilinear Threshold needs a vertical curve
+// (boundary lines run top-to-bottom, not left-to-right) and Nested Enclosure
+// needs a radial contour (concentric shrinking loops) — neither axis fits
+// drawWaveBand's horizontal-band signature, so they get their own thin
+// sine-shaping code instead of forcing a transform trick onto it.
+// ---------------------------------------------------------------------------
+const curvilinearThreshold: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const bands = Math.round(p.bandCount);
+    const curveAmt = (p.curvature / 100) * (w / bands) * 0.9;
+
+    for (let b = 0; b < bands; b++) {
+      const bx = (w / bands) * b + w / bands / 2;
+      const phase = t * 0.2 + b * 0.9;
+      ctx.beginPath();
+      for (let y = 0; y <= h; y += 6) {
+        const yT = (y / h) * Math.PI * 2;
+        const x = bx + Math.sin(yT + phase) * curveAmt;
+        if (y === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.lineWidth = p.lineWidth / bands + 1;
+      ctx.strokeStyle = lerpColor(palette[1], palette[2], b / bands);
+      ctx.stroke();
+    }
+  },
+});
+
+const membraneLikePartition: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const amp = h * 0.18 * (p.membraneWaviness / 100);
+    const freq = 0.006 * p.waveFrequency;
+    const alpha = 1 - clamp(p.transparency / 100, 0, 1) * 0.75;
+
+    drawWaveBand(ctx, w, h * 0.5, h, amp, t * 0.3, freq, 0, 0.3);
+    ctx.fillStyle = lerpColor(palette[1], palette[3], 0.4);
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    drawWaveBand(ctx, w, h * 0.45, 0, amp * 0.8, t * 0.3 + 1.5, freq * 1.3, 0, 0.3);
+    ctx.fillStyle = lerpColor(palette[0], palette[2], 0.5);
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  },
+});
+
+const nestedEnclosure: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const layers = Math.round(p.layerCount);
+    const R = Math.min(w, h) * 0.42;
+    const waviness = p.waviness / 100;
+
+    for (let l = 0; l < layers; l++) {
+      const layerT = l / Math.max(1, layers - 1);
+      const radius = R * (1 - layerT * 0.75);
+      const phase = t * 0.15 + l * 0.6;
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
+        const wobble = Math.sin(a * 4 + phase) * radius * 0.12 * waviness;
+        const r = radius + wobble;
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = lerpColor(palette[1], palette[3], layerT);
+      ctx.lineWidth = p.lineWidth;
+      ctx.stroke();
+    }
+  },
+});
+
+const flowingBoundary: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const amp = h * 0.22 * (p.flowAmplitude / 100);
+    const freq = 0.005 * p.flowFrequency;
+    const sharp = clamp(p.transitionSharpness / 100, 0, 1);
+
+    drawWaveBand(ctx, w, h * 0.62, h, amp, t * 0.25, freq, sharp, 0.2);
+    const grad = ctx.createLinearGradient(0, h * 0.3, 0, h);
+    grad.addColorStop(0, palette[0]);
+    grad.addColorStop(0.5, palette[1]);
+    grad.addColorStop(1, palette[3]);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -2500,6 +2600,10 @@ const registry: Record<string, Factory> = {
   tensegrity,
   honeycombPanel,
   minimalSurfaceShell,
+  curvilinearThreshold,
+  membraneLikePartition,
+  nestedEnclosure,
+  flowingBoundary,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,
