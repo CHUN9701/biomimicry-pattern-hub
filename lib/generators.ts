@@ -1852,6 +1852,170 @@ const rootSystemFoundation: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// ReactionDiffusion engine — shared Gray-Scott stepper for 3 of
+// reaction-diffusion's 4 mechanism types. Each factory owns its own sim
+// instance (state can't be shared across factory instances) but all reuse
+// the same step/render algorithm; only feedRate/killRate presets and the
+// palette-index mapping differ, which is what actually produces the
+// visually distinct stripe / mitosis / coral regimes in real Gray-Scott
+// parameter space. The 4th type (Diffusion-Limited Aggregation) is a
+// standalone stochastic branch-walker — a fundamentally different
+// (probabilistic particle-aggregation-style) algorithm from both this
+// engine and from FractalBranching's deterministic symmetric recursion,
+// so it isn't forced onto either.
+// ---------------------------------------------------------------------------
+function createReactionDiffusionSim(gw: number, gh: number) {
+  const N = gw * gh;
+  let U = new Float32Array(N).fill(1);
+  let V = new Float32Array(N).fill(0);
+  let Un = new Float32Array(N);
+  let Vn = new Float32Array(N);
+  let seeded = false;
+  let off: HTMLCanvasElement | null = null;
+  let offCtx: CanvasRenderingContext2D | null = null;
+  let imgData: ImageData | null = null;
+
+  const idx = (x: number, y: number) => {
+    const cx = x < 0 ? 0 : x >= gw ? gw - 1 : x;
+    const cy = y < 0 ? 0 : y >= gh ? gh - 1 : y;
+    return cy * gw + cx;
+  };
+
+  function seedBlobs(count: number, radius: number) {
+    const rand = mulberry32(42);
+    for (let s = 0; s < count; s++) {
+      const sx = Math.floor(rand() * gw);
+      const sy = Math.floor(rand() * gh);
+      for (let y = sy - radius; y <= sy + radius; y++) {
+        for (let x = sx - radius; x <= sx + radius; x++) {
+          V[idx(x, y)] = 1;
+        }
+      }
+    }
+    seeded = true;
+  }
+
+  // Diffusion coefficients 0.16/0.08 (not 1.0/0.5, which this was originally
+  // copied from) — the larger pair violates the explicit-scheme stability
+  // bound for a 4-neighbor Laplacian at this step size and saturates every
+  // cell to 0/1 regardless of f/k, which made all 3 presets below converge
+  // to the identical pattern. Verified empirically before/after the fix.
+  function step(f: number, k: number, iterations: number) {
+    if (!seeded) seedBlobs(6, 3);
+    for (let iter = 0; iter < iterations; iter++) {
+      for (let y = 0; y < gh; y++) {
+        for (let x = 0; x < gw; x++) {
+          const i = y * gw + x;
+          const u = U[i];
+          const v = V[i];
+          const lapU = U[idx(x - 1, y)] + U[idx(x + 1, y)] + U[idx(x, y - 1)] + U[idx(x, y + 1)] - 4 * u;
+          const lapV = V[idx(x - 1, y)] + V[idx(x + 1, y)] + V[idx(x, y - 1)] + V[idx(x, y + 1)] - 4 * v;
+          const uvv = u * v * v;
+          Un[i] = clamp(u + (0.16 * lapU - uvv + f * (1 - u)), 0, 1);
+          Vn[i] = clamp(v + (0.08 * lapV + uvv - (f + k) * v), 0, 1);
+        }
+      }
+      [U, Un] = [Un, U];
+      [V, Vn] = [Vn, V];
+    }
+  }
+
+  function render(ctx: CanvasRenderingContext2D, w: number, h: number, colorA: string, colorB: string) {
+    if (!off) {
+      off = document.createElement("canvas");
+      off.width = gw;
+      off.height = gh;
+      offCtx = off.getContext("2d");
+      imgData = offCtx?.createImageData(gw, gh) ?? null;
+    }
+    if (imgData && offCtx) {
+      const data = imgData.data;
+      for (let i = 0; i < N; i++) {
+        const val = clamp(U[i] - V[i], 0, 1);
+        const color = lerpColor(colorA, colorB, 1 - val);
+        const m = color.match(/[\d.]+/g);
+        data[i * 4] = m ? +m[0] : 0;
+        data[i * 4 + 1] = m ? +m[1] : 0;
+        data[i * 4 + 2] = m ? +m[2] : 0;
+        data[i * 4 + 3] = 255;
+      }
+      offCtx.putImageData(imgData, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(off, 0, 0, gw, gh, 0, 0, w, h);
+    }
+  }
+
+  return { step, render };
+}
+
+const turingPatternSkin: Factory = () => {
+  const sim = createReactionDiffusionSim(120, 90);
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
+      sim.render(ctx, w, h, palette[0], palette[3]);
+    },
+  };
+};
+
+const cellularGrowthSimulation: Factory = () => {
+  const sim = createReactionDiffusionSim(120, 90);
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
+      sim.render(ctx, w, h, palette[1], palette[2]);
+    },
+  };
+};
+
+const coralGrowthPattern: Factory = () => {
+  const sim = createReactionDiffusionSim(120, 90);
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
+      sim.render(ctx, w, h, palette[0], palette[2]);
+    },
+  };
+};
+
+const diffusionLimitedAggregation: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const maxDepth = Math.round(p.growthDepth);
+    const branchProb = clamp(p.branchProbability / 100, 0, 1);
+    const jitter = p.jitterAmount / 100;
+    const rand = mulberry32(Math.floor(maxDepth * 131 + branchProb * 977 + jitter * 313));
+
+    function grow(x: number, y: number, len: number, angle: number, depth: number) {
+      if (depth <= 0 || len < 1.5) return;
+      const sway = (rand() - 0.5) * jitter * 1.2 + Math.sin(t * 0.3 + depth) * 0.03;
+      const a = angle + sway;
+      const x2 = x + Math.cos(a) * len;
+      const y2 = y + Math.sin(a) * len;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = lerpColor(palette[1], palette[3], 1 - depth / maxDepth);
+      ctx.lineWidth = Math.max(0.6, depth * 0.5);
+      ctx.lineCap = "round";
+      ctx.stroke();
+
+      grow(x2, y2, len * 0.82, a + (rand() - 0.5) * 0.9, depth - 1);
+      if (rand() < branchProb) {
+        grow(x2, y2, len * 0.7, a + (rand() < 0.5 ? -1 : 1) * (0.5 + rand() * 0.6), depth - 1);
+      }
+      if (rand() < branchProb * 0.5) {
+        grow(x2, y2, len * 0.6, a + (rand() < 0.5 ? -1 : 1) * (0.8 + rand() * 0.6), depth - 1);
+      }
+    }
+
+    grow(w / 2, h / 2, Math.min(w, h) * 0.05, rand() * Math.PI * 2, maxDepth);
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -1879,6 +2043,10 @@ const registry: Record<string, Factory> = {
   recursiveCanopy,
   fractalVentilation,
   rootSystemFoundation,
+  turingPatternSkin,
+  cellularGrowthSimulation,
+  coralGrowthPattern,
+  diffusionLimitedAggregation,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

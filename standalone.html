@@ -1667,25 +1667,147 @@
               "id": 1,
               "name": "Turing Pattern Skin Type",
               "description": "表皮紋理依 Turing 反應擴散演算法生成，模擬動物斑紋（斑馬紋、豹紋）的自然生成邏輯",
-              "example": "參數化立面紋理設計"
+              "example": "參數化立面紋理設計",
+              "slug": "turing-pattern-skin",
+              "generator": "turingPatternSkin",
+              "climateInput": "反應速率／擴散速度 (feed rate / diffusion speed)",
+              "sliders": [
+                {
+                  "key": "feedRate",
+                  "label": "Feed Rate",
+                  "min": 0.02,
+                  "max": 0.06,
+                  "default": 0.04
+                },
+                {
+                  "key": "killRate",
+                  "label": "Kill Rate",
+                  "min": 0.05,
+                  "max": 0.07,
+                  "default": 0.06
+                },
+                {
+                  "key": "diffusionSpeed",
+                  "label": "Diffusion Speed",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                }
+              ],
+              "visualPrimitive": "以 Gray-Scott 反應擴散方程式即時演算生成的條紋／斑點紋理，在畫布上逐步演化",
+              "mappingRule": "feedRate 與 killRate 是 Gray-Scott 方程式的核心參數，兩者比例決定圖案落在條紋、斑點或迷宮狀哪個區間（此組預設值對應斑馬紋/豹紋常見的條紋-斑點過渡區）；diffusionSpeed 決定每次繪製推進的模擬迭代次數，越高則圖案演化越快。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系，U-V 濃度差映射至 palette[0]↔palette[3]）",
+              "refNote": "參數化立面紋理設計 — 表皮紋理依 Turing 反應擴散演算法生成，模擬動物斑紋（斑馬紋、豹紋）的自然生成邏輯"
             },
             {
               "id": 2,
               "name": "Cellular Growth Simulation Type",
               "description": "結構或表皮圖案透過模擬細胞增殖演算法生成有機分佈",
-              "example": "生成式設計立面研究"
+              "example": "生成式設計立面研究",
+              "slug": "cellular-growth-simulation",
+              "generator": "cellularGrowthSimulation",
+              "climateInput": "細胞增殖速率 (cell proliferation rate)",
+              "sliders": [
+                {
+                  "key": "feedRate",
+                  "label": "Feed Rate",
+                  "min": 0.03,
+                  "max": 0.05,
+                  "default": 0.0367
+                },
+                {
+                  "key": "killRate",
+                  "label": "Kill Rate",
+                  "min": 0.06,
+                  "max": 0.07,
+                  "default": 0.0649
+                },
+                {
+                  "key": "diffusionSpeed",
+                  "label": "Diffusion Speed",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                }
+              ],
+              "visualPrimitive": "同一套 Gray-Scott 引擎，但預設參數落在「分裂胞狀」區間，產生類似細胞持續分裂增殖的圓形斑塊圖案",
+              "mappingRule": "feedRate/killRate 預設值對應 Gray-Scott 參數空間中著名的「mitosis（有絲分裂）」區間，使斑塊呈現持續分裂、增生的動態；diffusionSpeed 越高則細胞增殖演化速度越快。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系，U-V 濃度差映射至 palette[1]↔palette[2]，呈現與 Turing 類型不同的色調）",
+              "refNote": "生成式設計立面研究 — 結構或表皮圖案透過模擬細胞增殖演算法生成有機分佈"
             },
             {
               "id": 3,
               "name": "Coral Growth Pattern Type",
               "description": "模擬珊瑚生長的擴散演算法生成多孔曲面結構",
-              "example": "3D 列印珊瑚啟發構造實驗"
+              "example": "3D 列印珊瑚啟發構造實驗",
+              "slug": "coral-growth-pattern",
+              "generator": "coralGrowthPattern",
+              "climateInput": "生長擴散比例 (growth diffusion ratio)",
+              "sliders": [
+                {
+                  "key": "feedRate",
+                  "label": "Feed Rate",
+                  "min": 0.05,
+                  "max": 0.07,
+                  "default": 0.058
+                },
+                {
+                  "key": "killRate",
+                  "label": "Kill Rate",
+                  "min": 0.06,
+                  "max": 0.07,
+                  "default": 0.065
+                },
+                {
+                  "key": "diffusionSpeed",
+                  "label": "Diffusion Speed",
+                  "min": 1,
+                  "max": 8,
+                  "default": 3
+                }
+              ],
+              "visualPrimitive": "同一套 Gray-Scott 引擎，預設參數落在「珊瑚／迷宮狀」區間，產生蜿蜒多孔的珊瑚生長曲面紋理",
+              "mappingRule": "feedRate/killRate 預設值對應 Gray-Scott 參數空間中的珊瑚狀（coral/worm）生長區間，產生蜿蜒交錯、多孔的曲面紋理；diffusionSpeed 決定生長演化速度。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系，U-V 濃度差映射至 palette[0]↔palette[2]）",
+              "refNote": "3D 列印珊瑚啟發構造實驗 — 模擬珊瑚生長的擴散演算法生成多孔曲面結構"
             },
             {
               "id": 4,
               "name": "Diffusion-Limited Aggregation Type",
               "description": "依擴散限制聚集演算法生成樹枝狀/珊瑚狀不規則紋理，常用於裝飾性遮陽構件",
-              "example": "參數化裝飾隔柵設計"
+              "example": "參數化裝飾隔柵設計",
+              "slug": "diffusion-limited-aggregation",
+              "generator": "diffusionLimitedAggregation",
+              "climateInput": "分岔機率／隨機擾動 (branch probability / jitter)",
+              "sliders": [
+                {
+                  "key": "growthDepth",
+                  "label": "Growth Depth",
+                  "min": 6,
+                  "max": 12,
+                  "default": 9
+                },
+                {
+                  "key": "branchProbability",
+                  "label": "Branch Probability",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "jitterAmount",
+                  "label": "Jitter Amount",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "由中心向外生長的隨機分岔樹枝狀紋理，每次生長方向皆帶有隨機擾動，模擬擴散限制聚集過程中粒子隨機沾黏形成的不規則樹枝/珊瑚狀聚落",
+              "mappingRule": "branchProbability 越高 → 每個生長節點額外分岔的機率越高，聚落越茂密；jitterAmount 越高 → 生長方向的隨機擾動越大，分岔越扭曲不規則，更貼近真實 DLA 粒子隨機沾黏的視覺特徵；growthDepth 決定生長的遞迴層數。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "參數化裝飾隔柵設計 — 依擴散限制聚集演算法生成樹枝狀/珊瑚狀不規則紋理，常用於裝飾性遮陽構件"
             }
           ]
         },
@@ -2196,6 +2318,95 @@
         walkFractalBranch(x2, y2, len * lengthRatio, a + frac * angleSpread, depth - 1, maxDepth, t, angleSpread, lengthRatio, branchCount, cb);
       }
     }
+  }
+
+  // ReactionDiffusion engine — shared Gray-Scott stepper for 3 of
+  // reaction-diffusion's 4 types. Each factory owns its own sim instance but
+  // reuses this same step/render algorithm; only feedRate/killRate presets
+  // and the palette-index mapping differ. Diffusion coefficients 0.16/0.08
+  // (not the 1.0/0.5 the old baseline reactionDiffusion factory below still
+  // uses) — the larger pair violates the explicit-scheme stability bound for
+  // a 4-neighbor Laplacian at this step size and saturates every cell to
+  // 0/1 regardless of f/k, which was verified to make all 3 presets
+  // converge to the identical pattern before this fix.
+  function createReactionDiffusionSim(gw, gh) {
+    const N = gw * gh;
+    let U = new Float32Array(N).fill(1);
+    let V = new Float32Array(N).fill(0);
+    let Un = new Float32Array(N);
+    let Vn = new Float32Array(N);
+    let seeded = false;
+    let off = null;
+    let offCtx = null;
+    let imgData = null;
+
+    const idx = function (x, y) {
+      const cx = x < 0 ? 0 : x >= gw ? gw - 1 : x;
+      const cy = y < 0 ? 0 : y >= gh ? gh - 1 : y;
+      return cy * gw + cx;
+    };
+
+    function seedBlobs(count, radius) {
+      const rand = mulberry32(42);
+      for (let s = 0; s < count; s++) {
+        const sx = Math.floor(rand() * gw);
+        const sy = Math.floor(rand() * gh);
+        for (let y = sy - radius; y <= sy + radius; y++) {
+          for (let x = sx - radius; x <= sx + radius; x++) {
+            V[idx(x, y)] = 1;
+          }
+        }
+      }
+      seeded = true;
+    }
+
+    function step(f, k, iterations) {
+      if (!seeded) seedBlobs(6, 3);
+      for (let iter = 0; iter < iterations; iter++) {
+        for (let y = 0; y < gh; y++) {
+          for (let x = 0; x < gw; x++) {
+            const i = y * gw + x;
+            const u = U[i];
+            const v = V[i];
+            const lapU = U[idx(x - 1, y)] + U[idx(x + 1, y)] + U[idx(x, y - 1)] + U[idx(x, y + 1)] - 4 * u;
+            const lapV = V[idx(x - 1, y)] + V[idx(x + 1, y)] + V[idx(x, y - 1)] + V[idx(x, y + 1)] - 4 * v;
+            const uvv = u * v * v;
+            Un[i] = clamp(u + (0.16 * lapU - uvv + f * (1 - u)), 0, 1);
+            Vn[i] = clamp(v + (0.08 * lapV + uvv - (f + k) * v), 0, 1);
+          }
+        }
+        const Utmp = U; U = Un; Un = Utmp;
+        const Vtmp = V; V = Vn; Vn = Vtmp;
+      }
+    }
+
+    function render(ctx, w, h, colorA, colorB) {
+      if (!off) {
+        off = document.createElement("canvas");
+        off.width = gw;
+        off.height = gh;
+        offCtx = off.getContext("2d");
+        imgData = offCtx ? offCtx.createImageData(gw, gh) : null;
+      }
+      if (imgData && offCtx) {
+        const data = imgData.data;
+        for (let i = 0; i < N; i++) {
+          const val = clamp(U[i] - V[i], 0, 1);
+          const color = lerpColor(colorA, colorB, 1 - val);
+          const m = color.match(/[\d.]+/g);
+          data[i * 4] = m ? +m[0] : 0;
+          data[i * 4 + 1] = m ? +m[1] : 0;
+          data[i * 4 + 2] = m ? +m[2] : 0;
+          data[i * 4 + 3] = 255;
+        }
+        offCtx.putImageData(imgData, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(off, 0, 0, gw, gh, 0, 0, w, h);
+      }
+    }
+
+    return { step: step, render: render };
   }
 
   // ---------------------------------------------------------------------
@@ -3015,6 +3226,74 @@
             ctx.stroke();
             ctx.globalAlpha = 1;
           });
+        },
+      };
+    },
+
+    turingPatternSkin: function () {
+      const sim = createReactionDiffusionSim(120, 90);
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
+          sim.render(ctx, w, h, palette[0], palette[3]);
+        },
+      };
+    },
+
+    cellularGrowthSimulation: function () {
+      const sim = createReactionDiffusionSim(120, 90);
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
+          sim.render(ctx, w, h, palette[1], palette[2]);
+        },
+      };
+    },
+
+    coralGrowthPattern: function () {
+      const sim = createReactionDiffusionSim(120, 90);
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
+          sim.render(ctx, w, h, palette[0], palette[2]);
+        },
+      };
+    },
+
+    diffusionLimitedAggregation: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const maxDepth = Math.round(p.growthDepth);
+          const branchProb = clamp(p.branchProbability / 100, 0, 1);
+          const jitter = p.jitterAmount / 100;
+          const rand = mulberry32(Math.floor(maxDepth * 131 + branchProb * 977 + jitter * 313));
+
+          function grow(x, y, len, angle, depth) {
+            if (depth <= 0 || len < 1.5) return;
+            const sway = (rand() - 0.5) * jitter * 1.2 + Math.sin(t * 0.3 + depth) * 0.03;
+            const a = angle + sway;
+            const x2 = x + Math.cos(a) * len;
+            const y2 = y + Math.sin(a) * len;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = lerpColor(palette[1], palette[3], 1 - depth / maxDepth);
+            ctx.lineWidth = Math.max(0.6, depth * 0.5);
+            ctx.lineCap = "round";
+            ctx.stroke();
+
+            grow(x2, y2, len * 0.82, a + (rand() - 0.5) * 0.9, depth - 1);
+            if (rand() < branchProb) {
+              grow(x2, y2, len * 0.7, a + (rand() < 0.5 ? -1 : 1) * (0.5 + rand() * 0.6), depth - 1);
+            }
+            if (rand() < branchProb * 0.5) {
+              grow(x2, y2, len * 0.6, a + (rand() < 0.5 ? -1 : 1) * (0.8 + rand() * 0.6), depth - 1);
+            }
+          }
+
+          grow(w / 2, h / 2, Math.min(w, h) * 0.05, rand() * Math.PI * 2, maxDepth);
         },
       };
     },

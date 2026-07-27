@@ -1135,25 +1135,147 @@
               "id": 1,
               "name": "Turing Pattern Skin Type",
               "description": "表皮紋理依 Turing 反應擴散演算法生成，模擬動物斑紋（斑馬紋、豹紋）的自然生成邏輯",
-              "example": "參數化立面紋理設計"
+              "example": "參數化立面紋理設計",
+              "slug": "turing-pattern-skin",
+              "generator": "turingPatternSkin",
+              "climateInput": "反應速率／擴散速度 (feed rate / diffusion speed)",
+              "sliders": [
+                {
+                  "key": "feedRate",
+                  "label": "Feed Rate",
+                  "min": 0.02,
+                  "max": 0.06,
+                  "default": 0.04
+                },
+                {
+                  "key": "killRate",
+                  "label": "Kill Rate",
+                  "min": 0.05,
+                  "max": 0.07,
+                  "default": 0.06
+                },
+                {
+                  "key": "diffusionSpeed",
+                  "label": "Diffusion Speed",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                }
+              ],
+              "visualPrimitive": "以 Gray-Scott 反應擴散方程式即時演算生成的條紋／斑點紋理，在畫布上逐步演化",
+              "mappingRule": "feedRate 與 killRate 是 Gray-Scott 方程式的核心參數，兩者比例決定圖案落在條紋、斑點或迷宮狀哪個區間（此組預設值對應斑馬紋/豹紋常見的條紋-斑點過渡區）；diffusionSpeed 決定每次繪製推進的模擬迭代次數，越高則圖案演化越快。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系，U-V 濃度差映射至 palette[0]↔palette[3]）",
+              "refNote": "參數化立面紋理設計 — 表皮紋理依 Turing 反應擴散演算法生成，模擬動物斑紋（斑馬紋、豹紋）的自然生成邏輯"
             },
             {
               "id": 2,
               "name": "Cellular Growth Simulation Type",
               "description": "結構或表皮圖案透過模擬細胞增殖演算法生成有機分佈",
-              "example": "生成式設計立面研究"
+              "example": "生成式設計立面研究",
+              "slug": "cellular-growth-simulation",
+              "generator": "cellularGrowthSimulation",
+              "climateInput": "細胞增殖速率 (cell proliferation rate)",
+              "sliders": [
+                {
+                  "key": "feedRate",
+                  "label": "Feed Rate",
+                  "min": 0.03,
+                  "max": 0.05,
+                  "default": 0.0367
+                },
+                {
+                  "key": "killRate",
+                  "label": "Kill Rate",
+                  "min": 0.06,
+                  "max": 0.07,
+                  "default": 0.0649
+                },
+                {
+                  "key": "diffusionSpeed",
+                  "label": "Diffusion Speed",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                }
+              ],
+              "visualPrimitive": "同一套 Gray-Scott 引擎，但預設參數落在「分裂胞狀」區間，產生類似細胞持續分裂增殖的圓形斑塊圖案",
+              "mappingRule": "feedRate/killRate 預設值對應 Gray-Scott 參數空間中著名的「mitosis（有絲分裂）」區間，使斑塊呈現持續分裂、增生的動態；diffusionSpeed 越高則細胞增殖演化速度越快。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系，U-V 濃度差映射至 palette[1]↔palette[2]，呈現與 Turing 類型不同的色調）",
+              "refNote": "生成式設計立面研究 — 結構或表皮圖案透過模擬細胞增殖演算法生成有機分佈"
             },
             {
               "id": 3,
               "name": "Coral Growth Pattern Type",
               "description": "模擬珊瑚生長的擴散演算法生成多孔曲面結構",
-              "example": "3D 列印珊瑚啟發構造實驗"
+              "example": "3D 列印珊瑚啟發構造實驗",
+              "slug": "coral-growth-pattern",
+              "generator": "coralGrowthPattern",
+              "climateInput": "生長擴散比例 (growth diffusion ratio)",
+              "sliders": [
+                {
+                  "key": "feedRate",
+                  "label": "Feed Rate",
+                  "min": 0.05,
+                  "max": 0.07,
+                  "default": 0.058
+                },
+                {
+                  "key": "killRate",
+                  "label": "Kill Rate",
+                  "min": 0.06,
+                  "max": 0.07,
+                  "default": 0.065
+                },
+                {
+                  "key": "diffusionSpeed",
+                  "label": "Diffusion Speed",
+                  "min": 1,
+                  "max": 8,
+                  "default": 3
+                }
+              ],
+              "visualPrimitive": "同一套 Gray-Scott 引擎，預設參數落在「珊瑚／迷宮狀」區間，產生蜿蜒多孔的珊瑚生長曲面紋理",
+              "mappingRule": "feedRate/killRate 預設值對應 Gray-Scott 參數空間中的珊瑚狀（coral/worm）生長區間，產生蜿蜒交錯、多孔的曲面紋理；diffusionSpeed 決定生長演化速度。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系，U-V 濃度差映射至 palette[0]↔palette[2]）",
+              "refNote": "3D 列印珊瑚啟發構造實驗 — 模擬珊瑚生長的擴散演算法生成多孔曲面結構"
             },
             {
               "id": 4,
               "name": "Diffusion-Limited Aggregation Type",
               "description": "依擴散限制聚集演算法生成樹枝狀/珊瑚狀不規則紋理，常用於裝飾性遮陽構件",
-              "example": "參數化裝飾隔柵設計"
+              "example": "參數化裝飾隔柵設計",
+              "slug": "diffusion-limited-aggregation",
+              "generator": "diffusionLimitedAggregation",
+              "climateInput": "分岔機率／隨機擾動 (branch probability / jitter)",
+              "sliders": [
+                {
+                  "key": "growthDepth",
+                  "label": "Growth Depth",
+                  "min": 6,
+                  "max": 12,
+                  "default": 9
+                },
+                {
+                  "key": "branchProbability",
+                  "label": "Branch Probability",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "jitterAmount",
+                  "label": "Jitter Amount",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "由中心向外生長的隨機分岔樹枝狀紋理，每次生長方向皆帶有隨機擾動，模擬擴散限制聚集過程中粒子隨機沾黏形成的不規則樹枝/珊瑚狀聚落",
+              "mappingRule": "branchProbability 越高 → 每個生長節點額外分岔的機率越高，聚落越茂密；jitterAmount 越高 → 生長方向的隨機擾動越大，分岔越扭曲不規則，更貼近真實 DLA 粒子隨機沾黏的視覺特徵；growthDepth 決定生長的遞迴層數。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "參數化裝飾隔柵設計 — 依擴散限制聚集演算法生成樹枝狀/珊瑚狀不規則紋理，常用於裝飾性遮陽構件"
             }
           ]
         },
