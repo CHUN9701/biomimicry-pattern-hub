@@ -5,3 +5,4 @@ out
 *.pem
 npm-debug.log*
 .env*.local
+*.tsbuildinfo
