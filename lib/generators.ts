@@ -1072,9 +1072,125 @@ const graduatedPinhole: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// WaveContour engine — shared periodic-contour primitive for the
+// thermal-mass-undulation subcategory's 4 mechanism types. Draws one filled
+// band whose top edge follows a shaped sine (sharpness blends toward a
+// triangle wave), with an optional high-frequency "detail" wobble layered on
+// for organic irregularity.
+// ---------------------------------------------------------------------------
+function drawWaveBand(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  midY: number,
+  bottomY: number,
+  amp: number,
+  phase: number,
+  freq: number,
+  sharpness: number,
+  detail = 0
+) {
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  for (let x = 0; x <= w; x += 6) {
+    const raw = Math.sin(x * freq + phase);
+    const shaped = sharpness > 0 ? Math.sign(raw) * Math.pow(Math.abs(raw), 1 - sharpness * 0.7) : raw;
+    const fine = detail > 0 ? Math.sin(x * freq * 2.7 + phase * 1.6) * detail : 0;
+    ctx.lineTo(x, midY + shaped * amp + fine * amp);
+  }
+  ctx.lineTo(w, bottomY);
+  ctx.lineTo(0, bottomY);
+  ctx.closePath();
+}
+
+const waveSectionWall: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const rows = clamp(Math.round(11 - p.wallThickness), 5, 10);
+    const rowH = h / rows;
+    const ampFactor = 0.4 + (p.tempSwing / 25) * 1.2;
+    const amp = rowH * 0.85 * (p.waveAmplitude / 100) * ampFactor;
+
+    for (let row = 0; row < rows; row++) {
+      const midY = row * rowH + rowH * 0.5;
+      const phase = t * 0.35 + row * 0.5;
+      drawWaveBand(ctx, w, midY, (row + 1) * rowH, amp, phase, 0.018, 0);
+      ctx.fillStyle = lerpColor(palette[0], palette[3], row / rows);
+      ctx.globalAlpha = 0.55 + (p.wallThickness / 6) * 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  },
+});
+
+const corrugatedThermalSkin: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const sharp = clamp(p.foldSharpness / 100, 0, 1);
+    const freq = (2 * Math.PI * p.foldDensity) / w;
+    const amp = h * 0.26;
+    const midY = h * 0.5;
+
+    drawWaveBand(ctx, w, midY, h, amp, t * 0.2, freq, sharp);
+    ctx.fillStyle = lerpColor(palette[2], palette[3], 0.5);
+    ctx.fill();
+
+    drawWaveBand(ctx, w, midY, h, amp, t * 0.2 + 0.4, freq, sharp);
+    ctx.fillStyle = `rgba(0,0,0,${0.15 + clamp(p.shadowDepth / 100, 0, 1) * 0.45})`;
+    ctx.fill();
+  },
+});
+
+const ribbedMassBuffer: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const ribCount = Math.max(4, Math.round(p.ribDensity));
+    const ribW = w / ribCount;
+    const gapFrac = clamp(p.airGapDepth / 100, 0.1, 0.8);
+    const delaySpeed = 0.15 + (p.thermalDelay / 100) * 0.5;
+
+    for (let i = 0; i < ribCount; i++) {
+      const x0 = i * ribW;
+      const solidW = ribW * (1 - gapFrac);
+      const heatPhase = Math.sin(t * delaySpeed - i * 0.4) * 0.5 + 0.5;
+
+      ctx.fillStyle = lerpColor(palette[1], palette[3], heatPhase);
+      ctx.fillRect(x0, 0, solidW, h);
+
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(x0 + solidW, 0, ribW - solidW, h);
+    }
+  },
+});
+
+const rollingTopography: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const relief = clamp(p.terrainRelief / 100, 0, 1);
+    const windSpeed = 0.08 + (p.windExposure / 100) * 0.5;
+    const baseY = h * 0.55;
+    const amp = h * 0.3 * relief;
+    const freq = 0.004 * p.terrainScale;
+
+    drawWaveBand(ctx, w, baseY, h, amp, t * windSpeed, freq, 0, 0.35);
+    ctx.fillStyle = lerpColor(palette[1], palette[2], 0.5);
+    ctx.fill();
+
+    const sky = ctx.createLinearGradient(0, 0, 0, baseY);
+    sky.addColorStop(0, palette[0]);
+    sky.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, baseY);
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
+  waveSectionWall,
+  corrugatedThermalSkin,
+  ribbedMassBuffer,
+  rollingTopography,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

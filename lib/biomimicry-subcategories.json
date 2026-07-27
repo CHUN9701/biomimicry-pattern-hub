@@ -19,9 +19,29 @@
               "generator": "fixedApertureGrid",
               "climateInput": "太陽角度 (sun angle)",
               "sliders": [
-                { "key": "sunAngle", "label": "Sun Angle", "min": 0, "max": 90, "default": 35, "unit": "°" },
-                { "key": "apertureDensity", "label": "Aperture Density", "min": 8, "max": 40, "default": 20 },
-                { "key": "apertureSize", "label": "Aperture Size", "min": 20, "max": 80, "default": 50, "unit": "%" }
+                {
+                  "key": "sunAngle",
+                  "label": "Sun Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 35,
+                  "unit": "°"
+                },
+                {
+                  "key": "apertureDensity",
+                  "label": "Aperture Density",
+                  "min": 8,
+                  "max": 40,
+                  "default": 20
+                },
+                {
+                  "key": "apertureSize",
+                  "label": "Aperture Size",
+                  "min": 20,
+                  "max": 80,
+                  "default": 50,
+                  "unit": "%"
+                }
               ],
               "visualPrimitive": "規則格網排列的固定大小圓形孔徑，陰影橢圓依日照角度偏移",
               "mappingRule": "apertureDensity 越高 → 格數越多、孔徑越密；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
@@ -37,9 +57,29 @@
               "generator": "deepWellShadow",
               "climateInput": "太陽高度角 (solar altitude)",
               "sliders": [
-                { "key": "sunAngle", "label": "Sun Angle", "min": 0, "max": 90, "default": 25, "unit": "°" },
-                { "key": "wellDepth", "label": "Well Depth", "min": 0, "max": 100, "default": 70, "unit": "%" },
-                { "key": "apertureDensity", "label": "Aperture Density", "min": 8, "max": 30, "default": 14 }
+                {
+                  "key": "sunAngle",
+                  "label": "Sun Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 25,
+                  "unit": "°"
+                },
+                {
+                  "key": "wellDepth",
+                  "label": "Well Depth",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                },
+                {
+                  "key": "apertureDensity",
+                  "label": "Aperture Density",
+                  "min": 8,
+                  "max": 30,
+                  "default": 14
+                }
               ],
               "visualPrimitive": "格網孔徑，每個孔洞內縮出多層同心暗環模擬井壁，井底一塊隨光線角度變亮的圓面代表可見的井底",
               "mappingRule": "wellDepth 越高 → 內縮同心暗環層數越多、顏色越深，模擬凹陷越深；sunAngle 越低（接近水平）→ 井底可見亮度越低（低角度光被井壁完全遮蔽）；sunAngle 越高（接近 90° 正午）→ 井底亮度趨近最大（正午光線可直射井底），此非線性關係用 sin(sunAngle) 直接映射亮度。",
@@ -55,9 +95,29 @@
               "generator": "directionalLouverAperture",
               "climateInput": "方位角 (azimuth / directional angle)",
               "sliders": [
-                { "key": "louverAngle", "label": "Louver Angle", "min": 0, "max": 90, "default": 30, "unit": "°" },
-                { "key": "slitWidth", "label": "Slit Width", "min": 10, "max": 60, "default": 30, "unit": "%" },
-                { "key": "apertureDensity", "label": "Aperture Density", "min": 6, "max": 24, "default": 12 }
+                {
+                  "key": "louverAngle",
+                  "label": "Louver Angle",
+                  "min": 0,
+                  "max": 90,
+                  "default": 30,
+                  "unit": "°"
+                },
+                {
+                  "key": "slitWidth",
+                  "label": "Slit Width",
+                  "min": 10,
+                  "max": 60,
+                  "default": 30,
+                  "unit": "%"
+                },
+                {
+                  "key": "apertureDensity",
+                  "label": "Aperture Density",
+                  "min": 6,
+                  "max": 24,
+                  "default": 12
+                }
               ],
               "visualPrimitive": "格網排列的斜向長條縫隙（非圓孔），縫隙方向整體依 louverAngle 旋轉",
               "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；apertureDensity 控制格數／每列縫隙數量。",
@@ -73,9 +133,29 @@
               "generator": "graduatedPinhole",
               "climateInput": "表面曲率／日照強度梯度 (surface curvature / solar intensity gradient)",
               "sliders": [
-                { "key": "gradientAngle", "label": "Gradient Direction", "min": 0, "max": 180, "default": 45, "unit": "°" },
-                { "key": "pinholeDensity", "label": "Pinhole Density", "min": 20, "max": 80, "default": 45 },
-                { "key": "contrastRange", "label": "Size Contrast", "min": 0, "max": 100, "default": 70, "unit": "%" }
+                {
+                  "key": "gradientAngle",
+                  "label": "Gradient Direction",
+                  "min": 0,
+                  "max": 180,
+                  "default": 45,
+                  "unit": "°"
+                },
+                {
+                  "key": "pinholeDensity",
+                  "label": "Pinhole Density",
+                  "min": 20,
+                  "max": 80,
+                  "default": 45
+                },
+                {
+                  "key": "contrastRange",
+                  "label": "Size Contrast",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                }
               ],
               "visualPrimitive": "密集針孔狀孔徑場，孔徑大小依 gradientAngle 方向連續漸變（沿用既有 Graded Porosity / Density-Graded Voronoi 的漸層演算法）",
               "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholeDensity 控制孔徑總數／場的精細度。",
@@ -93,25 +173,154 @@
               "id": 1,
               "name": "Wave-Section Wall Type",
               "description": "波浪斷面增加牆體表面積與蓄熱體積，日夜溫差調節不需機械輔助",
-              "example": "傳統夯土波形牆、Termite mound 外殼曲面"
+              "example": "傳統夯土波形牆、Termite mound 外殼曲面",
+              "slug": "wave-section-wall",
+              "generator": "waveSectionWall",
+              "climateInput": "日夜溫差 (diurnal temperature swing)",
+              "sliders": [
+                {
+                  "key": "tempSwing",
+                  "label": "Temp Swing",
+                  "min": 0,
+                  "max": 25,
+                  "default": 10,
+                  "unit": "°C"
+                },
+                {
+                  "key": "waveAmplitude",
+                  "label": "Wave Amplitude",
+                  "min": 0,
+                  "max": 100,
+                  "default": 45,
+                  "unit": "%"
+                },
+                {
+                  "key": "wallThickness",
+                  "label": "Wall Thickness",
+                  "min": 1,
+                  "max": 6,
+                  "default": 3,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "多層水平正弦波輪廓帶堆疊而成的牆體剖面，波峰波谷間填色代表蓄熱量體",
+              "mappingRule": "tempSwing 越大 → 有效波形振幅隨之放大，代表牆體表面積增加、蓄熱能力提升；wallThickness 越厚 → 分層數變少、每層代表的量體越厚，填色更飽和不透明，模擬蓄熱體積增加；waveAmplitude 是振幅的基礎視覺設定值，最終振幅由它與 tempSwing 共同決定。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統夯土波形牆、Termite mound 外殼曲面 — 波浪斷面增加牆體表面積與蓄熱體積，日夜溫差調節不需機械輔助"
             },
             {
               "id": 2,
               "name": "Corrugated Thermal Skin Type",
               "description": "規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收",
-              "example": "沙漠建築的摺板式外牆"
+              "example": "沙漠建築的摺板式外牆",
+              "slug": "corrugated-thermal-skin",
+              "generator": "corrugatedThermalSkin",
+              "climateInput": "日照強度／摺板自遮蔭比例 (solar radiation intensity)",
+              "sliders": [
+                {
+                  "key": "foldDensity",
+                  "label": "Fold Density",
+                  "min": 4,
+                  "max": 16,
+                  "default": 8
+                },
+                {
+                  "key": "foldSharpness",
+                  "label": "Fold Sharpness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                },
+                {
+                  "key": "shadowDepth",
+                  "label": "Shadow Depth",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "規律重複的摺板波形剖面，正面填色代表受光面、疊加一道相位偏移的暗色波形代表相鄰摺板投下的陰影面",
+              "mappingRule": "foldDensity 決定摺板數量（波形頻率）；foldSharpness 越高 → 波形從平滑正弦趨近尖銳三角摺線，模擬摺板角度加大；shadowDepth 越高 → 陰影疊層的不透明度越深、對比越強，代表自遮蔭效果越明顯、直射熱量吸收越低。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "沙漠建築的摺板式外牆 — 規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收"
             },
             {
               "id": 3,
               "name": "Ribbed Mass Buffer Type",
               "description": "肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間",
-              "example": "傳統土坯建築的肋狀牆體構造"
+              "example": "傳統土坯建築的肋狀牆體構造",
+              "slug": "ribbed-mass-buffer",
+              "generator": "ribbedMassBuffer",
+              "climateInput": "熱傳導延遲時間 (thermal conduction lag)",
+              "sliders": [
+                {
+                  "key": "ribDensity",
+                  "label": "Rib Density",
+                  "min": 6,
+                  "max": 24,
+                  "default": 12
+                },
+                {
+                  "key": "airGapDepth",
+                  "label": "Air Gap Depth",
+                  "min": 10,
+                  "max": 70,
+                  "default": 35,
+                  "unit": "%"
+                },
+                {
+                  "key": "thermalDelay",
+                  "label": "Thermal Delay",
+                  "min": 0,
+                  "max": 100,
+                  "default": 40,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "一排垂直肋條量體，肋條間留有暗色縫隙代表空氣間層，肋條亮度依序產生相位差、形成緩慢橫向掃過的亮度波代表熱量傳導延遲",
+              "mappingRule": "ribDensity 控制肋條數量；airGapDepth 越大 → 肋條之間的空氣間層（暗色縫隙）比例越寬，代表間層越厚、隔熱效果越好；thermalDelay 越高 → 肋條間亮度相位差的移動速度越慢、跨肋條延遲越明顯，模擬熱傳導延遲時間拉長。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統土坯建築的肋狀牆體構造 — 肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間"
             },
             {
               "id": 4,
               "name": "Rolling Topography Type",
               "description": "建築量體本身模擬地形起伏，藉高低差產生自然通風與遮蔭區",
-              "example": "Heatherwick studio 地景式建築量體語彙"
+              "example": "Heatherwick studio 地景式建築量體語彙",
+              "slug": "rolling-topography",
+              "generator": "rollingTopography",
+              "climateInput": "風場與地形起伏 (wind exposure / terrain relief)",
+              "sliders": [
+                {
+                  "key": "terrainRelief",
+                  "label": "Terrain Relief",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "terrainScale",
+                  "label": "Terrain Scale",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                },
+                {
+                  "key": "windExposure",
+                  "label": "Wind Exposure",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "一條起伏的地景輪廓線，上方為天空漸層、下方填色代表地形量體，輪廓疊加細碎波紋模擬有機地形紋理",
+              "mappingRule": "terrainRelief 越大 → 地形起伏振幅越大，高低差越明顯、自然通風與遮蔭效果越顯著；terrainScale 越小 → 地形尺度越大、越平緩開闊，越大則地形越細碎；windExposure 越高 → 地形表面的動態飄移速度越快，模擬風場流動對地景的擾動。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "Heatherwick studio 地景式建築量體語彙 — 建築量體本身模擬地形起伏，藉高低差產生自然通風與遮蔭區"
             }
           ]
         }

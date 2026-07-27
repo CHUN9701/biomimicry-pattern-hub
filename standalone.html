@@ -705,25 +705,154 @@
               "id": 1,
               "name": "Wave-Section Wall Type",
               "description": "波浪斷面增加牆體表面積與蓄熱體積，日夜溫差調節不需機械輔助",
-              "example": "傳統夯土波形牆、Termite mound 外殼曲面"
+              "example": "傳統夯土波形牆、Termite mound 外殼曲面",
+              "slug": "wave-section-wall",
+              "generator": "waveSectionWall",
+              "climateInput": "日夜溫差 (diurnal temperature swing)",
+              "sliders": [
+                {
+                  "key": "tempSwing",
+                  "label": "Temp Swing",
+                  "min": 0,
+                  "max": 25,
+                  "default": 10,
+                  "unit": "°C"
+                },
+                {
+                  "key": "waveAmplitude",
+                  "label": "Wave Amplitude",
+                  "min": 0,
+                  "max": 100,
+                  "default": 45,
+                  "unit": "%"
+                },
+                {
+                  "key": "wallThickness",
+                  "label": "Wall Thickness",
+                  "min": 1,
+                  "max": 6,
+                  "default": 3,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "多層水平正弦波輪廓帶堆疊而成的牆體剖面，波峰波谷間填色代表蓄熱量體",
+              "mappingRule": "tempSwing 越大 → 有效波形振幅隨之放大，代表牆體表面積增加、蓄熱能力提升；wallThickness 越厚 → 分層數變少、每層代表的量體越厚，填色更飽和不透明，模擬蓄熱體積增加；waveAmplitude 是振幅的基礎視覺設定值，最終振幅由它與 tempSwing 共同決定。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統夯土波形牆、Termite mound 外殼曲面 — 波浪斷面增加牆體表面積與蓄熱體積，日夜溫差調節不需機械輔助"
             },
             {
               "id": 2,
               "name": "Corrugated Thermal Skin Type",
               "description": "規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收",
-              "example": "沙漠建築的摺板式外牆"
+              "example": "沙漠建築的摺板式外牆",
+              "slug": "corrugated-thermal-skin",
+              "generator": "corrugatedThermalSkin",
+              "climateInput": "日照強度／摺板自遮蔭比例 (solar radiation intensity)",
+              "sliders": [
+                {
+                  "key": "foldDensity",
+                  "label": "Fold Density",
+                  "min": 4,
+                  "max": 16,
+                  "default": 8
+                },
+                {
+                  "key": "foldSharpness",
+                  "label": "Fold Sharpness",
+                  "min": 0,
+                  "max": 100,
+                  "default": 60,
+                  "unit": "%"
+                },
+                {
+                  "key": "shadowDepth",
+                  "label": "Shadow Depth",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "規律重複的摺板波形剖面，正面填色代表受光面、疊加一道相位偏移的暗色波形代表相鄰摺板投下的陰影面",
+              "mappingRule": "foldDensity 決定摺板數量（波形頻率）；foldSharpness 越高 → 波形從平滑正弦趨近尖銳三角摺線，模擬摺板角度加大；shadowDepth 越高 → 陰影疊層的不透明度越深、對比越強，代表自遮蔭效果越明顯、直射熱量吸收越低。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "沙漠建築的摺板式外牆 — 規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收"
             },
             {
               "id": 3,
               "name": "Ribbed Mass Buffer Type",
               "description": "肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間",
-              "example": "傳統土坯建築的肋狀牆體構造"
+              "example": "傳統土坯建築的肋狀牆體構造",
+              "slug": "ribbed-mass-buffer",
+              "generator": "ribbedMassBuffer",
+              "climateInput": "熱傳導延遲時間 (thermal conduction lag)",
+              "sliders": [
+                {
+                  "key": "ribDensity",
+                  "label": "Rib Density",
+                  "min": 6,
+                  "max": 24,
+                  "default": 12
+                },
+                {
+                  "key": "airGapDepth",
+                  "label": "Air Gap Depth",
+                  "min": 10,
+                  "max": 70,
+                  "default": 35,
+                  "unit": "%"
+                },
+                {
+                  "key": "thermalDelay",
+                  "label": "Thermal Delay",
+                  "min": 0,
+                  "max": 100,
+                  "default": 40,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "一排垂直肋條量體，肋條間留有暗色縫隙代表空氣間層，肋條亮度依序產生相位差、形成緩慢橫向掃過的亮度波代表熱量傳導延遲",
+              "mappingRule": "ribDensity 控制肋條數量；airGapDepth 越大 → 肋條之間的空氣間層（暗色縫隙）比例越寬，代表間層越厚、隔熱效果越好；thermalDelay 越高 → 肋條間亮度相位差的移動速度越慢、跨肋條延遲越明顯，模擬熱傳導延遲時間拉長。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "傳統土坯建築的肋狀牆體構造 — 肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間"
             },
             {
               "id": 4,
               "name": "Rolling Topography Type",
               "description": "建築量體本身模擬地形起伏，藉高低差產生自然通風與遮蔭區",
-              "example": "Heatherwick studio 地景式建築量體語彙"
+              "example": "Heatherwick studio 地景式建築量體語彙",
+              "slug": "rolling-topography",
+              "generator": "rollingTopography",
+              "climateInput": "風場與地形起伏 (wind exposure / terrain relief)",
+              "sliders": [
+                {
+                  "key": "terrainRelief",
+                  "label": "Terrain Relief",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "terrainScale",
+                  "label": "Terrain Scale",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4
+                },
+                {
+                  "key": "windExposure",
+                  "label": "Wind Exposure",
+                  "min": 0,
+                  "max": 100,
+                  "default": 50,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "一條起伏的地景輪廓線，上方為天空漸層、下方填色代表地形量體，輪廓疊加細碎波紋模擬有機地形紋理",
+              "mappingRule": "terrainRelief 越大 → 地形起伏振幅越大，高低差越明顯、自然通風與遮蔭效果越顯著；terrainScale 越小 → 地形尺度越大、越平緩開闊，越大則地形越細碎；windExposure 越高 → 地形表面的動態飄移速度越快，模擬風場流動對地景的擾動。",
+              "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
+              "refNote": "Heatherwick studio 地景式建築量體語彙 — 建築量體本身模擬地形起伏，藉高低差產生自然通風與遮蔭區"
             }
           ]
         }
@@ -1310,6 +1439,25 @@
     }
   }
 
+  // Shared periodic-contour helper — the "WaveContour engine" for
+  // thermal-mass-undulation's 4 types below. Draws one filled band whose top
+  // edge follows a shaped sine (sharpness blends toward a triangle wave),
+  // with an optional high-frequency "detail" wobble for organic irregularity.
+  function drawWaveBand(ctx, w, midY, bottomY, amp, phase, freq, sharpness, detail) {
+    detail = detail || 0;
+    ctx.beginPath();
+    ctx.moveTo(0, midY);
+    for (let x = 0; x <= w; x += 6) {
+      const raw = Math.sin(x * freq + phase);
+      const shaped = sharpness > 0 ? Math.sign(raw) * Math.pow(Math.abs(raw), 1 - sharpness * 0.7) : raw;
+      const fine = detail > 0 ? Math.sin(x * freq * 2.7 + phase * 1.6) * detail : 0;
+      ctx.lineTo(x, midY + shaped * amp + fine * amp);
+    }
+    ctx.lineTo(w, bottomY);
+    ctx.lineTo(0, bottomY);
+    ctx.closePath();
+  }
+
   // ---------------------------------------------------------------------
   // Canvas2D pattern generators (ported 1:1 from the Next.js prototype)
   // ---------------------------------------------------------------------
@@ -1372,6 +1520,87 @@
             ctx.fill();
             ctx.globalAlpha = 1;
           }
+        },
+      };
+    },
+
+    waveSectionWall: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const rows = clamp(Math.round(11 - p.wallThickness), 5, 10);
+          const rowH = h / rows;
+          const ampFactor = 0.4 + (p.tempSwing / 25) * 1.2;
+          const amp = rowH * 0.85 * (p.waveAmplitude / 100) * ampFactor;
+          for (let row = 0; row < rows; row++) {
+            const midY = row * rowH + rowH * 0.5;
+            const phase = t * 0.35 + row * 0.5;
+            drawWaveBand(ctx, w, midY, (row + 1) * rowH, amp, phase, 0.018, 0);
+            ctx.fillStyle = lerpColor(palette[0], palette[3], row / rows);
+            ctx.globalAlpha = 0.55 + (p.wallThickness / 6) * 0.4;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        },
+      };
+    },
+
+    corrugatedThermalSkin: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const sharp = clamp(p.foldSharpness / 100, 0, 1);
+          const freq = (2 * Math.PI * p.foldDensity) / w;
+          const amp = h * 0.26;
+          const midY = h * 0.5;
+          drawWaveBand(ctx, w, midY, h, amp, t * 0.2, freq, sharp);
+          ctx.fillStyle = lerpColor(palette[2], palette[3], 0.5);
+          ctx.fill();
+          drawWaveBand(ctx, w, midY, h, amp, t * 0.2 + 0.4, freq, sharp);
+          ctx.fillStyle = "rgba(0,0,0," + (0.15 + clamp(p.shadowDepth / 100, 0, 1) * 0.45) + ")";
+          ctx.fill();
+        },
+      };
+    },
+
+    ribbedMassBuffer: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const ribCount = Math.max(4, Math.round(p.ribDensity));
+          const ribW = w / ribCount;
+          const gapFrac = clamp(p.airGapDepth / 100, 0.1, 0.8);
+          const delaySpeed = 0.15 + (p.thermalDelay / 100) * 0.5;
+          for (let i = 0; i < ribCount; i++) {
+            const x0 = i * ribW;
+            const solidW = ribW * (1 - gapFrac);
+            const heatPhase = Math.sin(t * delaySpeed - i * 0.4) * 0.5 + 0.5;
+            ctx.fillStyle = lerpColor(palette[1], palette[3], heatPhase);
+            ctx.fillRect(x0, 0, solidW, h);
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.fillRect(x0 + solidW, 0, ribW - solidW, h);
+          }
+        },
+      };
+    },
+
+    rollingTopography: function () {
+      return {
+        draw: function (ctx, w, h, t, p, palette) {
+          ctx.clearRect(0, 0, w, h);
+          const relief = clamp(p.terrainRelief / 100, 0, 1);
+          const windSpeed = 0.08 + (p.windExposure / 100) * 0.5;
+          const baseY = h * 0.55;
+          const amp = h * 0.3 * relief;
+          const freq = 0.004 * p.terrainScale;
+          drawWaveBand(ctx, w, baseY, h, amp, t * windSpeed, freq, 0, 0.35);
+          ctx.fillStyle = lerpColor(palette[1], palette[2], 0.5);
+          ctx.fill();
+          const sky = ctx.createLinearGradient(0, 0, 0, baseY);
+          sky.addColorStop(0, palette[0]);
+          sky.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, w, baseY);
         },
       };
     },
