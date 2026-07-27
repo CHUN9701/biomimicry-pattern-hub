@@ -1288,25 +1288,145 @@
               "id": 1,
               "name": "Leaf Venation Structural Type",
               "description": "結構肋條模擬葉脈分佈邏輯，達到輕量化與力學效率的平衡",
-              "example": "仿生葉脈屋頂結構研究"
+              "example": "仿生葉脈屋頂結構研究",
+              "slug": "leaf-venation-structural",
+              "generator": "leafVenationStructural",
+              "climateInput": "脈絡密度／生長速度 (vein density / growth speed)",
+              "sliders": [
+                {
+                  "key": "veinDensity",
+                  "label": "Vein Density",
+                  "min": 60,
+                  "max": 200,
+                  "default": 120
+                },
+                {
+                  "key": "growthSpeed",
+                  "label": "Growth Speed",
+                  "min": 1,
+                  "max": 10,
+                  "default": 5
+                },
+                {
+                  "key": "branchWidth",
+                  "label": "Branch Width",
+                  "min": 1,
+                  "max": 3,
+                  "default": 1.5
+                }
+              ],
+              "visualPrimitive": "以空間殖民演算法（space colonization）從底部單一起點向上生長，吸引子分佈於橢圓形葉片範圍內，逐步長出分岔葉脈網絡",
+              "mappingRule": "veinDensity 決定葉片範圍內吸引子（生長目標點）的數量，越多則脈絡越密集、分岔越豐富；growthSpeed 決定每次繪製推進的生長迭代次數；branchWidth 決定脈絡線條基礎粗細,靠近起點的主脈較粗、末梢細脈較細。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "仿生葉脈屋頂結構研究 — 結構肋條模擬葉脈分佈邏輯，達到輕量化與力學效率的平衡"
             },
             {
               "id": 2,
               "name": "Fluid Dynamic Facade Type",
               "description": "立面線條模擬葉脈中水分輸送路徑，兼具視覺流動感與結構導向",
-              "example": "參數化流線型立面"
+              "example": "參數化流線型立面",
+              "slug": "fluid-dynamic-facade",
+              "generator": "fluidDynamicFacade",
+              "climateInput": "流線密度／流速 (streamline density / flow speed)",
+              "sliders": [
+                {
+                  "key": "streamDensity",
+                  "label": "Stream Density",
+                  "min": 60,
+                  "max": 200,
+                  "default": 130
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 1,
+                  "max": 10,
+                  "default": 5
+                },
+                {
+                  "key": "lineWidth",
+                  "label": "Line Width",
+                  "min": 1,
+                  "max": 3,
+                  "default": 1.5
+                }
+              ],
+              "visualPrimitive": "同一套空間殖民引擎，但起點改為左側邊界多個高度不同的點，吸引子平均分佈於整個畫布，形成由左向右流動的水平流線束",
+              "mappingRule": "streamDensity 決定吸引子總數，越高則流線分岔越密集；flowSpeed 決定生長推進速度，模擬水分輸送流速；lineWidth 決定流線基礎粗細。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "參數化流線型立面 — 立面線條模擬葉脈中水分輸送路徑，兼具視覺流動感與結構導向"
             },
             {
               "id": 3,
               "name": "Capillary Drainage Type",
               "description": "排水系統模擬葉脈微血管網絡，分散雨水逕流路徑",
-              "example": "仿生屋頂排水系統設計"
+              "example": "仿生屋頂排水系統設計",
+              "slug": "capillary-drainage",
+              "generator": "capillaryDrainage",
+              "climateInput": "排水點密度／逕流速度 (drainage density / runoff speed)",
+              "sliders": [
+                {
+                  "key": "drainDensity",
+                  "label": "Drain Density",
+                  "min": 60,
+                  "max": 200,
+                  "default": 110
+                },
+                {
+                  "key": "flowSpeed",
+                  "label": "Flow Speed",
+                  "min": 1,
+                  "max": 10,
+                  "default": 5
+                },
+                {
+                  "key": "lineWidth",
+                  "label": "Line Width",
+                  "min": 1,
+                  "max": 3,
+                  "default": 1.5
+                }
+              ],
+              "visualPrimitive": "同一套空間殖民引擎，起點改為底部邊界的多個排水出口，吸引子分佈於整個屋頂範圍，向下collect 匯聚成分散的排水微血管網絡",
+              "mappingRule": "drainDensity 決定屋頂範圍內吸引子（雨水匯集點）數量，越高則排水微血管網絡越細密；flowSpeed 決定逕流匯聚速度；lineWidth 決定管道基礎粗細，越靠近出口的主管道越粗。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "仿生屋頂排水系統設計 — 排水系統模擬葉脈微血管網絡，分散雨水逕流路徑"
             },
             {
               "id": 4,
               "name": "Branching Load Path Type",
               "description": "結構受力路徑依葉脈分岔邏輯層層分散，減少單點應力集中",
-              "example": "仿生結構力學分析應用"
+              "example": "仿生結構力學分析應用",
+              "slug": "branching-load-path",
+              "generator": "branchingLoadPath",
+              "climateInput": "受力點數量／生長速度 (load point count / growth speed)",
+              "sliders": [
+                {
+                  "key": "loadPointCount",
+                  "label": "Load Point Count",
+                  "min": 2,
+                  "max": 6,
+                  "default": 4
+                },
+                {
+                  "key": "growthSpeed",
+                  "label": "Growth Speed",
+                  "min": 1,
+                  "max": 10,
+                  "default": 5
+                },
+                {
+                  "key": "lineWidth",
+                  "label": "Line Width",
+                  "min": 1,
+                  "max": 3,
+                  "default": 2
+                }
+              ],
+              "visualPrimitive": "同一套空間殖民引擎，但吸引子不再均勻鋪滿整個範圍，而是集中成 loadPointCount 組局部叢集（代表離散受力點），從底部支撐起點向上分岔連接至各叢集",
+              "mappingRule": "loadPointCount 決定離散受力點（叢集）的數量，越多則分岔路徑越分散、單點應力集中越低；growthSpeed 決定生長推進速度；lineWidth 決定路徑基礎粗細，主要傳力路徑較粗、次要分岔較細。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "仿生結構力學分析應用 — 結構受力路徑依葉脈分岔邏輯層層分散，減少單點應力集中"
             }
           ]
         },

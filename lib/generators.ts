@@ -2016,6 +2016,256 @@ const diffusionLimitedAggregation: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// SpaceColonization engine — shared vein-growth stepper for vein-flow's 4
+// mechanism types. Each factory owns its own attractors/nodes state (grown
+// incrementally across draw calls, same as the pre-existing veinFlow
+// baseline this was extracted from) but all reuse the same growth step:
+// every attractor pulls its single nearest node, nodes advance toward the
+// averaged pull direction, and attractors within kill range are consumed.
+// Factories differ only in where attractors are seeded and where growth
+// starts from, which is what actually produces the leaf/stream/drain/
+// load-path distinction.
+// ---------------------------------------------------------------------------
+type VeinNode = { x: number; y: number; parent: number };
+type VeinPoint = { x: number; y: number };
+
+function seedInEllipse(
+  rand: () => number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number
+): VeinPoint {
+  for (let tries = 0; tries < 20; tries++) {
+    const x = (rand() * 2 - 1) * rx;
+    const y = (rand() * 2 - 1) * ry;
+    if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) return { x: cx + x, y: cy + y };
+  }
+  return { x: cx, y: cy };
+}
+
+function stepSpaceColonization(
+  nodes: VeinNode[],
+  attractors: VeinPoint[],
+  influenceR: number,
+  killR: number,
+  stepLen: number,
+  iterations: number
+): { nodes: VeinNode[]; attractors: VeinPoint[] } {
+  for (let iter = 0; iter < iterations && nodes.length < 900; iter++) {
+    const pulls = new Map<number, { dx: number; dy: number; n: number }>();
+
+    for (const a of attractors) {
+      let bestI = -1;
+      let bestD = influenceR;
+      for (let i = 0; i < nodes.length; i++) {
+        const dx = a.x - nodes[i].x;
+        const dy = a.y - nodes[i].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < bestD) {
+          bestD = d;
+          bestI = i;
+        }
+      }
+      if (bestI >= 0) {
+        const dx = a.x - nodes[bestI].x;
+        const dy = a.y - nodes[bestI].y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+        const cur = pulls.get(bestI) ?? { dx: 0, dy: 0, n: 0 };
+        cur.dx += dx / d;
+        cur.dy += dy / d;
+        cur.n += 1;
+        pulls.set(bestI, cur);
+      }
+    }
+
+    const newNodes: VeinNode[] = [];
+    pulls.forEach((v, i) => {
+      const dx = v.dx / v.n;
+      const dy = v.dy / v.n;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      newNodes.push({ x: nodes[i].x + (dx / d) * stepLen, y: nodes[i].y + (dy / d) * stepLen, parent: i });
+    });
+    for (const n of newNodes) nodes.push(n);
+
+    attractors = attractors.filter((a) => {
+      for (const n of nodes) {
+        const dx = a.x - n.x;
+        const dy = a.y - n.y;
+        if (dx * dx + dy * dy < killR * killR) return false;
+      }
+      return true;
+    });
+  }
+  return { nodes, attractors };
+}
+
+function drawVeinNetwork(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nodes: VeinNode[],
+  palette: Palette,
+  baseWidth: number
+) {
+  ctx.clearRect(0, 0, w, h);
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    if (n.parent < 0) continue;
+    const parent = nodes[n.parent];
+    ctx.beginPath();
+    ctx.moveTo(parent.x, parent.y);
+    ctx.lineTo(n.x, n.y);
+    ctx.strokeStyle = lerpColor(palette[1], palette[3], i / Math.max(1, nodes.length));
+    ctx.lineWidth = Math.max(0.6, baseWidth * (1 - i / Math.max(1, nodes.length)));
+    ctx.lineCap = "round";
+    ctx.stroke();
+  }
+}
+
+const leafVenationStructural: Factory = () => {
+  let attractors: VeinPoint[] = [];
+  let nodes: VeinNode[] = [];
+  let lastDensity = -1;
+
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      const density = Math.round(p.veinDensity);
+      if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
+        const rand = mulberry32(Math.floor(density * 97 + 7));
+        attractors = [];
+        const cx = w * 0.5;
+        const cy = h * 0.46;
+        const rx = w * 0.42;
+        const ry = h * 0.42;
+        for (let i = 0; i < density; i++) attractors.push(seedInEllipse(rand, cx, cy, rx, ry));
+        nodes = [{ x: w * 0.5, y: h * 0.96, parent: -1 }];
+        lastDensity = density;
+      }
+
+      const influenceR = Math.max(w, h) * 0.18;
+      const killR = Math.max(w, h) * 0.035;
+      const stepLen = 4 + p.growthSpeed * 0.4;
+      const iterations = Math.max(1, Math.round(p.growthSpeed / 2));
+      const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
+      nodes = result.nodes;
+      attractors = result.attractors;
+
+      drawVeinNetwork(ctx, w, h, nodes, palette, p.branchWidth);
+    },
+  };
+};
+
+const fluidDynamicFacade: Factory = () => {
+  let attractors: VeinPoint[] = [];
+  let nodes: VeinNode[] = [];
+  let lastDensity = -1;
+
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      const density = Math.round(p.streamDensity);
+      if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
+        const rand = mulberry32(Math.floor(density * 131 + 11));
+        attractors = [];
+        for (let i = 0; i < density; i++) attractors.push({ x: rand() * w, y: rand() * h });
+        nodes = [0.15, 0.38, 0.62, 0.85].map((f) => ({ x: w * 0.02, y: h * f, parent: -1 }));
+        lastDensity = density;
+      }
+
+      const influenceR = Math.max(w, h) * 0.2;
+      const killR = Math.max(w, h) * 0.035;
+      const stepLen = 4 + p.flowSpeed * 0.4;
+      const iterations = Math.max(1, Math.round(p.flowSpeed / 2));
+      const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
+      nodes = result.nodes;
+      attractors = result.attractors;
+
+      drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+    },
+  };
+};
+
+const capillaryDrainage: Factory = () => {
+  let attractors: VeinPoint[] = [];
+  let nodes: VeinNode[] = [];
+  let lastDensity = -1;
+
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      const density = Math.round(p.drainDensity);
+      if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
+        const rand = mulberry32(Math.floor(density * 71 + 13));
+        attractors = [];
+        for (let i = 0; i < density; i++) attractors.push({ x: rand() * w, y: rand() * h * 0.94 });
+        nodes = [0.25, 0.5, 0.75].map((f) => ({ x: w * f, y: h * 0.98, parent: -1 }));
+        lastDensity = density;
+      }
+
+      const influenceR = Math.max(w, h) * 0.19;
+      const killR = Math.max(w, h) * 0.035;
+      const stepLen = 4 + p.flowSpeed * 0.4;
+      const iterations = Math.max(1, Math.round(p.flowSpeed / 2));
+      const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
+      nodes = result.nodes;
+      attractors = result.attractors;
+
+      drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+    },
+  };
+};
+
+const branchingLoadPath: Factory = () => {
+  let attractors: VeinPoint[] = [];
+  let nodes: VeinNode[] = [];
+  let lastKey = -1;
+
+  return {
+    draw(ctx, w, h, t, p, palette) {
+      const clusterCount = Math.round(p.loadPointCount);
+      if (clusterCount !== lastKey || nodes.length === 0) {
+        const rand = mulberry32(Math.floor(clusterCount * 613 + 29));
+        const clusters: VeinPoint[] = [];
+        for (let c = 0; c < clusterCount; c++) {
+          clusters.push({ x: rand() * w * 0.7 + w * 0.15, y: rand() * h * 0.55 + h * 0.05 });
+        }
+        attractors = [];
+        for (let i = 0; i < 48; i++) {
+          const cl = clusters[i % clusterCount];
+          attractors.push({ x: cl.x + (rand() - 0.5) * w * 0.1, y: cl.y + (rand() - 0.5) * h * 0.1 });
+        }
+        // One start node per cluster, aligned under its own cluster's x
+        // position — not one shared trunk node. A single shared start
+        // reaching for every cluster at once had each cluster's pull
+        // vector fight the others (opposite horizontal directions largely
+        // cancel out when averaged), so it crept in a compromise direction
+        // and stalled instead of branching. Aligning one node per cluster
+        // means each one's pulls come predominantly from its own nearby
+        // cluster, so growth actually reaches all of them. Verified
+        // visually before/after this fix.
+        nodes = clusters.map((cl) => ({ x: cl.x, y: h * 0.96, parent: -1 }));
+        lastKey = clusterCount;
+      }
+
+      // Load-point clusters are sparse isolated blobs (not a continuous
+      // field like the other 3 types), so influenceR must be large enough
+      // to bridge the full worst-case distance from the base to any
+      // cluster in one hop — a small radius (as used elsewhere) left the
+      // base node(s) permanently out of range of every attractor, so
+      // nothing ever grew. Verified visually before/after this fix.
+      const influenceR = Math.max(w, h) * 1.3;
+      const killR = Math.max(w, h) * 0.035;
+      const stepLen = 4 + p.growthSpeed * 0.4;
+      const iterations = Math.max(1, Math.round(p.growthSpeed / 2));
+      const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
+      nodes = result.nodes;
+      attractors = result.attractors;
+
+      drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+    },
+  };
+};
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -2047,6 +2297,10 @@ const registry: Record<string, Factory> = {
   cellularGrowthSimulation,
   coralGrowthPattern,
   diffusionLimitedAggregation,
+  leafVenationStructural,
+  fluidDynamicFacade,
+  capillaryDrainage,
+  branchingLoadPath,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,
