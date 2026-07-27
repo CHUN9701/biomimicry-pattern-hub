@@ -1441,6 +1441,154 @@ const gradientThicknessMembrane: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Voronoi engine — shared true-tessellation primitive for the voronoi
+// subcategory's 4 mechanism types. makeVoronoiSeeds builds a jittered seed
+// point set; forEachVoronoiCellPixel rasterizes the diagram on a step grid,
+// handing each type its nearest-seed index and edge-proximity value so it
+// can decide how to render cell fill vs. boundary.
+// ---------------------------------------------------------------------------
+function makeVoronoiSeeds(
+  n: number,
+  w: number,
+  h: number,
+  t: number,
+  jitterAmt: number
+): { x: number; y: number }[] {
+  const rand = mulberry32(Math.floor(n * 977 + jitterAmt * 3100));
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const sx = rand();
+    const sy = rand();
+    pts.push({
+      x: (sx + Math.sin(t * 0.15 + i) * 0.02 * jitterAmt) * w,
+      y: (sy + Math.cos(t * 0.15 + i * 1.3) * 0.02 * jitterAmt) * h,
+    });
+  }
+  return pts;
+}
+
+function forEachVoronoiCellPixel(
+  w: number,
+  h: number,
+  points: { x: number; y: number }[],
+  step: number,
+  cb: (gx: number, gy: number, step: number, best: number, edge: number) => void
+) {
+  for (let gy = 0; gy < h; gy += step) {
+    for (let gx = 0; gx < w; gx += step) {
+      let best = 0;
+      let bestD = Infinity;
+      let secondD = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const dx = points[i].x - gx;
+        const dy = points[i].y - gy;
+        const d = dx * dx + dy * dy;
+        if (d < bestD) {
+          secondD = bestD;
+          bestD = d;
+          best = i;
+        } else if (d < secondD) {
+          secondD = d;
+        }
+      }
+      const edge = Math.sqrt(secondD) - Math.sqrt(bestD);
+      cb(gx, gy, step, best, edge);
+    }
+  }
+}
+
+const cellularSkinVoronoi: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const n = Math.round(p.cellCount);
+    const jitterAmt = p.jitter / 100;
+    const pts = makeVoronoiSeeds(n, w, h, t, jitterAmt);
+    const poreAlpha = clamp(p.poreOpacity / 100, 0, 1);
+
+    forEachVoronoiCellPixel(w, h, pts, 6, (gx, gy, step, best, edge) => {
+      const isEdge = edge < 3;
+      ctx.fillStyle = isEdge ? `rgba(0,0,0,${poreAlpha})` : lerpColor(palette[1], palette[3], (best % 7) / 7);
+      ctx.fillRect(gx, gy, step, step);
+    });
+  },
+});
+
+const structuralVoronoiShell: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const n = Math.round(p.cellCount);
+    const jitterAmt = p.jitter / 100;
+    const pts = makeVoronoiSeeds(n, w, h, t, jitterAmt);
+    const memberW = p.memberWidth;
+
+    forEachVoronoiCellPixel(w, h, pts, 5, (gx, gy, step, best, edge) => {
+      const isMember = edge < memberW;
+      ctx.fillStyle = isMember ? lerpColor(palette[2], palette[3], 0.6) : lerpColor(palette[0], palette[1], 0.3);
+      ctx.globalAlpha = isMember ? 1 : 0.35;
+      ctx.fillRect(gx, gy, step, step);
+      ctx.globalAlpha = 1;
+    });
+  },
+});
+
+const densityGradedVoronoi: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const gradRad = (p.gradientAngle / 180) * Math.PI;
+    const dirX = Math.cos(gradRad);
+    const dirY = Math.sin(gradRad);
+    const contrast = clamp(p.contrastRange / 100, 0, 1);
+    const candidates = Math.round(p.baseCellCount) * 4;
+    const rand = mulberry32(Math.floor(candidates * 977));
+    const pts: { x: number; y: number }[] = [];
+    for (let i = 0; i < candidates; i++) {
+      const x = rand();
+      const y = rand();
+      const proj = (x - 0.5) * dirX + (y - 0.5) * dirY;
+      const density = clamp(0.2 + (0.5 + proj) * contrast, 0, 1);
+      if (rand() < density) {
+        pts.push({
+          x: (x + Math.sin(t * 0.15 + i) * 0.015) * w,
+          y: (y + Math.cos(t * 0.15 + i * 1.3) * 0.015) * h,
+        });
+      }
+    }
+    if (pts.length < 3) {
+      pts.push({ x: w / 2, y: h / 2 }, { x: w * 0.3, y: h * 0.7 }, { x: w * 0.7, y: h * 0.3 });
+    }
+
+    forEachVoronoiCellPixel(w, h, pts, 6, (gx, gy, step, best, edge) => {
+      const isEdge = edge < 3;
+      ctx.fillStyle = isEdge ? "rgba(0,0,0,0.5)" : lerpColor(palette[1], palette[3], (best % 7) / 7);
+      ctx.fillRect(gx, gy, step, step);
+    });
+  },
+});
+
+const boneVoronoi: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const n = Math.round(p.cellCount);
+    const pts = makeVoronoiSeeds(n, w, h, t, 0.3);
+    const porosityT = clamp(p.porosity / 100, 0, 1);
+    const strutW = p.strutThickness * (1 - porosityT * 0.5);
+
+    ctx.fillStyle = palette[0];
+    ctx.fillRect(0, 0, w, h);
+
+    forEachVoronoiCellPixel(w, h, pts, 5, (gx, gy, step, best, edge) => {
+      const strutT = clamp(1 - edge / (strutW * 4), 0, 1);
+      if (strutT > 0.02) {
+        ctx.fillStyle = lerpColor(palette[2], palette[3], strutT);
+        ctx.globalAlpha = strutT;
+        ctx.fillRect(gx, gy, step, step);
+        ctx.globalAlpha = 1;
+      }
+    });
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -1456,6 +1604,10 @@ const registry: Record<string, Factory> = {
   bistableSnap,
   irisAperture,
   gradientThicknessMembrane,
+  cellularSkinVoronoi,
+  structuralVoronoiShell,
+  densityGradedVoronoi,
+  boneVoronoi,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,

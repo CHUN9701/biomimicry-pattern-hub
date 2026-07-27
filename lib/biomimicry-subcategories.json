@@ -665,25 +665,153 @@
               "id": 1,
               "name": "Cellular Skin Type",
               "description": "表皮以泰森多邊形切割產生不規則孔洞，模擬細胞組織分佈邏輯",
-              "example": "Beijing National Aquatics Centre「水立方」的氣泡結構"
+              "example": "Beijing National Aquatics Centre「水立方」的氣泡結構",
+              "slug": "cellular-skin-voronoi",
+              "generator": "cellularSkinVoronoi",
+              "climateInput": "細胞密度／孔隙不透明度 (cell density / pore opacity)",
+              "sliders": [
+                {
+                  "key": "cellCount",
+                  "label": "Cell Count",
+                  "min": 20,
+                  "max": 120,
+                  "default": 60
+                },
+                {
+                  "key": "jitter",
+                  "label": "Jitter",
+                  "min": 0,
+                  "max": 100,
+                  "default": 40,
+                  "unit": "%"
+                },
+                {
+                  "key": "poreOpacity",
+                  "label": "Pore Opacity",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "以真實泰森多邊形演算法（最近種子點搜尋）鑲嵌畫布，每個多邊形依索引填色、邊界處以暗色孔隙線分隔，模擬細胞組織的不規則分佈",
+              "mappingRule": "cellCount 決定種子點數量，越多則多邊形（細胞）越多越小；jitter 讓種子點隨時間輕微飄移，模擬細胞組織的有機浮動感；poreOpacity 決定邊界孔隙線的不透明度，越高代表孔隙越明顯清晰。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "Beijing National Aquatics Centre「水立方」的氣泡結構 — 表皮以泰森多邊形切割產生不規則孔洞，模擬細胞組織分佈邏輯"
             },
             {
               "id": 2,
               "name": "Structural Voronoi Shell Type",
               "description": "結構外殼直接以泰森多邊形做承重分割，兼具結構效率與視覺紋理",
-              "example": "仿生殼體結構實驗案例"
+              "example": "仿生殼體結構實驗案例",
+              "slug": "structural-voronoi-shell",
+              "generator": "structuralVoronoiShell",
+              "climateInput": "結構受力分佈 (structural load distribution)",
+              "sliders": [
+                {
+                  "key": "cellCount",
+                  "label": "Cell Count",
+                  "min": 10,
+                  "max": 60,
+                  "default": 30
+                },
+                {
+                  "key": "jitter",
+                  "label": "Jitter",
+                  "min": 0,
+                  "max": 100,
+                  "default": 25,
+                  "unit": "%"
+                },
+                {
+                  "key": "memberWidth",
+                  "label": "Member Width",
+                  "min": 1,
+                  "max": 8,
+                  "default": 4,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "僅保留泰森多邊形的邊界作為粗結構線條（承重構件），多邊形內部僅以低不透明度淡填色呈現，呼應結構外殼「線條即構件」的邏輯",
+              "mappingRule": "memberWidth 越粗 → 結構線條（承重構件）越粗壯明顯，內部淡色區域相對縮小；cellCount 決定結構分割的密度；jitter 讓結構節點隨時間微幅浮動，呼應動態受力調整的視覺聯想。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "仿生殼體結構實驗案例 — 結構外殼直接以泰森多邊形做承重分割，兼具結構效率與視覺紋理"
             },
             {
               "id": 3,
               "name": "Density-Graded Voronoi Type",
               "description": "泰森多邊形密度依結構受力或日照強度漸變",
-              "example": "參數化立面的應力視覺化設計"
+              "example": "參數化立面的應力視覺化設計",
+              "slug": "density-graded-voronoi",
+              "generator": "densityGradedVoronoi",
+              "climateInput": "結構受力梯度／日照強度梯度 (stress or solar intensity gradient)",
+              "sliders": [
+                {
+                  "key": "gradientAngle",
+                  "label": "Gradient Direction",
+                  "min": 0,
+                  "max": 180,
+                  "default": 45,
+                  "unit": "°"
+                },
+                {
+                  "key": "baseCellCount",
+                  "label": "Base Cell Count",
+                  "min": 15,
+                  "max": 40,
+                  "default": 20
+                },
+                {
+                  "key": "contrastRange",
+                  "label": "Contrast Range",
+                  "min": 0,
+                  "max": 100,
+                  "default": 70,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "種子點沿 gradientAngle 方向以機率漸變方式生成（非均勻隨機），使泰森多邊形尺寸沿該軸連續由小漸變到大",
+              "mappingRule": "gradientAngle 決定密度漸變的方向軸；contrastRange 越大 → 該方向軸兩端的種子點密度差距越大，對應多邊形尺寸的漸變越明顯（一端細密、一端疏朗）；baseCellCount 決定候選種子點基礎數量。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "參數化立面的應力視覺化設計 — 泰森多邊形密度依結構受力或日照強度漸變"
             },
             {
               "id": 4,
               "name": "Bone-Inspired Voronoi Type",
               "description": "靈感取自骨骼小樑（trabecular bone）的多孔分佈邏輯，兼顧輕量化與強度",
-              "example": "3D 列印骨骼結構建築構件研究"
+              "example": "3D 列印骨骼結構建築構件研究",
+              "slug": "bone-voronoi",
+              "generator": "boneVoronoi",
+              "climateInput": "孔隙率 (porosity)",
+              "sliders": [
+                {
+                  "key": "cellCount",
+                  "label": "Cell Count",
+                  "min": 15,
+                  "max": 50,
+                  "default": 28
+                },
+                {
+                  "key": "porosity",
+                  "label": "Porosity",
+                  "min": 0,
+                  "max": 100,
+                  "default": 55,
+                  "unit": "%"
+                },
+                {
+                  "key": "strutThickness",
+                  "label": "Strut Thickness",
+                  "min": 1,
+                  "max": 6,
+                  "default": 3,
+                  "unit": "px"
+                }
+              ],
+              "visualPrimitive": "深色量體背景上，僅泰森多邊形邊界附近以柔和漸層亮起形成類似骨小樑的鏤空支撐網，而非鑲嵌鋪滿整個畫面",
+              "mappingRule": "porosity 越高 → 支撐網的有效寬度越窄、鏤空（孔隙）面積越大，模擬骨小樑輕量化但仍保有連續支撐路徑；strutThickness 決定支撐網基礎粗細；cellCount 決定支撐網格密度。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "3D 列印骨骼結構建築構件研究 — 靈感取自骨骼小樑（trabecular bone）的多孔分佈邏輯，兼顧輕量化與強度"
             }
           ]
         },
