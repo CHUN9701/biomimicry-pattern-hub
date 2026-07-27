@@ -824,25 +824,149 @@
               "id": 1,
               "name": "Logarithmic Shell Spiral Type",
               "description": "依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構",
-              "example": "螺旋狀樓梯/中庭採光井設計"
+              "example": "螺旋狀樓梯/中庭採光井設計",
+              "slug": "logarithmic-shell-spiral",
+              "generator": "logarithmicShellSpiral",
+              "climateInput": "螺旋生長比例 (logarithmic growth ratio)",
+              "sliders": [
+                {
+                  "key": "growthRate",
+                  "label": "Growth Rate",
+                  "min": 1.05,
+                  "max": 1.5,
+                  "default": 1.2
+                },
+                {
+                  "key": "turns",
+                  "label": "Turns",
+                  "min": 2,
+                  "max": 6,
+                  "default": 4
+                },
+                {
+                  "key": "chamberCount",
+                  "label": "Chamber Count",
+                  "min": 8,
+                  "max": 24,
+                  "default": 16
+                }
+              ],
+              "visualPrimitive": "由中心向外連續延伸的對數螺旋曲線，並以放射狀分隔線標示鸚鵡螺殼腔室分節",
+              "mappingRule": "growthRate 越大 → 螺旋半徑隨角度增加的速率越快，殼形越快速外擴（對應鸚鵡螺殼的生長比例）；turns 決定螺旋總圈數；chamberCount 決定放射狀腔室分隔線的數量，線條顏色沿螺旋方向漸層，呼應腔室由內而外依序生成。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "螺旋狀樓梯/中庭採光井設計 — 依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構"
             },
             {
               "id": 2,
               "name": "Phyllotaxis Facade Type",
               "description": "立面開孔排列模擬植物葉序生長角度（約137.5°黃金角），達到均勻採光與遮蔭",
-              "example": "向日葵花序啟發的參數化立面"
+              "example": "向日葵花序啟發的參數化立面",
+              "slug": "phyllotaxis-facade",
+              "generator": "phyllotaxisFacade",
+              "climateInput": "開孔數量／螺旋間距 (aperture count / spiral spacing)",
+              "sliders": [
+                {
+                  "key": "apertureCount",
+                  "label": "Aperture Count",
+                  "min": 60,
+                  "max": 300,
+                  "default": 150
+                },
+                {
+                  "key": "apertureScale",
+                  "label": "Aperture Scale",
+                  "min": 2,
+                  "max": 12,
+                  "default": 6,
+                  "unit": "px"
+                },
+                {
+                  "key": "spiralDensity",
+                  "label": "Spiral Density",
+                  "min": 0.5,
+                  "max": 2,
+                  "default": 1
+                }
+              ],
+              "visualPrimitive": "以黃金角（≈137.5°）為固定角度增量、半徑隨序號平方根成長的螺旋點陣，每點為一圓形孔徑，形成向日葵花序般均勻分佈的開孔場",
+              "mappingRule": "apertureCount 決定開孔總數；spiralDensity 越大 → 點陣整體間距越開，孔徑分佈越疏朗；apertureScale 決定單一孔徑基礎大小，並隨序號漸增微幅放大，模擬由中心向外生長的孔徑序列。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "向日葵花序啟發的參數化立面 — 立面開孔排列模擬植物葉序生長角度（約137.5°黃金角），達到均勻採光與遮蔭"
             },
             {
               "id": 3,
               "name": "Spiral Growth Tower Type",
               "description": "塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律",
-              "example": "螺旋形高層建築量體邏輯"
+              "example": "螺旋形高層建築量體邏輯",
+              "slug": "spiral-growth-tower",
+              "generator": "spiralGrowthTower",
+              "climateInput": "逐層旋轉角度／收分比例 (twist-per-floor / taper ratio)",
+              "sliders": [
+                {
+                  "key": "floorCount",
+                  "label": "Floor Count",
+                  "min": 6,
+                  "max": 20,
+                  "default": 12
+                },
+                {
+                  "key": "twistPerFloor",
+                  "label": "Twist Per Floor",
+                  "min": 0,
+                  "max": 180,
+                  "default": 137.5,
+                  "unit": "°"
+                },
+                {
+                  "key": "taperRatio",
+                  "label": "Taper Ratio",
+                  "min": 0,
+                  "max": 80,
+                  "default": 35,
+                  "unit": "%"
+                }
+              ],
+              "visualPrimitive": "多層樓板堆疊而成的塔樓立面剖面，每層樓板隨高度依 twistPerFloor 角度水平偏移、寬度隨 taperRatio 逐漸收分",
+              "mappingRule": "twistPerFloor 預設即為費氏數列對應的黃金角（≈137.5°），決定每層樓板相對於下一層的水平偏移量，模擬逐層旋轉生成的視覺韻律；taperRatio 越高 → 樓層寬度隨高度收分幅度越大，呼應塔樓量體向上逐漸收窄；floorCount 決定樓層數量。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "螺旋形高層建築量體邏輯 — 塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律"
             },
             {
               "id": 4,
               "name": "Radial Fibonacci Louver Type",
               "description": "遮陽百葉依螺旋角度漸變排列，兼顧不同方位的遮陽效率",
-              "example": "參數化遮陽格柵設計"
+              "example": "參數化遮陽格柵設計",
+              "slug": "radial-fibonacci-louver",
+              "generator": "radialFibonacciLouver",
+              "climateInput": "百葉數量／間距比例 (louver count / spacing scale)",
+              "sliders": [
+                {
+                  "key": "louverCount",
+                  "label": "Louver Count",
+                  "min": 80,
+                  "max": 260,
+                  "default": 160
+                },
+                {
+                  "key": "louverLength",
+                  "label": "Louver Length",
+                  "min": 6,
+                  "max": 24,
+                  "default": 14,
+                  "unit": "px"
+                },
+                {
+                  "key": "spacingScale",
+                  "label": "Spacing Scale",
+                  "min": 0.5,
+                  "max": 2,
+                  "default": 1
+                }
+              ],
+              "visualPrimitive": "沿黃金角螺旋點陣排列的細長遮陽百葉條，每片百葉依所在螺旋角度旋轉朝向，形成呼應費氏螺旋的放射狀遮陽場",
+              "mappingRule": "louverCount 決定百葉總數；spacingScale 越大 → 螺旋點陣間距越開，百葉分佈越疏；louverLength 決定單片百葉長度，越長則遮陽效率越高但也越密集重疊，對應不同方位角度的遮陽需求差異。",
+              "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
+              "refNote": "參數化遮陽格柵設計 — 遮陽百葉依螺旋角度漸變排列，兼顧不同方位的遮陽效率"
             }
           ]
         },

@@ -1589,6 +1589,135 @@ const boneVoronoi: Factory = () => ({
   },
 });
 
+// ---------------------------------------------------------------------------
+// forEachPhyllotaxisPoint — golden-angle spiral point placement, the second
+// half of the RadialPhyllotaxis family alongside forEachRadialPetal. Where
+// forEachRadialPetal evenly spaces N elements at one radius (petals/blades),
+// this spaces them by the golden angle with radius growing as sqrt(i), the
+// true phyllotaxis (sunflower-seed) point field. Used by 2 of fibonacci's 4
+// types; the other 2 (a continuous logarithmic spiral curve, and a vertical
+// stacked-floor tower) are standalone factories — neither placement helper
+// fits a continuous curve or a floor stack, so they aren't forced onto one.
+// ---------------------------------------------------------------------------
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+function forEachPhyllotaxisPoint(
+  cx: number,
+  cy: number,
+  count: number,
+  scale: number,
+  cb: (i: number, x: number, y: number, r: number, angle: number) => void
+) {
+  for (let i = 0; i < count; i++) {
+    const angle = i * GOLDEN_ANGLE;
+    const r = scale * Math.sqrt(i);
+    cb(i, cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, r, angle);
+  }
+}
+
+const logarithmicShellSpiral: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const b = Math.log(p.growthRate) / (Math.PI / 2);
+    const maxAngle = p.turns * 2 * Math.PI;
+    const startR = Math.min(w, h) * 0.02;
+    const rot = t * 0.06;
+
+    ctx.beginPath();
+    for (let a = 0; a <= maxAngle; a += 0.05) {
+      const r = startR * Math.exp(b * a);
+      const x = cx + Math.cos(a + rot) * r;
+      const y = cy + Math.sin(a + rot) * r;
+      if (a === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = lerpColor(palette[2], palette[3], 0.5);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const chamberCount = Math.round(p.chamberCount);
+    const chamberStep = maxAngle / chamberCount;
+    for (let c = 0; c <= chamberCount; c++) {
+      const a = c * chamberStep;
+      const r = startR * Math.exp(b * a);
+      const x = cx + Math.cos(a + rot) * r;
+      const y = cy + Math.sin(a + rot) * r;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = lerpColor(palette[1], palette[3], c / chamberCount);
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  },
+});
+
+const phyllotaxisFacade: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.round(p.apertureCount);
+    const scale = Math.min(w, h) * 0.045 * p.spiralDensity;
+
+    forEachPhyllotaxisPoint(cx, cy, count, scale, (i, x, y) => {
+      if (x < 0 || x > w || y < 0 || y > h) return;
+      const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + i * 0.3);
+      const rad = p.apertureScale * (0.5 + (i / count) * 0.6) * shimmer;
+      ctx.beginPath();
+      ctx.arc(x, y, rad, 0, Math.PI * 2);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], (i % 13) / 13);
+      ctx.fill();
+    });
+  },
+});
+
+const spiralGrowthTower: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const floors = Math.round(p.floorCount);
+    const floorH = h / floors;
+    const taper = p.taperRatio / 100;
+    const twist = (p.twistPerFloor / 180) * Math.PI;
+
+    for (let f = 0; f < floors; f++) {
+      const fT = f / floors;
+      const floorW = w * 0.7 * (1 - taper * fT);
+      const offset = Math.sin(f * twist + t * 0.1) * w * 0.12;
+      const x0 = (w - floorW) / 2 + offset;
+      const y0 = h - (f + 1) * floorH;
+
+      ctx.fillStyle = lerpColor(palette[1], palette[3], fT);
+      ctx.fillRect(x0, y0, floorW, floorH * 0.88);
+    }
+  },
+});
+
+const radialFibonacciLouver: Factory = () => ({
+  draw(ctx, w, h, t, p, palette) {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const count = Math.round(p.louverCount);
+    const scale = Math.min(w, h) * 0.05 * p.spacingScale;
+    const louverLen = p.louverLength;
+
+    forEachPhyllotaxisPoint(cx, cy, count, scale, (i, x, y, r, angle) => {
+      if (x < -louverLen || x > w + louverLen || y < -louverLen || y > h + louverLen) return;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle + Math.PI / 2);
+      ctx.fillStyle = lerpColor(palette[1], palette[3], (i % 17) / 17);
+      ctx.fillRect(-1.5, -louverLen / 2, 3, louverLen);
+      ctx.restore();
+    });
+  },
+});
+
 const registry: Record<string, Factory> = {
   selfShadingSkin,
   thermalMassUndulation,
@@ -1608,6 +1737,10 @@ const registry: Record<string, Factory> = {
   structuralVoronoiShell,
   densityGradedVoronoi,
   boneVoronoi,
+  logarithmicShellSpiral,
+  phyllotaxisFacade,
+  spiralGrowthTower,
+  radialFibonacciLouver,
   kineticFoldingPetals,
   shapeMemoryMembrane,
   voronoi,
