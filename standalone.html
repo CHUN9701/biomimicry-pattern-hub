@@ -5206,10 +5206,17 @@
     bgCanvas.style.filter = level === "variant" ? "blur(18px) brightness(0.55)" : "blur(0px) brightness(1)";
   }
 
+  // Show a value at exactly the precision its own step implies: step 1 -> "20",
+  // step 0.5 -> "1.5", step 0.001 -> "0.037". The previous version hardcoded
+  // toFixed(3) for any non-integer step, and — because every slider in
+  // subcategoryData was missing `step` entirely — Number.isInteger(undefined)
+  // was false, so even integers rendered as "20.000".
   function formatVal(val, slider) {
-    const isInt = Number.isInteger(slider.step);
-    const text = isInt ? String(val) : val.toFixed(3);
-    return text + (slider.unit || "");
+    if (typeof val !== "number" || !Number.isFinite(val)) return "—";
+    const decimals = Number.isInteger(slider.step)
+      ? 0
+      : ((slider.step.toString().split(".")[1]) || "").length;
+    return val.toFixed(decimals) + (slider.unit || "");
   }
 
   const appEl = document.getElementById("app");

@@ -4,6 +4,24 @@ import { useEffect, useRef } from "react";
 import { createGenerator } from "@/lib/generators";
 import type { SliderConfig } from "@/lib/data";
 
+/**
+ * Show a value at exactly the precision its own step implies: step 1 -> "20",
+ * step 0.5 -> "1.5", step 0.001 -> "0.037".
+ *
+ * Replaces a `Number.isInteger(step) ? value : value.toFixed(3)` check that
+ * broke in two ways: when step was missing (as it was for all 144 JSON
+ * sliders) isInteger(undefined) is false, so every integer rendered as
+ * "20.000"; and a step of 0.5 rendered as "1.500" rather than "1.5".
+ */
+function formatParamValue(value: number | undefined, step: number): string {
+  if (value === undefined || !Number.isFinite(value)) return "—";
+  // Decimals needed = digits after the point in `step` (0 for integer steps).
+  const decimals = Number.isInteger(step)
+    ? 0
+    : (step.toString().split(".")[1] ?? "").length;
+  return value.toFixed(decimals);
+}
+
 export default function PlaygroundCanvas({
   colors,
   generatorKey,
@@ -66,8 +84,8 @@ export default function PlaygroundCanvas({
             <div key={slider.key}>
               <div className="mb-2 flex items-center justify-between text-sm text-white/80">
                 <label htmlFor={slider.key}>{slider.label}</label>
-                <span className="font-mono text-xs text-white/50">
-                  {Number.isInteger(slider.step) ? params[slider.key] : params[slider.key]?.toFixed(3)}
+                <span className="font-mono text-xs text-white/50 tabular-nums">
+                  {formatParamValue(params[slider.key], slider.step)}
                   {slider.unit ?? ""}
                 </span>
               </div>
