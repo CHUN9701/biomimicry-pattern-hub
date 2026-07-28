@@ -5,7 +5,11 @@ import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import { getVariant } from "@/lib/data";
 import type { SliderConfig } from "@/lib/data";
-import { getSubcategoryTypes, isVariantExplorerReady } from "@/lib/subcategoryTypes";
+import {
+  getSubcategoryTypes,
+  getValidatedSliders,
+  isVariantExplorerReady,
+} from "@/lib/subcategoryTypes";
 import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
@@ -25,23 +29,33 @@ type ResolvedType = {
   sliders: SliderConfig[];
 };
 
-// mechanismTypes.ts / shapeMemoryTypes.ts (the old universal 4-type
-// taxonomies) are intentionally not imported here anymore — this page now
-// reads exclusively from lib/biomimicry-subcategories.json, per variant.
-// Those two files stay in the repo until every variant has been migrated,
-// but are no longer a live fallback: a variant that isn't fully speced yet
-// falls back to its OWN single generator (lib/data.ts), never to a generic
-// stand-in.
+// The old universal 4-type taxonomies are not imported here — this page reads
+// exclusively from lib/biomimicry-subcategories.json, per variant. A variant
+// that isn't fully speced yet falls back to its OWN single generator
+// (lib/data.ts), never to a generic stand-in. (mechanismTypes.ts has since
+// been deleted; shapeMemoryTypes.ts remains on disk but unused.)
+//
+// Only ever called behind isVariantExplorerReady(), which already requires
+// every type to have a registered generator and fully valid sliders — so the
+// non-null assertions below are guaranteed, not hopeful. getValidatedSliders
+// is used rather than reading t.sliders directly so a malformed slider set
+// can't reach the UI even if this is ever called out of order.
 function resolveExplorerTypes(variantSlug: string): ResolvedType[] {
   const jsonTypes = getSubcategoryTypes(variantSlug) ?? [];
-  return jsonTypes.map((t) => ({
-    key: t.slug ?? String(t.id),
-    label: t.name,
-    examples: t.example,
-    description: t.description,
-    generator: t.generator as string,
-    sliders: t.sliders as SliderConfig[],
-  }));
+  return jsonTypes.flatMap((t) => {
+    const sliders = getValidatedSliders(t);
+    if (!t.generator || !sliders) return [];
+    return [
+      {
+        key: t.slug ?? String(t.id),
+        label: t.name,
+        examples: t.example,
+        description: t.description,
+        generator: t.generator,
+        sliders,
+      },
+    ];
+  });
 }
 
 export default function VariantPage({
