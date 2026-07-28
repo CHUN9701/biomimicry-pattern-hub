@@ -1016,14 +1016,24 @@ const fixedApertureGrid: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
     const angleRad = (p.sunAngle / 180) * Math.PI;
+    // cos/sin alone would keep the offset vector's length ~constant
+    // (cos²+sin²=1) — the shadow only spun in place as sunAngle changed,
+    // never visibly lengthened or shortened (see staticShading's fix for
+    // the full explanation). elevationFactor scales the offset AND
+    // stretches the shadow ellipse itself so length is legible, not just
+    // direction; the aperture (r) itself stays constant size, unaffected —
+    // that's the whole point of "Fixed" Aperture Grid.
+    const elevationFactor = 1 - Math.sin(angleRad);
+    const shadowStretch = 1 + elevationFactor * 1.8;
     forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col, rows, cols) => {
       const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
       const r = Math.min(cellW, cellH) * 0.5 * (p.apertureSize / 100) * shimmer;
-      const offsetX = Math.cos(angleRad) * cellW * 0.5;
-      const offsetY = Math.sin(angleRad) * cellH * 0.5;
+      const shadowLength = Math.min(cellW, cellH) * (0.12 + elevationFactor * 0.65);
+      const offsetX = Math.cos(angleRad) * shadowLength;
+      const offsetY = Math.sin(angleRad) * shadowLength * (cellH / cellW);
 
       ctx.beginPath();
-      ctx.ellipse(cx + offsetX * 0.4, cy + offsetY * 0.4, r * 1.15, r * 0.65, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx + offsetX * 0.5, cy + offsetY * 0.5, r * 1.15 * shadowStretch, r * 0.65, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.fill();
 
