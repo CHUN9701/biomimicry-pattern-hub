@@ -2473,7 +2473,9 @@ const tensegrity: Factory = () => ({
       ctx.moveTo(s.x1, s.y1);
       ctx.lineTo(s.x2, s.y2);
       ctx.strokeStyle = lerpColor(palette[2], palette[3], i / count);
-      ctx.lineWidth = p.memberThickness ? p.memberThickness * 2 : 3;
+      // memberThickness now has its own slider; the previous `? :` fallback to
+      // a hardcoded 3 was silently pinning this because no slider supplied it.
+      ctx.lineWidth = p.memberThickness * 2;
       ctx.lineCap = "round";
       ctx.stroke();
     }

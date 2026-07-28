@@ -1617,10 +1617,19 @@
                   "step": 1.0,
                   "default": 35,
                   "unit": "°"
+                },
+                {
+                  "key": "memberThickness",
+                  "label": "Member Thickness",
+                  "min": 1,
+                  "max": 3,
+                  "step": 0.5,
+                  "default": 1.5,
+                  "unit": "px"
                 }
               ],
-              "visualPrimitive": "多根不相接觸的懸浮壓力支柱環繞排列，支柱兩端以細索（張力元件）交叉連接至相鄰支柱，形成自撐平衡結構",
-              "mappingRule": "strutCount 決定支柱數量；strutLength 決定支柱長度佔整體半徑比例；twistAngle 決定支柱相對切線方向的旋轉角度，越大則張力索的交叉張力感越明顯，呼應張力與壓力元件分離互相平衡的邏輯。",
+              "visualPrimitive": "多根不相接觸的懸浮壓力支柱環繞排列，支柱兩端以細索（張力元件）交叉連接至相鄰支柱，形成自撐平衡結構；支柱線寬由 memberThickness 控制，明顯粗於張力索",
+              "mappingRule": "strutCount 決定支柱數量；strutLength 決定支柱長度佔整體半徑比例；twistAngle 決定支柱相對切線方向的旋轉角度，越大則張力索的交叉張力感越明顯，呼應張力與壓力元件分離互相平衡的邏輯；memberThickness 決定壓力支柱的線寬（張力索固定為細線 1px，藉粗細對比讓「壓力桿粗、張力索細」的結構分工一眼可辨）。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
               "refNote": "張拉整體結構橋樑/裝置藝術 — 張力與壓力元件分離並互相平衡，形成輕量自撐結構"
             },
