@@ -626,6 +626,35 @@ const sensoryHealingPattern: Factory = () => ({
 // textureScale (5-100%).
 // ---------------------------------------------------------------------------
 
+// Shared wind-cue helper for the 4 universal Framework 1 generators below.
+// A cos/sin offset vector alone can't carry "wind strength" legibly (see the
+// drawWindStreaks call sites for why); this renders horizontal streaks whose
+// travel speed AND opacity both scale with windSpeed, giving two independent,
+// readable cues (motion speed + color depth) instead of one subtle wobble.
+function drawWindStreaks(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  t: number,
+  windSpeed: number,
+  color: string
+) {
+  const streakCount = 6;
+  const speed = 20 + windSpeed * 8;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < streakCount; i++) {
+    const yBase = (h / streakCount) * (i + 0.5);
+    const xOffset = ((t * speed + i * 80) % (w + 120)) - 60;
+    ctx.beginPath();
+    ctx.moveTo(xOffset, yBase);
+    ctx.lineTo(xOffset + 40, yBase);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // Static Shading Type — e.g. coral, cactus ridges: fixed apertures whose size
 // is set by texture scale, self-shadowed in the direction of the light.
 const staticShading: Factory = () => ({
@@ -638,17 +667,27 @@ const staticShading: Factory = () => ({
     const angleRad = (p.sunAngle / 180) * Math.PI;
     const shimmerSpeed = 0.3 + p.windSpeed * 0.03;
 
+    // cos(angleRad)/sin(angleRad) alone would keep the offset vector's
+    // length ~constant (cos²+sin²=1) — the shadow only spun in place as
+    // sunAngle changed, never visibly lengthened or shortened, which
+    // doesn't match how real shadows behave (low sun = long shadow, high
+    // sun = short shadow). elevationFactor scales the offset AND stretches
+    // the shadow ellipse itself so length is legible, not just direction.
+    const elevationFactor = 1 - Math.sin(angleRad);
+    const shadowLength = Math.min(cellW, cellH) * (0.12 + elevationFactor * 0.65);
+    const shadowStretch = 1 + elevationFactor * 1.8;
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const cx = col * cellW + cellW / 2;
         const cy = row * cellH + cellH / 2;
         const shimmer = 1 + 0.05 * Math.sin(t * shimmerSpeed + col * 0.9 + row * 1.3);
         const r = Math.min(cellW, cellH) * 0.5 * 0.55 * shimmer;
-        const offsetX = Math.cos(angleRad) * cellW * 0.5;
-        const offsetY = Math.sin(angleRad) * cellH * 0.5;
+        const offsetX = Math.cos(angleRad) * shadowLength;
+        const offsetY = Math.sin(angleRad) * shadowLength * (cellH / cellW);
 
         ctx.beginPath();
-        ctx.ellipse(cx + offsetX * 0.4, cy + offsetY * 0.4, r * 1.15, r * 0.65, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + offsetX * 0.5, cy + offsetY * 0.5, r * 1.15 * shadowStretch, r * 0.65, 0, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(0,0,0,0.45)";
         ctx.fill();
 
@@ -658,6 +697,9 @@ const staticShading: Factory = () => ({
         ctx.fill();
       }
     }
+
+    const windOpacity = clamp(0.08 + (p.windSpeed / 30) * 0.3, 0, 0.38);
+    drawWindStreaks(ctx, w, h, t, p.windSpeed, rgba(palette[3], windOpacity));
   },
 });
 
@@ -703,6 +745,9 @@ const kineticResponsive: Factory = () => ({
     ctx.arc(cx, cy, R * 0.14, 0, Math.PI * 2);
     ctx.fillStyle = palette[0];
     ctx.fill();
+
+    const windOpacity = clamp(0.08 + (p.windSpeed / 30) * 0.3, 0, 0.38);
+    drawWindStreaks(ctx, w, h, t, p.windSpeed, rgba(palette[3], windOpacity));
   },
 });
 
@@ -735,6 +780,9 @@ const gradedPorosity: Factory = () => ({
         ctx.globalAlpha = 1;
       }
     }
+
+    const windOpacity = clamp(0.08 + (p.windSpeed / 30) * 0.3, 0, 0.38);
+    drawWindStreaks(ctx, w, h, t, p.windSpeed, rgba(palette[3], windOpacity));
   },
 });
 
@@ -767,6 +815,9 @@ const layeredOverlapping: Factory = () => ({
         ctx.stroke();
       }
     }
+
+    const windOpacity = clamp(0.08 + (p.windSpeed / 30) * 0.3, 0, 0.38);
+    drawWindStreaks(ctx, w, h, t, p.windSpeed, rgba(palette[3], windOpacity));
   },
 });
 
