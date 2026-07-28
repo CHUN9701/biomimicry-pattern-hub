@@ -1,3 +1,28 @@
+// ============================================================================
+// ORPHANED FILE (as of 97008c2) — imported by nothing.
+//
+// This was the second of two "universal 4-type taxonomy" files that drove the
+// old split-screen explorer. Its sibling, lib/mechanismTypes.ts, was deleted
+// once Part 2 finished replacing that generic framework with per-variant types
+// in lib/biomimicry-subcategories.json. This file was kept rather than deleted
+// alongside it, so it is now dead weight: app/category/[slug]/[variant]/
+// page.tsx reads only lib/subcategoryTypes.ts (JSON) with a lib/data.ts
+// fallback, and never imports this.
+//
+// It also keeps four generators alive on paper — shapeMemoryAlloy,
+// hygromorphicMembrane, bimetallicStrip, pneumaticMembrane — which are
+// registered in lib/generators.ts but unreachable from any live route because
+// this file is their only consumer. They're marked ORPHANED there too.
+//
+// NOT to be confused with the live shape-memory-membrane variant, which is
+// fully working and uses entirely different generators (curlingStripArray /
+// irisAperture / bistableSnap / gradientThicknessMembrane).
+//
+// Safe to delete along with those four generators; kept for now as reference
+// for the universal-slider approach. If reviving, note the taxonomy it
+// describes overlaps the live shape-memory-membrane variant's 4 types.
+// ============================================================================
+
 import type { SliderConfig } from "./data";
 
 export type MembraneType = {
@@ -11,7 +36,8 @@ export type MembraneType = {
 
 // Climate-Responsive Shape-Memory Membrane — the second biomimicry taxonomy,
 // covering material-level phase-change and moisture/pressure-driven skins
-// rather than geometry-level shading. Mirrors the structure of mechanismTypes.ts.
+// rather than geometry-level shading. Mirrored the structure of the former
+// lib/mechanismTypes.ts (deleted at 97008c2).
 export const shapeMemoryTypes: MembraneType[] = [
   {
     key: "sma",

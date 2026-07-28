@@ -621,16 +621,34 @@ const sensoryHealingPattern: Factory = () => ({
 });
 
 // ---------------------------------------------------------------------------
-// Mechanism-type generators for the split-screen explorer — each reads the
+// ORPHANED (as of 97008c2) — nothing renders these four.
+//
+// Mechanism-type generators for the old split-screen explorer — each reads the
 // same three universal params: sunAngle (0-180°), windSpeed (0-30 m/s),
 // textureScale (5-100%).
+//
+// They stay registered in the registry below, but lib/mechanismTypes.ts — the
+// only thing that ever mapped their keys to a UI — was deleted once Part 2
+// finished replacing this generic 4-type taxonomy with per-variant types in
+// lib/biomimicry-subcategories.json. Neither that JSON nor lib/data.ts
+// references staticShading / kineticResponsive / gradedPorosity /
+// layeredOverlapping, so createGenerator() can no longer be reached with
+// these keys from any live route. drawWindStreaks below is likewise only
+// called by these four.
+//
+// Kept deliberately (not deleted) as reference implementations of the
+// universal-slider approach. If you revive them, wire a `generator` field to
+// one of these keys and confirm the type's sliders supply sunAngle /
+// windSpeed / textureScale. Safe to delete outright if that's not planned.
 // ---------------------------------------------------------------------------
 
+// ORPHANED — only called by the four orphaned generators below.
+//
 // Shared wind-cue helper for the 4 universal Framework 1 generators below.
-// A cos/sin offset vector alone can't carry "wind strength" legibly (see the
-// drawWindStreaks call sites for why); this renders horizontal streaks whose
-// travel speed AND opacity both scale with windSpeed, giving two independent,
-// readable cues (motion speed + color depth) instead of one subtle wobble.
+// A cos/sin offset vector alone can't carry "wind strength" legibly; this
+// renders horizontal streaks whose travel speed AND opacity both scale with
+// windSpeed, giving two independent, readable cues (motion speed + color
+// depth) instead of one subtle wobble.
 function drawWindStreaks(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -655,6 +673,9 @@ function drawWindStreaks(
   ctx.restore();
 }
 
+// ORPHANED — see the section header above. Note the live equivalent of this
+// one is fixedApertureGrid (self-shading-skin type 1), which was a verbatim
+// copy and needed the same shadow-length fix; keep them in sync if revived.
 // Static Shading Type — e.g. coral, cactus ridges: fixed apertures whose size
 // is set by texture scale, self-shadowed in the direction of the light.
 const staticShading: Factory = () => ({
@@ -703,6 +724,7 @@ const staticShading: Factory = () => ({
   },
 });
 
+// ORPHANED — see the section header above.
 // Kinetic / Climate-Responsive Type — e.g. Al Bahar Towers, pangolin-inspired
 // panels: petals fold/unfold in real time in response to wind, resting more
 // open under stronger light.
@@ -751,6 +773,7 @@ const kineticResponsive: Factory = () => ({
   },
 });
 
+// ORPHANED — see the section header above.
 // Graded Porosity Type — e.g. Esplanade spines, shell spiral porosity: a pore
 // field whose size grades continuously along the light direction axis.
 const gradedPorosity: Factory = () => ({
@@ -786,6 +809,7 @@ const gradedPorosity: Factory = () => ({
   },
 });
 
+// ORPHANED — see the section header above.
 // Layered / Overlapping Type — e.g. pangolin scales: overlapping scale rows
 // that catch a directional highlight and lift in a wind-driven ripple.
 const layeredOverlapping: Factory = () => ({
@@ -822,11 +846,25 @@ const layeredOverlapping: Factory = () => ({
 });
 
 // ---------------------------------------------------------------------------
+// ORPHANED (as of 97008c2) — nothing renders these four either.
+//
 // Climate-Responsive Shape-Memory Membrane generators — universal params:
 // temperature (-10 to 60°C), humidity (0-100%), pressure (0-100% inflation).
 // Each type mainly reacts to the one stimulus its real mechanism responds to.
+//
+// Same situation as the Framework 1 block above, one step removed: these are
+// reachable only via lib/shapeMemoryTypes.ts, which is itself orphaned (kept
+// on disk, imported by nothing). Neither lib/biomimicry-subcategories.json
+// nor lib/data.ts references shapeMemoryAlloy / hygromorphicMembrane /
+// bimetallicStrip / pneumaticMembrane.
+//
+// Don't confuse these with the LIVE shape-memory-membrane variant: that one
+// uses `shapeMemoryMembrane` (lib/data.ts baseline) plus the four Part 2
+// types curlingStripArray / irisAperture / bistableSnap /
+// gradientThicknessMembrane. Deleting this block would not affect it.
 // ---------------------------------------------------------------------------
 
+// ORPHANED — see the section header above.
 // Shape Memory Alloy (SMA) Type — a grid of alloy strips that curl as they
 // heat through their phase-transformation temperature.
 const shapeMemoryAlloy: Factory = () => ({
@@ -868,6 +906,7 @@ const shapeMemoryAlloy: Factory = () => ({
   },
 });
 
+// ORPHANED — see the section header above.
 // Hygromorphic Membrane Type — wood-fiber composite slats that bow sideways
 // as humidity rises, grain lines included for the material read.
 const hygromorphicMembrane: Factory = () => ({
@@ -911,6 +950,7 @@ const hygromorphicMembrane: Factory = () => ({
   },
 });
 
+// ORPHANED — see the section header above.
 // Bimetallic / Thermobimetal Type — laminated horizontal strips that tilt like
 // louvres as they heat, each rendered as two bonded colour bands.
 const bimetallicStrip: Factory = () => ({
@@ -939,6 +979,7 @@ const bimetallicStrip: Factory = () => ({
   },
 });
 
+// ORPHANED — see the section header above.
 // Pneumatic Responsive Membrane Type — a grid of inflatable cushions that puff
 // up and brighten as internal pressure rises, like an ETFE pillow facade.
 const pneumaticMembrane: Factory = () => ({
