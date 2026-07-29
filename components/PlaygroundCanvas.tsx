@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createGenerator } from "@/lib/generators";
 import type { GeneratorInstance, GeneratorStatus } from "@/lib/generators";
 import type { SliderConfig } from "@/lib/data";
+import GrayScottMap from "./GrayScottMap";
 
 /**
  * Show a value at exactly the precision its own step implies: step 1 -> "20",
@@ -36,6 +37,12 @@ export default function PlaygroundCanvas({
   params: Record<string, number>;
   onParamsChange: (updater: (prev: Record<string, number>) => Record<string, number>) => void;
 }) {
+  const hasFeedKill =
+    sliders.some((s) => s.key === "feedRate") &&
+    sliders.some((s) => s.key === "killRate") &&
+    Number.isFinite(params.feedRate) &&
+    Number.isFinite(params.killRate);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const paramsRef = useRef<Record<string, number>>(params);
   paramsRef.current = params;
@@ -156,6 +163,12 @@ export default function PlaygroundCanvas({
             </div>
           ))}
         </div>
+
+        {/* Only the Gray-Scott types carry both of these, so the map appears
+            exactly where it means something and nowhere else. */}
+        {hasFeedKill && (
+          <GrayScottMap feedRate={params.feedRate} killRate={params.killRate} />
+        )}
       </div>
     </div>
   );
