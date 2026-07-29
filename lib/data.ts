@@ -1,6 +1,8 @@
 export type SliderConfig = {
   key: string;
   label: string;
+  /** Traditional Chinese gloss shown beside the English label. */
+  labelZh?: string;
   min: number;
   max: number;
   step: number;

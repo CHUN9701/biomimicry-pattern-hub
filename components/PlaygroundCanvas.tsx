@@ -127,9 +127,14 @@ export default function PlaygroundCanvas({
         <div className="mt-5 flex flex-col gap-6">
           {sliders.map((slider) => (
             <div key={slider.key}>
-              <div className="mb-2 flex items-center justify-between text-sm text-white/80">
-                <label htmlFor={slider.key}>{slider.label}</label>
-                <span className="font-mono text-xs text-white/50 tabular-nums">
+              <div className="mb-2 flex items-baseline justify-between gap-3 text-sm text-white/80">
+                <label htmlFor={slider.key} className="min-w-0">
+                  {slider.label}
+                  {slider.labelZh && (
+                    <span className="ml-1.5 text-xs text-white/45">{slider.labelZh}</span>
+                  )}
+                </label>
+                <span className="shrink-0 font-mono text-xs text-white/50 tabular-nums">
                   {formatParamValue(params[slider.key], slider.step)}
                   {slider.unit ?? ""}
                 </span>

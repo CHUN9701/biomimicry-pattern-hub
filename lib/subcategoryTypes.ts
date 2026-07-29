@@ -70,6 +70,7 @@ export function isValidSlider(s: unknown): s is SliderConfig {
     if (typeof o[f] !== "number" || !Number.isFinite(o[f] as number)) return false;
   }
   if (o.unit !== undefined && typeof o.unit !== "string") return false;
+  if (o.labelZh !== undefined && typeof o.labelZh !== "string") return false;
 
   const min = o.min as number;
   const max = o.max as number;
