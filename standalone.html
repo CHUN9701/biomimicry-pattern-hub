@@ -183,6 +183,20 @@
   .param-row { margin-top: 24px; }
   .param-label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
   .param-label-zh { margin-left: 6px; font-size: 12px; color: rgba(255,255,255,0.45); }
+  .type-info { margin-top: 24px; width: 100%; padding: 24px; }
+  @media (min-width: 768px) { .type-info { padding: 32px; } }
+  .type-info-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 24px; }
+  .type-info-head h2 { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.9); margin: 0; }
+  @media (min-width: 768px) { .type-info-head h2 { font-size: 18px; } }
+  .type-info-head span { font-size: 14px; color: rgba(255,255,255,0.5); }
+  .type-info-grid { display: grid; gap: 24px 32px; }
+  @media (min-width: 768px) { .type-info-grid.cols-2, .type-info-grid.cols-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (min-width: 1024px) { .type-info-grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  .type-info-sec h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-weight: 400; }
+  .type-info-sec .ti-en { font-family: "SFMono-Regular", Menlo, monospace; font-size: 10.4px; letter-spacing: 0.22em; }
+  .type-info-sec .ti-zh { font-size: 12px; color: rgba(255,255,255,0.45); }
+  .type-info-sec p { margin: 0; max-width: 65ch; font-size: 14px; line-height: 1.7;
+    color: rgba(255,255,255,0.7); white-space: pre-line; }
   .param-value { flex-shrink: 0; font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; color: rgba(255,255,255,0.5); font-variant-numeric: tabular-nums; }
 
   input[type=range] {
@@ -508,6 +522,8 @@
               "name": "Fixed Aperture Grid Type",
               "description": "規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果",
               "example": "傳統阿拉伯 Mashrabiya 木格窗",
+              "principle": "孔徑大小固定不變，遮蔭效果完全來自孔洞「深度」與「入射角」的幾何關係。當太陽高度角低、光線斜射時，孔壁在孔洞內投下長影，穿透率下降；高度角接近正午時光線近乎垂直，影子縮短，穿透率上升。模擬中孔徑半徑刻意維持恆定，只有陰影橢圓的長度與方向隨日照角度改變。這是最單純的自遮蔭策略：不需任何機構或材料變化，純靠構件本身的厚度。",
+              "spatialApplication": "適合西曬或東曬立面的固定式遮陽層。設計時通常先依當地緯度與立面朝向決定孔洞的深徑比，再由開孔率調節採光與遮蔭的平衡。因為沒有活動機構，維護成本低，適合大面積重複使用；常見於雙層表皮的外層，或走廊、樓梯間等半戶外空間的圍蔽。",
               "slug": "fixed-aperture-grid",
               "generator": "fixedApertureGrid",
               "climateInput": "太陽角度 (sun angle)",
@@ -552,6 +568,8 @@
               "name": "Deep-Well Shadow Type",
               "description": "孔洞加深形成井狀凹陷，利用孔壁本身遮蔽低角度日照，僅正午高角度光線能穿透",
               "example": "傳統清真寺深凹窗龕",
+              "principle": "把孔洞加深成井狀，讓孔壁本身成為遮陽構件。低角度光線會被井壁完全阻擋，只有接近天頂的光線能到達井底，因此穿透率對太陽高度角高度敏感，且呈非線性反應。模擬用逐層內縮的同心暗環表現井深，井底亮度依高度角的正弦值變化。",
+              "spatialApplication": "適合需要強烈遮蔭但仍要保留天然採光的空間，例如展場或禮拜空間。深徑比越大遮蔭越強，室內也越暗，需與照度需求一起權衡。井狀開口會讓進入的光線形成明確光斑，本身可作為塑造空間氛圍的手段。",
               "slug": "deep-well-shadow",
               "generator": "deepWellShadow",
               "climateInput": "太陽高度角 (solar altitude)",
@@ -596,6 +614,8 @@
               "name": "Directional Louver Aperture Type",
               "description": "孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽",
               "example": "恆定角度太陽能遮陽格柵",
+              "principle": "孔徑不是圓形，而是具方向性的斜向長縫，縫隙的朝向決定它「接受」哪個方位角的光。只有與縫隙方向接近平行的光線能穿透，其餘角度被葉片阻擋，因此遮蔭具有方向選擇性，而不是全向均勻。模擬中所有縫隙依 louverAngle 一起旋轉，縫寬則決定容許穿透的角度範圍。",
+              "spatialApplication": "適合單一朝向需要精確控制的立面，例如只阻擋午後西曬、同時保留北向天光。設計流程上需先做日照分析，確定要阻擋與要保留的方位角，再回推葉片角度。常見於辦公建築，因為它能同時兼顧遮陽與水平視野。",
               "slug": "directional-louver-aperture",
               "generator": "directionalLouverAperture",
               "climateInput": "方位角 (azimuth / directional angle)",
@@ -640,6 +660,8 @@
               "name": "Graduated Pinhole Type",
               "description": "孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果",
               "example": "沖孔金屬板立面（perforated metal facade）",
+              "principle": "孔徑細密，且大小沿某一方向連續漸變。單一孔洞的遮蔭效果並不明顯，整體遮光是靠孔徑與密度的統計分佈累積出來的。漸變方向通常對應日照強度梯度或表面曲率，讓同一片牆能回應不同位置的受光差異。視覺上遠看是連續的明暗漸層，近看才辨識得出個別孔洞。",
+              "spatialApplication": "適合曲面或大尺度立面，用漸層回應同一面牆上不同位置的日照差異。實作上最常見的做法是沖孔金屬板，加工技術成熟、成本可控。也常被用來處理視覺上的虛實過渡，例如從實牆漸變到開口。",
               "slug": "graduated-pinhole",
               "generator": "graduatedPinhole",
               "climateInput": "表面曲率／日照強度梯度 (surface curvature / solar intensity gradient)",
@@ -5183,6 +5205,8 @@
         label: t.name,
         examples: t.example,
         description: t.description,
+        principle: t.principle,
+        spatialApplication: t.spatialApplication,
         generator: t.generator,
         sliders: t.sliders,
       };
@@ -5220,7 +5244,43 @@
       '<div class="glass-panel params-panel">' +
       '<div class="params-title">PARAMETERS</div>' +
       '<div id="params-list"></div>' +
-      "</div></div></div></div></div>";
+      '</div></div></div>' +
+      '<section class="glass-panel type-info" id="type-info" hidden></section>' +
+      "</div></div>";
+
+    // Explanation of whatever is on the canvas. Sections render only when the
+    // JSON carries them, so types not yet written up degrade to "what it is"
+    // rather than showing empty headings.
+    const infoEl = document.getElementById("type-info");
+    function renderTypeInfo(info) {
+      if (!infoEl) return;
+      const whatItIs = [info.description, info.example ? "案例：" + info.example : null]
+        .filter(Boolean).join("\n");
+      const secs = [
+        { en: "WHAT IT IS", zh: "這是什麼", body: whatItIs },
+        { en: "HOW IT FORMS", zh: "生成原理", body: info.principle },
+        { en: "IN SPATIAL DESIGN", zh: "空間設計運用", body: info.spatialApplication },
+      ].filter(function (x) { return !!x.body; });
+      if (!secs.length) { infoEl.hidden = true; return; }
+      infoEl.hidden = false;
+      infoEl.innerHTML =
+        '<div class="type-info-head"><h2></h2>' + (info.labelZh ? "<span></span>" : "") + "</div>" +
+        '<div class="type-info-grid cols-' + secs.length + '">' +
+        secs.map(function (x) {
+          return '<div class="type-info-sec"><h3><span class="ti-en"></span>' +
+                 '<span class="ti-zh"></span></h3><p></p></div>';
+        }).join("") + "</div>";
+      // fill via textContent so JSON copy can never be parsed as markup
+      infoEl.querySelector("h2").textContent = info.label;
+      if (info.labelZh) infoEl.querySelector(".type-info-head span").textContent = info.labelZh;
+      const secEls = infoEl.querySelectorAll(".type-info-sec");
+      secs.forEach(function (x, i) {
+        secEls[i].querySelector(".ti-en").textContent = x.en;
+        secEls[i].querySelector(".ti-en").style.color = cat.colors[2];
+        secEls[i].querySelector(".ti-zh").textContent = x.zh;
+        secEls[i].querySelector("p").textContent = x.body;
+      });
+    }
 
     document.getElementById("back-btn").addEventListener("click", function () { location.hash = "#/category/" + cat.slug; });
 
@@ -5303,11 +5363,17 @@
 
     if (!explorerReady) {
       startMainCanvas(fallbackGenerator);
+      renderTypeInfo({ label: v.title, labelZh: v.titleZh, description: v.description });
       return;
     }
 
     // Left-panel mechanism cards, each with its own tiny live preview.
     let activeTypeKey = explorerTypes[0].key;
+    renderTypeInfo({
+      label: explorerTypes[0].label, description: explorerTypes[0].description,
+      example: explorerTypes[0].examples, principle: explorerTypes[0].principle,
+      spatialApplication: explorerTypes[0].spatialApplication,
+    });
     const cardsEl = document.getElementById("mechanism-cards");
     const cardButtons = {};
 
@@ -5325,6 +5391,10 @@
         Object.keys(cardButtons).forEach(function (k) { cardButtons[k].classList.toggle("active", k === activeTypeKey); });
         rebuildParamsPanel(type.sliders);
         startMainCanvas(type.generator);
+        renderTypeInfo({
+          label: type.label, description: type.description, example: type.examples,
+          principle: type.principle, spatialApplication: type.spatialApplication,
+        });
       });
       cardsEl.appendChild(card);
       cardButtons[type.key] = card;

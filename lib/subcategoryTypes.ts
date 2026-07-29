@@ -11,6 +11,10 @@ export type SubcategoryPatternType = {
   description: string;
   example: string;
   slug?: string;
+  /** 3-5 sentences on how the pattern actually comes about. */
+  principle?: string;
+  /** Basic-level note on how this gets used in spatial design. */
+  spatialApplication?: string;
   generator?: string;
   climateInput?: string;
   sliders?: SliderConfig[];

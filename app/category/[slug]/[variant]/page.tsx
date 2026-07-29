@@ -14,6 +14,7 @@ import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
 import MechanismTypeList from "@/components/MechanismTypeList";
+import TypeInfoPanel from "@/components/TypeInfoPanel";
 
 // Build a fully-resolved default-params object from any slider list.
 function defaultParamsFromSliders(sliders: SliderConfig[]): Record<string, number> {
@@ -23,8 +24,11 @@ function defaultParamsFromSliders(sliders: SliderConfig[]): Record<string, numbe
 type ResolvedType = {
   key: string;
   label: string;
+  labelZh?: string;
   examples: string;
   description?: string;
+  principle?: string;
+  spatialApplication?: string;
   generator: string;
   sliders: SliderConfig[];
 };
@@ -51,6 +55,8 @@ function resolveExplorerTypes(variantSlug: string): ResolvedType[] {
         label: t.name,
         examples: t.example,
         description: t.description,
+        principle: t.principle,
+        spatialApplication: t.spatialApplication,
         generator: t.generator,
         sliders,
       },
@@ -165,6 +171,24 @@ export default function VariantPage({
           />
         </div>
       </motion.div>
+
+      {/* Explanation of whatever is currently on the canvas. Falls back to the
+          variant's own copy when this variant has no per-type explorer. */}
+      <TypeInfoPanel
+        key={activeMechanism?.key ?? "__fallback__"}
+        accent={category.colors[2]}
+        info={
+          activeMechanism
+            ? {
+                label: activeMechanism.label,
+                description: activeMechanism.description,
+                example: activeMechanism.examples,
+                principle: activeMechanism.principle,
+                spatialApplication: activeMechanism.spatialApplication,
+              }
+            : { label: variant.title, labelZh: variant.titleZh, description: variant.description }
+        }
+      />
     </div>
   );
 }
