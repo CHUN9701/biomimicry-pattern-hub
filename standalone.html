@@ -163,6 +163,20 @@
   .playground-canvas-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; }
   @media (min-width: 1024px) { .playground-canvas-wrap { aspect-ratio: auto; min-height: 28rem; flex: 1; } }
   .playground-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+  .extinct-overlay { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; text-align: center;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); }
+  .extinct-overlay[hidden] { display: none; }
+  .extinct-overlay .eo-tag { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem; letter-spacing: 0.25em; color: rgba(255,255,255,0.6); }
+  .extinct-overlay .eo-body { max-width: 24rem; font-size: 0.875rem; line-height: 1.7;
+    color: rgba(255,255,255,0.8); }
+  .extinct-overlay .eo-sub { display: block; margin-top: 0.25rem; color: rgba(255,255,255,0.55); }
+  .extinct-overlay .eo-btn { border: 1px solid rgba(255,255,255,0.25); border-radius: 999px;
+    padding: 0.5rem 1.25rem; font-size: 0.875rem; color: rgba(255,255,255,0.9);
+    cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .extinct-overlay .eo-btn:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); }
+  .extinct-overlay .eo-btn:focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
   .params-panel { width: 100%; flex-shrink: 0; padding: 24px; }
   @media (min-width: 1024px) { .params-panel { width: 20rem; } }
   .params-title { font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; letter-spacing: 0.25em; color: rgba(255,255,255,0.5); }
@@ -1714,7 +1728,7 @@
                   "key": "killRate",
                   "label": "Kill Rate",
                   "min": 0.05,
-                  "max": 0.07,
+                  "max": 0.066,
                   "step": 0.001,
                   "default": 0.06
                 },
@@ -1753,7 +1767,7 @@
                   "key": "killRate",
                   "label": "Kill Rate",
                   "min": 0.06,
-                  "max": 0.07,
+                  "max": 0.066,
                   "step": 0.001,
                   "default": 0.065
                 },
@@ -1792,7 +1806,7 @@
                   "key": "killRate",
                   "label": "Kill Rate",
                   "min": 0.06,
-                  "max": 0.07,
+                  "max": 0.066,
                   "step": 0.001,
                   "default": 0.065
                 },
@@ -2954,6 +2968,8 @@
     let Un = new Float32Array(N);
     let Vn = new Float32Array(N);
     let seeded = false;
+    let extinct = false;
+    let seedRun = 0;
     let off = null;
     let offCtx = null;
     let imgData = null;
@@ -2965,7 +2981,7 @@
     };
 
     function seedBlobs(count, radius) {
-      const rand = mulberry32(42);
+      const rand = mulberry32(42 + seedRun * 7919);
       for (let s = 0; s < count; s++) {
         const sx = Math.floor(rand() * gw);
         const sy = Math.floor(rand() * gh);
@@ -2976,6 +2992,7 @@
         }
       }
       seeded = true;
+      extinct = false;
     }
 
     function step(f, k, iterations) {
@@ -2996,6 +3013,25 @@
         const Utmp = U; U = Un; Un = Utmp;
         const Vtmp = V; V = Vn; Vn = Vtmp;
       }
+      // V = 0 everywhere is an absorbing state: with no V left to
+      // autocatalyse, the field stays uniform forever whatever f/k become
+      // afterwards. Real behaviour of the system, so it is reported to the UI
+      // rather than hidden behind a silently blank canvas.
+      let vmax = 0;
+      for (let i = 0; i < N; i++) if (V[i] > vmax) vmax = V[i];
+      extinct = vmax < 0.005;
+    }
+
+    function reseed() {
+      seedRun += 1;
+      U.fill(1);
+      V.fill(0);
+      seeded = false;
+      extinct = false;
+    }
+
+    function getStatus() {
+      return extinct ? { code: "extinct" } : null;
     }
 
     function render(ctx, w, h, colorA, colorB) {
@@ -3024,7 +3060,7 @@
       }
     }
 
-    return { step: step, render: render };
+    return { step: step, render: render, reseed: reseed, getStatus: getStatus };
   }
 
   // SpaceColonization engine — shared vein-growth stepper for vein-flow's 4
@@ -3935,6 +3971,8 @@
           sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
           sim.render(ctx, w, h, palette[0], palette[3]);
         },
+        getStatus: sim.getStatus,
+        reset: sim.reseed,
       };
     },
 
@@ -3945,6 +3983,8 @@
           sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
           sim.render(ctx, w, h, palette[1], palette[2]);
         },
+        getStatus: sim.getStatus,
+        reset: sim.reseed,
       };
     },
 
@@ -3955,6 +3995,8 @@
           sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
           sim.render(ctx, w, h, palette[0], palette[2]);
         },
+        getStatus: sim.getStatus,
+        reset: sim.reseed,
       };
     },
 
@@ -5021,7 +5063,14 @@
         : "") +
       '<div class="playground-col"' + (explorerReady ? "" : ' style="width:100%;"') + '>' +
       '<div class="playground">' +
-      '<div class="glass-panel playground-canvas-wrap"><canvas id="playground-canvas"></canvas></div>' +
+      '<div class="glass-panel playground-canvas-wrap"><canvas id="playground-canvas"></canvas>' +
+      '<div class="extinct-overlay" id="extinct-overlay" hidden>' +
+      '<p class="eo-tag">PATTERN EXTINGUISHED</p>' +
+      '<p class="eo-body">反應已滅絕 —— 此參數組合落在圖樣窗口之外。' +
+      '<span class="eo-sub">濃度歸零後是吸收態，拉回滑桿不會自動復原。這是 Gray-Scott ' +
+      '系統的真實行為：自組織圖樣只存在於特定的參數區間。</span></p>' +
+      '<button type="button" class="eo-btn" id="extinct-reseed">重新播種 · Reseed</button>' +
+      '</div></div>' +
       '<div class="glass-panel params-panel">' +
       '<div class="params-title">PARAMETERS</div>' +
       '<div id="params-list"></div>' +
@@ -5073,14 +5122,32 @@
     cleanupFns.push(function () { resizeObserver.disconnect(); });
 
     let mainRaf = 0;
+    let activeGenerator = null;
+    const overlayEl = document.getElementById("extinct-overlay");
+    const reseedBtn = document.getElementById("extinct-reseed");
+    if (reseedBtn) {
+      reseedBtn.addEventListener("click", function () {
+        if (activeGenerator && activeGenerator.reset) activeGenerator.reset();
+        if (overlayEl) overlayEl.hidden = true;
+      });
+    }
     function startMainCanvas(generatorKey) {
       cancelAnimationFrame(mainRaf);
       const generator = createGenerator(generatorKey);
+      activeGenerator = generator;
+      if (overlayEl) overlayEl.hidden = true;
       const start = performance.now();
+      let lastPoll = 0;
       function loop(now) {
         mainRaf = requestAnimationFrame(loop);
         const t = (now - start) / 1000;
         generator.draw(ctx, canvas.width, canvas.height, t, params, cat.colors);
+        // Poll a few times a second instead of every frame.
+        if (now - lastPoll > 350) {
+          lastPoll = now;
+          const st = generator.getStatus ? generator.getStatus() : null;
+          if (overlayEl) overlayEl.hidden = !(st && st.code === "extinct");
+        }
       }
       mainRaf = requestAnimationFrame(loop);
     }

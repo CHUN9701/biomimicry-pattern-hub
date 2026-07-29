@@ -3,6 +3,17 @@ import { clamp, lerpColor, mulberry32, rgba } from "./canvasUtils";
 export type Palette = [string, string, string, string];
 export type GenParams = Record<string, number>;
 
+/**
+ * A notable runtime state a generator wants the UI to surface. Machine-readable
+ * on purpose — the wording lives in the UI layer, not here.
+ *
+ * "extinct": a simulation has collapsed to a uniform field and cannot restart
+ * on its own. Real behaviour, not a fault: in Gray-Scott, V = 0 is an absorbing
+ * state, so moving the sliders back will NOT revive it. The UI has to say so
+ * and offer an explicit reseed.
+ */
+export type GeneratorStatus = { code: "extinct" };
+
 export interface GeneratorInstance {
   draw(
     ctx: CanvasRenderingContext2D,
@@ -12,6 +23,10 @@ export interface GeneratorInstance {
     params: GenParams,
     palette: Palette
   ): void;
+  /** Stateful generators only: current notable state, or null when normal. */
+  getStatus?(): GeneratorStatus | null;
+  /** Stateful generators only: re-initialise (e.g. reseed a simulation). */
+  reset?(): void;
 }
 
 type Factory = () => GeneratorInstance;
@@ -1578,6 +1593,10 @@ function createReactionDiffusionSim(gw: number, gh: number) {
   let Un = new Float32Array(N);
   let Vn = new Float32Array(N);
   let seeded = false;
+  let extinct = false;
+  // Varies the blob layout on each manual reseed, so re-running the same
+  // parameters doesn't just replay an identical field.
+  let seedRun = 0;
   let off: HTMLCanvasElement | null = null;
   let offCtx: CanvasRenderingContext2D | null = null;
   let imgData: ImageData | null = null;
@@ -1589,7 +1608,7 @@ function createReactionDiffusionSim(gw: number, gh: number) {
   };
 
   function seedBlobs(count: number, radius: number) {
-    const rand = mulberry32(42);
+    const rand = mulberry32(42 + seedRun * 7919);
     for (let s = 0; s < count; s++) {
       const sx = Math.floor(rand() * gw);
       const sy = Math.floor(rand() * gh);
@@ -1600,6 +1619,7 @@ function createReactionDiffusionSim(gw: number, gh: number) {
       }
     }
     seeded = true;
+    extinct = false;
   }
 
   // Diffusion coefficients 0.16/0.08 (not 1.0/0.5, which this was originally
@@ -1625,6 +1645,28 @@ function createReactionDiffusionSim(gw: number, gh: number) {
       [U, Un] = [Un, U];
       [V, Vn] = [Vn, V];
     }
+
+    // Extinction check. V = 0 everywhere is an absorbing state of the
+    // Gray-Scott system: with no V left there is nothing to autocatalyse, so
+    // the field stays uniform forever no matter what f/k become afterwards.
+    // The parameter window for patterns is a diagonal wedge in (f, k), not a
+    // rectangle, so two independent sliders can always reach outside it —
+    // this is real behaviour to be reported, not a fault to be hidden.
+    let vmax = 0;
+    for (let i = 0; i < N; i++) if (V[i] > vmax) vmax = V[i];
+    extinct = vmax < 0.005;
+  }
+
+  function reseed() {
+    seedRun += 1;
+    U.fill(1);
+    V.fill(0);
+    seeded = false; // next step() reseeds with a fresh blob layout
+    extinct = false;
+  }
+
+  function getStatus(): GeneratorStatus | null {
+    return extinct ? { code: "extinct" } : null;
   }
 
   function render(ctx: CanvasRenderingContext2D, w: number, h: number, colorA: string, colorB: string) {
@@ -1653,7 +1695,7 @@ function createReactionDiffusionSim(gw: number, gh: number) {
     }
   }
 
-  return { step, render };
+  return { step, render, reseed, getStatus };
 }
 
 const turingPatternSkin: Factory = () => {
@@ -1663,6 +1705,8 @@ const turingPatternSkin: Factory = () => {
       sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
       sim.render(ctx, w, h, palette[0], palette[3]);
     },
+    getStatus: sim.getStatus,
+    reset: sim.reseed,
   };
 };
 
@@ -1673,6 +1717,8 @@ const cellularGrowthSimulation: Factory = () => {
       sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
       sim.render(ctx, w, h, palette[1], palette[2]);
     },
+    getStatus: sim.getStatus,
+    reset: sim.reseed,
   };
 };
 
@@ -1683,6 +1729,8 @@ const coralGrowthPattern: Factory = () => {
       sim.step(p.feedRate, p.killRate, Math.max(1, Math.round(p.diffusionSpeed)));
       sim.render(ctx, w, h, palette[0], palette[2]);
     },
+    getStatus: sim.getStatus,
+    reset: sim.reseed,
   };
 };
 

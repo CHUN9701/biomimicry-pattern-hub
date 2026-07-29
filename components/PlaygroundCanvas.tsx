@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createGenerator } from "@/lib/generators";
+import type { GeneratorInstance, GeneratorStatus } from "@/lib/generators";
 import type { SliderConfig } from "@/lib/data";
 
 /**
@@ -38,6 +39,9 @@ export default function PlaygroundCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const paramsRef = useRef<Record<string, number>>(params);
   paramsRef.current = params;
+  // Held so the reseed button can reach the running generator instance.
+  const generatorRef = useRef<GeneratorInstance | null>(null);
+  const [status, setStatus] = useState<GeneratorStatus | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -46,6 +50,8 @@ export default function PlaygroundCanvas({
     if (!ctx) return;
 
     const generator = createGenerator(generatorKey);
+    generatorRef.current = generator;
+    setStatus(null);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const resize = () => {
@@ -58,17 +64,27 @@ export default function PlaygroundCanvas({
     resizeObserver.observe(canvas);
 
     let raf = 0;
+    let lastPoll = 0;
     const start = performance.now();
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const t = (now - start) / 1000;
       generator.draw(ctx, canvas.width, canvas.height, t, paramsRef.current, colors);
+
+      // Poll a few times a second rather than every frame; returning `prev`
+      // when nothing changed lets React skip the re-render entirely.
+      if (now - lastPoll > 350) {
+        lastPoll = now;
+        const next = generator.getStatus?.() ?? null;
+        setStatus((prev) => (prev?.code === next?.code ? prev : next));
+      }
     };
     raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
+      generatorRef.current = null;
     };
   }, [generatorKey, colors]);
 
@@ -76,6 +92,35 @@ export default function PlaygroundCanvas({
     <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-stretch">
       <div className="glass-panel relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:min-h-[28rem] lg:flex-1">
         <canvas ref={canvasRef} className="h-full w-full" />
+
+        {/* Reaching a dead parameter combination is a real property of the
+            system, not a fault — so name it and offer a way back, rather than
+            leaving a blank canvas the student can't tell from a broken page. */}
+        {status?.code === "extinct" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/55 p-6 text-center backdrop-blur-sm">
+            <p className="font-mono text-[0.7rem] tracking-[0.25em] text-white/60">
+              PATTERN EXTINGUISHED
+            </p>
+            <p className="max-w-sm text-sm leading-relaxed text-white/80">
+              反應已滅絕 —— 此參數組合落在圖樣窗口之外。
+              <span className="mt-1 block text-white/55">
+                濃度歸零後是吸收態，拉回滑桿不會自動復原。這是 Gray-Scott
+                系統的真實行為：自組織圖樣只存在於特定的參數區間。
+              </span>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                generatorRef.current?.reset?.();
+                setStatus(null);
+              }}
+              className="rounded-full border border-white/25 px-5 py-2 text-sm text-white/90 transition hover:border-white/50 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              style={{ backgroundColor: `${colors[1]}55` }}
+            >
+              重新播種 · Reseed
+            </button>
+          </div>
+        )}
       </div>
       <div className="glass-panel w-full shrink-0 p-6 lg:w-80">
         <h3 className="font-mono text-xs tracking-[0.25em] text-white/50">PARAMETERS</h3>
