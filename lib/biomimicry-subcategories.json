@@ -368,7 +368,8 @@
                   "min": 1,
                   "max": 8,
                   "step": 1.0,
-                  "default": 4
+                  "default": 4,
+                  "unit": "×"
                 },
                 {
                   "key": "windExposure",
@@ -418,7 +419,8 @@
                   "min": 6,
                   "max": 16,
                   "step": 1.0,
-                  "default": 10
+                  "default": 10,
+                  "unit": " 片"
                 },
                 {
                   "key": "lightAngle",
@@ -474,7 +476,8 @@
                   "min": 4,
                   "max": 12,
                   "step": 1.0,
-                  "default": 8
+                  "default": 8,
+                  "unit": " 面"
                 },
                 {
                   "key": "creaseSharpness",
@@ -510,7 +513,8 @@
                   "min": 2,
                   "max": 6,
                   "step": 1.0,
-                  "default": 4
+                  "default": 4,
+                  "unit": " 層"
                 },
                 {
                   "key": "cascadeDelay",
@@ -566,7 +570,8 @@
                   "min": 4,
                   "max": 10,
                   "step": 1.0,
-                  "default": 6
+                  "default": 6,
+                  "unit": " 片"
                 },
                 {
                   "key": "responseSpeed",
@@ -629,7 +634,8 @@
                   "min": 4,
                   "max": 14,
                   "step": 1.0,
-                  "default": 8
+                  "default": 8,
+                  "unit": " 條"
                 }
               ],
               "visualPrimitive": "多條水平合金薄條堆疊，每條依溫度同步捲曲成波浪狀輪廓",
@@ -665,7 +671,8 @@
                   "min": 6,
                   "max": 16,
                   "step": 1.0,
-                  "default": 8
+                  "default": 8,
+                  "unit": " 片"
                 },
                 {
                   "key": "responseSpeed",
@@ -767,7 +774,8 @@
                   "min": 6,
                   "max": 14,
                   "step": 1.0,
-                  "default": 10
+                  "default": 10,
+                  "unit": " 片"
                 }
               ],
               "visualPrimitive": "放射狀花瓣環，依角度位置模擬薄膜厚度由薄到厚漸變，較薄一側花瓣開合幅度較大、反應較快，較厚一側較慢",
@@ -807,7 +815,8 @@
                   "min": 20,
                   "max": 120,
                   "step": 1.0,
-                  "default": 60
+                  "default": 60,
+                  "unit": " 個"
                 },
                 {
                   "key": "jitter",
@@ -853,7 +862,8 @@
                   "min": 10,
                   "max": 60,
                   "step": 1.0,
-                  "default": 30
+                  "default": 30,
+                  "unit": " 個"
                 },
                 {
                   "key": "jitter",
@@ -909,7 +919,8 @@
                   "min": 15,
                   "max": 40,
                   "step": 1.0,
-                  "default": 20
+                  "default": 20,
+                  "unit": " 個"
                 },
                 {
                   "key": "contrastRange",
@@ -945,7 +956,8 @@
                   "min": 15,
                   "max": 50,
                   "step": 1.0,
-                  "default": 28
+                  "default": 28,
+                  "unit": " 個"
                 },
                 {
                   "key": "porosity",
@@ -998,7 +1010,8 @@
                   "min": 1.05,
                   "max": 1.5,
                   "step": 0.01,
-                  "default": 1.2
+                  "default": 1.2,
+                  "unit": "×"
                 },
                 {
                   "key": "turns",
@@ -1007,7 +1020,8 @@
                   "min": 2,
                   "max": 6,
                   "step": 1.0,
-                  "default": 4
+                  "default": 4,
+                  "unit": " 圈"
                 },
                 {
                   "key": "chamberCount",
@@ -1016,7 +1030,8 @@
                   "min": 8,
                   "max": 24,
                   "step": 1.0,
-                  "default": 16
+                  "default": 16,
+                  "unit": " 個"
                 }
               ],
               "visualPrimitive": "由中心向外連續延伸的對數螺旋曲線，並以放射狀分隔線標示鸚鵡螺殼腔室分節",
@@ -1042,7 +1057,8 @@
                   "min": 60,
                   "max": 300,
                   "step": 1.0,
-                  "default": 150
+                  "default": 150,
+                  "unit": " 個"
                 },
                 {
                   "key": "apertureScale",
@@ -1061,7 +1077,8 @@
                   "min": 0.5,
                   "max": 2,
                   "step": 0.05,
-                  "default": 1
+                  "default": 1,
+                  "unit": "×"
                 }
               ],
               "visualPrimitive": "以黃金角（≈137.5°）為固定角度增量、半徑隨序號平方根成長的螺旋點陣，每點為一圓形孔徑，形成向日葵花序般均勻分佈的開孔場",
@@ -1087,7 +1104,8 @@
                   "min": 6,
                   "max": 20,
                   "step": 1.0,
-                  "default": 12
+                  "default": 12,
+                  "unit": " 層"
                 },
                 {
                   "key": "twistPerFloor",
@@ -1133,7 +1151,8 @@
                   "min": 80,
                   "max": 260,
                   "step": 1.0,
-                  "default": 160
+                  "default": 160,
+                  "unit": " 片"
                 },
                 {
                   "key": "louverLength",
@@ -1152,7 +1171,8 @@
                   "min": 0.5,
                   "max": 2,
                   "step": 0.05,
-                  "default": 1
+                  "default": 1,
+                  "unit": "×"
                 }
               ],
               "visualPrimitive": "沿黃金角螺旋點陣排列的細長遮陽百葉條，每片百葉依所在螺旋角度旋轉朝向，形成呼應費氏螺旋的放射狀遮陽場",
@@ -1185,7 +1205,8 @@
                   "min": 3,
                   "max": 8,
                   "step": 1.0,
-                  "default": 6
+                  "default": 6,
+                  "unit": " 層"
                 },
                 {
                   "key": "branchAngle",
@@ -1204,7 +1225,8 @@
                   "min": 0.5,
                   "max": 0.85,
                   "step": 0.01,
-                  "default": 0.72
+                  "default": 0.72,
+                  "unit": "×"
                 }
               ],
               "visualPrimitive": "由畫布底部中央向上遞迴分岔的樹狀線條，線寬隨深度遞減、顏色隨深度漸層，模擬柱體向上分岔承重",
@@ -1230,7 +1252,8 @@
                   "min": 3,
                   "max": 7,
                   "step": 1.0,
-                  "default": 5
+                  "default": 5,
+                  "unit": " 層"
                 },
                 {
                   "key": "spreadAngle",
@@ -1249,7 +1272,8 @@
                   "min": 2,
                   "max": 4,
                   "step": 1.0,
-                  "default": 3
+                  "default": 3,
+                  "unit": " 支"
                 }
               ],
               "visualPrimitive": "由畫布頂部中央向下延伸的多分支遞迴結構，末端分支加上半透明圓點代表葉冠遮蔭範圍",
@@ -1275,7 +1299,8 @@
                   "min": 4,
                   "max": 8,
                   "step": 1.0,
-                  "default": 6
+                  "default": 6,
+                  "unit": " 層"
                 },
                 {
                   "key": "branchAngle",
@@ -1321,7 +1346,8 @@
                   "min": 4,
                   "max": 7,
                   "step": 1.0,
-                  "default": 5
+                  "default": 5,
+                  "unit": " 層"
                 },
                 {
                   "key": "spreadAngle",
@@ -1340,7 +1366,8 @@
                   "min": 2,
                   "max": 3,
                   "step": 1.0,
-                  "default": 2
+                  "default": 2,
+                  "unit": " 支"
                 }
               ],
               "visualPrimitive": "由頂部地面線向下延伸的根系分岔結構，根部隨深度變細並逐漸淡出，呼應根系向外擴散穩定地基的邏輯",
@@ -1505,7 +1532,8 @@
                   "min": 6,
                   "max": 12,
                   "step": 1.0,
-                  "default": 9
+                  "default": 9,
+                  "unit": " 層"
                 },
                 {
                   "key": "branchProbability",
@@ -1576,7 +1604,8 @@
                   "min": 1,
                   "max": 3,
                   "step": 0.5,
-                  "default": 1.5
+                  "default": 1.5,
+                  "unit": "px"
                 }
               ],
               "visualPrimitive": "以空間殖民演算法（space colonization）從底部單一起點向上生長，吸引子分佈於橢圓形葉片範圍內，逐步長出分岔葉脈網絡",
@@ -1605,9 +1634,9 @@
                   "default": 130
                 },
                 {
-                  "key": "flowSpeed",
-                  "label": "Flow Speed",
-                  "labelZh": "流速",
+                  "key": "growthSpeed",
+                  "label": "Growth Speed",
+                  "labelZh": "生長速度",
                   "min": 1,
                   "max": 10,
                   "step": 1.0,
@@ -1620,11 +1649,12 @@
                   "min": 1,
                   "max": 3,
                   "step": 0.5,
-                  "default": 1.5
+                  "default": 1.5,
+                  "unit": "px"
                 }
               ],
               "visualPrimitive": "同一套空間殖民引擎，但起點改為左側邊界多個高度不同的點，吸引子平均分佈於整個畫布，形成由左向右流動的水平流線束",
-              "mappingRule": "streamDensity 決定吸引子總數，越高則流線分岔越密集；flowSpeed 決定生長推進速度，模擬水分輸送流速；lineWidth 決定流線基礎粗細。",
+              "mappingRule": "streamDensity 決定吸引子總數，越高則流線分岔越密集；growthSpeed 決定生長推進速度，模擬水分輸送流速；lineWidth 決定流線基礎粗細。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
               "refNote": "參數化流線型立面 — 立面線條模擬葉脈中水分輸送路徑，兼具視覺流動感與結構導向"
             },
@@ -1649,9 +1679,9 @@
                   "default": 110
                 },
                 {
-                  "key": "flowSpeed",
-                  "label": "Flow Speed",
-                  "labelZh": "流速",
+                  "key": "growthSpeed",
+                  "label": "Growth Speed",
+                  "labelZh": "生長速度",
                   "min": 1,
                   "max": 10,
                   "step": 1.0,
@@ -1664,11 +1694,12 @@
                   "min": 1,
                   "max": 3,
                   "step": 0.5,
-                  "default": 1.5
+                  "default": 1.5,
+                  "unit": "px"
                 }
               ],
               "visualPrimitive": "同一套空間殖民引擎，起點改為底部邊界的多個排水出口，吸引子分佈於整個屋頂範圍，向下collect 匯聚成分散的排水微血管網絡",
-              "mappingRule": "drainDensity 決定屋頂範圍內吸引子（雨水匯集點）數量，越高則排水微血管網絡越細密；flowSpeed 決定逕流匯聚速度；lineWidth 決定管道基礎粗細，越靠近出口的主管道越粗。",
+              "mappingRule": "drainDensity 決定屋頂範圍內吸引子（雨水匯集點）數量，越高則排水微血管網絡越細密；growthSpeed 決定逕流匯聚速度；lineWidth 決定管道基礎粗細，越靠近出口的主管道越粗。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
               "refNote": "仿生屋頂排水系統設計 — 排水系統模擬葉脈微血管網絡，分散雨水逕流路徑"
             },
@@ -1690,7 +1721,8 @@
                   "min": 2,
                   "max": 6,
                   "step": 1.0,
-                  "default": 4
+                  "default": 4,
+                  "unit": " 點"
                 },
                 {
                   "key": "growthSpeed",
@@ -1708,7 +1740,8 @@
                   "min": 1,
                   "max": 3,
                   "step": 0.5,
-                  "default": 2
+                  "default": 2,
+                  "unit": "px"
                 }
               ],
               "visualPrimitive": "同一套空間殖民引擎，但吸引子不再均勻鋪滿整個範圍，而是集中成 loadPointCount 組局部叢集（代表離散受力點），從底部支撐起點向上分岔連接至各叢集",
@@ -1741,7 +1774,8 @@
                   "min": 3,
                   "max": 8,
                   "step": 1.0,
-                  "default": 5
+                  "default": 5,
+                  "unit": " 環"
                 },
                 {
                   "key": "segments",
@@ -1750,7 +1784,8 @@
                   "min": 6,
                   "max": 16,
                   "step": 1.0,
-                  "default": 10
+                  "default": 10,
+                  "unit": " 段"
                 },
                 {
                   "key": "memberThickness",
@@ -1786,7 +1821,8 @@
                   "min": 4,
                   "max": 12,
                   "step": 1.0,
-                  "default": 6
+                  "default": 6,
+                  "unit": " 根"
                 },
                 {
                   "key": "strutLength",
@@ -1908,7 +1944,8 @@
                   "min": 1,
                   "max": 4,
                   "step": 1.0,
-                  "default": 2
+                  "default": 2,
+                  "unit": " 道"
                 }
               ],
               "visualPrimitive": "規則方格網依正弦鞍形函數上下起伏形變，形成類似肥皂膜最小曲面的薄殼網格",
@@ -1948,7 +1985,8 @@
                   "min": 3,
                   "max": 8,
                   "step": 1.0,
-                  "default": 6
+                  "default": 6,
+                  "unit": " 帶"
                 },
                 {
                   "key": "curvature",
@@ -2040,7 +2078,8 @@
                   "min": 3,
                   "max": 7,
                   "step": 1.0,
-                  "default": 5
+                  "default": 5,
+                  "unit": " 層"
                 },
                 {
                   "key": "waviness",
@@ -2139,7 +2178,8 @@
                   "min": 1,
                   "max": 8,
                   "step": 1.0,
-                  "default": 4
+                  "default": 4,
+                  "unit": "×"
                 },
                 {
                   "key": "octaves",
@@ -2148,7 +2188,8 @@
                   "min": 1,
                   "max": 4,
                   "step": 1.0,
-                  "default": 3
+                  "default": 3,
+                  "unit": " 層"
                 },
                 {
                   "key": "flowSpeed",
@@ -2184,7 +2225,8 @@
                   "min": 1,
                   "max": 8,
                   "step": 1.0,
-                  "default": 4
+                  "default": 4,
+                  "unit": "×"
                 },
                 {
                   "key": "bandCount",
@@ -2193,7 +2235,8 @@
                   "min": 3,
                   "max": 10,
                   "step": 1.0,
-                  "default": 6
+                  "default": 6,
+                  "unit": " 帶"
                 },
                 {
                   "key": "flowSpeed",
@@ -2284,7 +2327,8 @@
                   "min": 1,
                   "max": 6,
                   "step": 1.0,
-                  "default": 3
+                  "default": 3,
+                  "unit": "×"
                 },
                 {
                   "key": "roughness",

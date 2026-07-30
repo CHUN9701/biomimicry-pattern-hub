@@ -1958,8 +1958,8 @@ const fluidDynamicFacade: Factory = () => {
 
       const influenceR = Math.max(w, h) * 0.2;
       const killR = Math.max(w, h) * 0.035;
-      const stepLen = 4 + p.flowSpeed * 0.4;
-      const iterations = Math.max(1, Math.round(p.flowSpeed / 2));
+      const stepLen = 4 + p.growthSpeed * 0.4;
+      const iterations = Math.max(1, Math.round(p.growthSpeed / 2));
       const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
       nodes = result.nodes;
       attractors = result.attractors;
@@ -1987,8 +1987,8 @@ const capillaryDrainage: Factory = () => {
 
       const influenceR = Math.max(w, h) * 0.19;
       const killR = Math.max(w, h) * 0.035;
-      const stepLen = 4 + p.flowSpeed * 0.4;
-      const iterations = Math.max(1, Math.round(p.flowSpeed / 2));
+      const stepLen = 4 + p.growthSpeed * 0.4;
+      const iterations = Math.max(1, Math.round(p.growthSpeed / 2));
       const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
       nodes = result.nodes;
       attractors = result.attractors;
