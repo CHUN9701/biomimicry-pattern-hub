@@ -75,6 +75,16 @@ export default function TypeInfoPanel({ info, accent }: { info: TypeInfo; accent
           </div>
         ))}
       </div>
+
+      {/* Same reasoning as the parameter map's caption: where the content came
+          from is part of what a student should be in the habit of asking. Shown
+          only once the derived sections are actually present — the plain
+          description/example above is quoted data, not derived commentary. */}
+      {(info.principle || info.spatialApplication) && (
+        <p className="mt-6 border-t border-white/10 pt-4 text-[0.68rem] leading-relaxed text-white/40">
+          原理與應用說明為依據各機制推導整理，非逐條文獻查證。若用於研究或報告，請自行核對原始文獻。
+        </p>
+      )}
     </motion.section>
   );
 }
