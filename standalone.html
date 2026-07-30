@@ -5280,9 +5280,13 @@
       '<div class="params-title">PARAMETERS</div>' +
       '<div id="params-list"></div>' +
       '<div class="gs-map" id="gs-map" hidden></div>' +
-      '</div></div></div>' +
+      // closes: params-panel, playground, playground-col, variant-body.
+      // type-info must sit AFTER variant-body, not inside it: variant-body is a
+      // flex ROW at >=1024px, so a sibling there gets laid out beside the
+      // playground and squeezes the canvas column to zero width.
+      '</div></div></div></div>' +
       '<section class="glass-panel type-info" id="type-info" hidden></section>' +
-      "</div></div>";
+      "</div>";
 
     // Explanation of whatever is on the canvas. Sections render only when the
     // JSON carries them, so types not yet written up degrade to "what it is"
