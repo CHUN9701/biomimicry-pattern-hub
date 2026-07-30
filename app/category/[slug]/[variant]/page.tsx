@@ -141,7 +141,14 @@ export default function VariantPage({
         </p>
         <h1 className="mt-4 text-2xl font-semibold leading-snug md:text-4xl">
           {variant.title}
-          <span className="ml-3 text-base font-normal text-white/50">{variant.titleZh}</span>
+          {/* CJK has no word boundaries, so as an inline span this used to break
+              mid-phrase on narrow screens — leaving a single orphaned character
+              at the end of a line. nowrap keeps it whole (longest is 8 chars,
+              safe down to 320px), and on mobile it drops to its own line as a
+              subtitle instead of trailing the wrapped English title. */}
+          <span className="mt-1 block whitespace-nowrap text-base font-normal text-white/50 md:ml-3 md:mt-0 md:inline">
+            {variant.titleZh}
+          </span>
         </h1>
         <p className="mt-4 text-sm text-white/65 md:text-base">{variant.description}</p>
       </motion.div>

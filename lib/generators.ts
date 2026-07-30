@@ -7,12 +7,20 @@ export type GenParams = Record<string, number>;
  * A notable runtime state a generator wants the UI to surface. Machine-readable
  * on purpose — the wording lives in the UI layer, not here.
  *
- * "extinct": a simulation has collapsed to a uniform field and cannot restart
- * on its own. Real behaviour, not a fault: in Gray-Scott, V = 0 is an absorbing
- * state, so moving the sliders back will NOT revive it. The UI has to say so
- * and offer an explicit reseed.
+ * Two ways a Gray-Scott run can end up with nothing to look at. Both are real
+ * behaviour rather than faults, both need an explicit reseed, but they happen
+ * for different reasons and the UI explains each on its own terms:
+ *
+ * "extinct" – V has been consumed to zero. An absorbing state: with no V left
+ *             to autocatalyse, no choice of f/k revives it.
+ * "uniform" – V is still abundant but spread perfectly evenly. Verified not to
+ *             recover either, for a different reason: a homogeneous field has
+ *             zero Laplacian everywhere, so there is no spatial perturbation
+ *             for the Turing instability to amplify. Moving the sliders from
+ *             here slides along homogeneous equilibria and, in this model's
+ *             range, drives V to zero instead of producing a pattern.
  */
-export type GeneratorStatus = { code: "extinct" };
+export type GeneratorStatus = { code: "extinct" | "uniform" };
 
 export interface GeneratorInstance {
   draw(
@@ -1594,6 +1602,8 @@ function createReactionDiffusionSim(gw: number, gh: number) {
   let Vn = new Float32Array(N);
   let seeded = false;
   let extinct = false;
+  let uniform = false;
+  let uniformStreak = 0;
   // Varies the blob layout on each manual reseed, so re-running the same
   // parameters doesn't just replay an identical field.
   let seedRun = 0;
@@ -1620,6 +1630,8 @@ function createReactionDiffusionSim(gw: number, gh: number) {
     }
     seeded = true;
     extinct = false;
+    uniform = false;
+    uniformStreak = 0;
   }
 
   // Diffusion coefficients 0.16/0.08 (not 1.0/0.5, which this was originally
@@ -1653,8 +1665,21 @@ function createReactionDiffusionSim(gw: number, gh: number) {
     // rectangle, so two independent sliders can always reach outside it —
     // this is real behaviour to be reported, not a fault to be hidden.
     let vmax = 0;
-    for (let i = 0; i < N; i++) if (V[i] > vmax) vmax = V[i];
+    let mn = 2;
+    let mx = -1;
+    for (let i = 0; i < N; i++) {
+      if (V[i] > vmax) vmax = V[i];
+      const val = U[i] - V[i];
+      if (val < mn) mn = val;
+      if (val > mx) mx = val;
+    }
     extinct = vmax < 0.005;
+
+    // Patternless-but-alive. Counted over consecutive frames rather than
+    // reported instantly, so a brief dip mid-transient can't flash the overlay.
+    if (!extinct && mx - mn < 0.08) uniformStreak++;
+    else uniformStreak = 0;
+    uniform = uniformStreak > 30;
   }
 
   function reseed() {
@@ -1663,10 +1688,14 @@ function createReactionDiffusionSim(gw: number, gh: number) {
     V.fill(0);
     seeded = false; // next step() reseeds with a fresh blob layout
     extinct = false;
+    uniform = false;
+    uniformStreak = 0;
   }
 
   function getStatus(): GeneratorStatus | null {
-    return extinct ? { code: "extinct" } : null;
+    if (extinct) return { code: "extinct" };
+    if (uniform) return { code: "uniform" };
+    return null;
   }
 
   function render(ctx: CanvasRenderingContext2D, w: number, h: number, colorA: string, colorB: string) {

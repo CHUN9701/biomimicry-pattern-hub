@@ -100,20 +100,35 @@ export default function PlaygroundCanvas({
       <div className="glass-panel relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:min-h-[28rem] lg:flex-1">
         <canvas ref={canvasRef} className="h-full w-full" />
 
-        {/* Reaching a dead parameter combination is a real property of the
-            system, not a fault — so name it and offer a way back, rather than
-            leaving a blank canvas the student can't tell from a broken page. */}
-        {status?.code === "extinct" && (
+        {/* Reaching a patternless parameter combination is a real property of
+            the system, not a fault — so name it and offer a way back, rather
+            than leaving a flat canvas the student can't tell from a broken
+            page. The two states get separate wording because they happen for
+            genuinely different reasons. */}
+        {status && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/55 p-6 text-center backdrop-blur-sm">
             <p className="font-mono text-[0.7rem] tracking-[0.25em] text-white/60">
-              PATTERN EXTINGUISHED
+              {status.code === "extinct" ? "PATTERN EXTINGUISHED" : "FIELD WENT UNIFORM"}
             </p>
             <p className="max-w-sm text-sm leading-relaxed text-white/80">
-              反應已滅絕 —— 此參數組合落在圖樣窗口之外。
-              <span className="mt-1 block text-white/55">
-                濃度歸零後是吸收態，拉回滑桿不會自動復原。這是 Gray-Scott
-                系統的真實行為：自組織圖樣只存在於特定的參數區間。
-              </span>
+              {status.code === "extinct" ? (
+                <>
+                  反應已滅絕 —— 此參數組合落在圖樣窗口之外。
+                  <span className="mt-1 block text-white/55">
+                    濃度歸零後是吸收態，拉回滑桿不會自動復原。這是 Gray-Scott
+                    系統的真實行為：自組織圖樣只存在於特定的參數區間。
+                  </span>
+                </>
+              ) : (
+                <>
+                  反應仍在進行，但濃度已均勻化 —— 場中不再有圖樣。
+                  <span className="mt-1 block text-white/55">
+                    完全均勻的場沒有濃度梯度可供放大，圖樣無法自行重新長出；
+                    此時拉動滑桿只會沿著均勻平衡移動，甚至走向滅絕。與「滅絕」
+                    的差別在於原因：這裡濃度還在，缺的是空間結構。
+                  </span>
+                </>
+              )}
             </p>
             <button
               type="button"

@@ -136,7 +136,13 @@
   @media (min-width: 768px) { .variant-screen { padding: 128px 40px 96px; } }
   .variant-head { max-width: 42rem; margin-bottom: 40px; }
   .variant-head h1 { margin: 16px 0 0; font-size: 24px; font-weight: 600; }
-  .variant-head h1 .zh { margin-left: 12px; font-size: 16px; font-weight: 400; color: rgba(255,255,255,0.5); }
+  /* CJK has no word boundaries, so as an inline span this broke mid-phrase on
+     narrow screens, orphaning a single character. nowrap keeps it whole
+     (longest is 8 chars, safe to 320px); on mobile it drops to its own line as
+     a subtitle rather than trailing the wrapped English title. */
+  .variant-head h1 .zh { display: block; margin-top: 4px; white-space: nowrap;
+    font-size: 16px; font-weight: 400; color: rgba(255,255,255,0.5); }
+  @media (min-width: 768px) { .variant-head h1 .zh { display: inline; margin-top: 0; margin-left: 12px; } }
   @media (min-width: 768px) { .variant-head h1 { font-size: 36px; } }
   .variant-head p { margin-top: 16px; font-size: 14px; color: rgba(255,255,255,0.65); }
   @media (min-width: 768px) { .variant-head p { font-size: 16px; } }
@@ -3172,6 +3178,8 @@
     let Vn = new Float32Array(N);
     let seeded = false;
     let extinct = false;
+    let uniform = false;
+    let uniformStreak = 0;
     let seedRun = 0;
     let off = null;
     let offCtx = null;
@@ -3196,6 +3204,8 @@
       }
       seeded = true;
       extinct = false;
+      uniform = false;
+      uniformStreak = 0;
     }
 
     function step(f, k, iterations) {
@@ -3220,9 +3230,21 @@
       // autocatalyse, the field stays uniform forever whatever f/k become
       // afterwards. Real behaviour of the system, so it is reported to the UI
       // rather than hidden behind a silently blank canvas.
-      let vmax = 0;
-      for (let i = 0; i < N; i++) if (V[i] > vmax) vmax = V[i];
+      let vmax = 0, mn = 2, mx = -1;
+      for (let i = 0; i < N; i++) {
+        if (V[i] > vmax) vmax = V[i];
+        const val = U[i] - V[i];
+        if (val < mn) mn = val;
+        if (val > mx) mx = val;
+      }
       extinct = vmax < 0.005;
+      // Patternless but alive: V still abundant, spread perfectly evenly. A
+      // homogeneous field has no gradient for the instability to amplify, so it
+      // doesn't recover on its own either. Counted over consecutive frames so a
+      // brief transient dip can't flash the overlay.
+      if (!extinct && mx - mn < 0.08) uniformStreak++;
+      else uniformStreak = 0;
+      uniform = uniformStreak > 30;
     }
 
     function reseed() {
@@ -3231,10 +3253,14 @@
       V.fill(0);
       seeded = false;
       extinct = false;
+      uniform = false;
+      uniformStreak = 0;
     }
 
     function getStatus() {
-      return extinct ? { code: "extinct" } : null;
+      if (extinct) return { code: "extinct" };
+      if (uniform) return { code: "uniform" };
+      return null;
     }
 
     function render(ctx, w, h, colorA, colorB) {
@@ -5270,10 +5296,8 @@
       '<div class="playground">' +
       '<div class="glass-panel playground-canvas-wrap"><canvas id="playground-canvas"></canvas>' +
       '<div class="extinct-overlay" id="extinct-overlay" hidden>' +
-      '<p class="eo-tag">PATTERN EXTINGUISHED</p>' +
-      '<p class="eo-body">反應已滅絕 —— 此參數組合落在圖樣窗口之外。' +
-      '<span class="eo-sub">濃度歸零後是吸收態，拉回滑桿不會自動復原。這是 Gray-Scott ' +
-      '系統的真實行為：自組織圖樣只存在於特定的參數區間。</span></p>' +
+      '<p class="eo-tag" id="eo-tag"></p>' +
+      '<p class="eo-body" id="eo-body"></p>' +
       '<button type="button" class="eo-btn" id="extinct-reseed">重新播種 · Reseed</button>' +
       '</div></div>' +
       '<div class="glass-panel params-panel">' +
@@ -5434,6 +5458,33 @@
     let mainRaf = 0;
     let activeGenerator = null;
     const overlayEl = document.getElementById("extinct-overlay");
+    // Separate wording per state: both leave nothing to look at and both need a
+    // reseed, but for genuinely different reasons.
+    let overlayCode = null;
+    function setOverlayCopy(code) {
+      if (code === overlayCode) return;
+      overlayCode = code;
+      const tag = document.getElementById("eo-tag");
+      const body = document.getElementById("eo-body");
+      if (!tag || !body) return;
+      if (code === "extinct") {
+        tag.textContent = "PATTERN EXTINGUISHED";
+        body.innerHTML = "";
+        body.appendChild(document.createTextNode("反應已滅絕 —— 此參數組合落在圖樣窗口之外。"));
+        const sub = document.createElement("span");
+        sub.className = "eo-sub";
+        sub.textContent = "濃度歸零後是吸收態，拉回滑桿不會自動復原。這是 Gray-Scott 系統的真實行為：自組織圖樣只存在於特定的參數區間。";
+        body.appendChild(sub);
+      } else {
+        tag.textContent = "FIELD WENT UNIFORM";
+        body.innerHTML = "";
+        body.appendChild(document.createTextNode("反應仍在進行，但濃度已均勻化 —— 場中不再有圖樣。"));
+        const sub = document.createElement("span");
+        sub.className = "eo-sub";
+        sub.textContent = "完全均勻的場沒有濃度梯度可供放大，圖樣無法自行重新長出；此時拉動滑桿只會沿著均勻平衡移動，甚至走向滅絕。與「滅絕」的差別在於原因：這裡濃度還在，缺的是空間結構。";
+        body.appendChild(sub);
+      }
+    }
     const reseedBtn = document.getElementById("extinct-reseed");
     if (reseedBtn) {
       reseedBtn.addEventListener("click", function () {
@@ -5445,6 +5496,7 @@
       cancelAnimationFrame(mainRaf);
       const generator = createGenerator(generatorKey);
       activeGenerator = generator;
+      overlayCode = null;
       if (overlayEl) overlayEl.hidden = true;
       const start = performance.now();
       let lastPoll = 0;
@@ -5456,7 +5508,10 @@
         if (now - lastPoll > 350) {
           lastPoll = now;
           const st = generator.getStatus ? generator.getStatus() : null;
-          if (overlayEl) overlayEl.hidden = !(st && st.code === "extinct");
+          if (overlayEl) {
+            overlayEl.hidden = !st;
+            if (st) setOverlayCopy(st.code);
+          }
         }
       }
       mainRaf = requestAnimationFrame(loop);
