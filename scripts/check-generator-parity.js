@@ -1,9 +1,16 @@
 // Prove a generator refactor changed no pixels.
 //
 // Loads the hand-written generator implementation from an OLD git revision of
-// standalone.html and the current lib/ bundle into one page, draws every type
-// with both at identical params and identical draw-call sequences, and compares
-// the resulting frames pixel by pixel.
+// standalone.html and the current lib/ bundle into one page, draws every type with
+// both, and compares the resulting frames pixel by pixel.
+//
+// Each side is given the defaults ITS OWN revision declares, not one shared set.
+// That matters as soon as a refactor changes what a param MEANS: B0 turned the
+// thickness sliders from device pixels into millimetres, so feeding the current
+// default of 150 (mm) to the old code made it stroke a 150-PIXEL line and reported
+// 81% of pixels differing — a real number measuring nothing. What the comparison
+// is for is "does the default view still look the same", so each implementation
+// gets the defaults it shipped with.
 //
 //   node scripts/check-generator-parity.js
 //   REF=<git-ref> node scripts/check-generator-parity.js
@@ -51,11 +58,23 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
   // ---- the old implementation, straight out of git -------------------------
-  const oldSrc = execFileSync("git", ["show", `${REF}:standalone.html`], {
-    cwd: REPO,
-    encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024,
-  }).split("\n");
+  const gitShow = (file) =>
+    execFileSync("git", ["show", `${REF}:${file}`], {
+      cwd: REPO,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
+
+  const oldSrc = gitShow("standalone.html").split("\n");
+  // The old revision's slider defaults, so the old implementation is driven by the
+  // numbers it was written for.
+  const oldData = JSON.parse(gitShow("lib/biomimicry-subcategories.json"));
+  const oldTypeBySlug = new Map(
+    oldData.categories
+      .flatMap((c) => c.subcategories)
+      .flatMap((s) => s.types)
+      .map((t) => [t.slug, t])
+  );
 
   // Sliced by markers rather than line numbers, so this survives being pointed
   // at other revisions: from the top of the utility block to the close of
@@ -104,8 +123,8 @@ ${region}
 // generator difference.
 var PALETTE = ["#0b1a2a", "#1e5f8c", "#4fd1c5", "#f6e05e"];
 
-window.drawBoth = function (key, params, frames, w, h) {
-  function run(make) {
+window.drawBoth = function (key, paramsOld, paramsNew, frames, w, h) {
+  function run(make, params) {
     const c = document.createElement("canvas");
     c.width = w;
     c.height = h;
@@ -118,8 +137,8 @@ window.drawBoth = function (key, params, frames, w, h) {
     }
     return shots;
   }
-  const a = run(window.OLD.createGenerator);
-  const b = run(window.BPH.createGenerator);
+  const a = run(window.OLD.createGenerator, paramsOld);
+  const b = run(window.BPH.createGenerator, paramsNew);
   const out = [];
   for (let i = 0; i < frames.length; i++) {
     const pa = a[i];
@@ -237,18 +256,25 @@ window.drawBoth = function (key, params, frames, w, h) {
       for (const c2 of c1.subcategories) {
         for (const t of c2.types) {
           if (!t.generator || !Array.isArray(t.sliders) || !t.sliders.length) continue;
-          // Defaults exactly as the UI opens them, plus the tier's default
-          // extent. Both implementations receive the identical params object, so
-          // any pixel difference belongs to the generator, not to the caller.
-          const params = {};
-          for (const s of t.sliders) params[s.key] = s.default;
-          const tierM = t.scaleTier && TIER_DEFAULT_M[t.scaleTier];
-          if (tierM) params.canvasWidthM = tierM;
+          // Defaults exactly as each revision's UI opens them, plus that
+          // revision's tier default extent.
+          const paramsFor = (type) => {
+            const params = {};
+            for (const s of type.sliders ?? []) params[s.key] = s.default;
+            const tierM = type.scaleTier && TIER_DEFAULT_M[type.scaleTier];
+            if (tierM) params.canvasWidthM = tierM;
+            return params;
+          };
+          const paramsNew = paramsFor(t);
+          // A type absent from the old revision has no old defaults to use; fall
+          // back to the current ones rather than silently comparing against {}.
+          const paramsOld = paramsFor(oldTypeBySlug.get(t.slug) ?? t);
 
           const frames = JSON.parse(
             await ev(
               `JSON.stringify(window.drawBoth(${JSON.stringify(t.generator)}, ` +
-                `${JSON.stringify(params)}, ${JSON.stringify(FRAMES)}, ${W}, ${H}))`
+                `${JSON.stringify(paramsOld)}, ${JSON.stringify(paramsNew)}, ` +
+                `${JSON.stringify(FRAMES)}, ${W}, ${H}))`
             )
           );
           compared++;

@@ -660,6 +660,9 @@ var BPH = (() => {
     const wavelengthPx = wavelengthMm / 1e3 * pxPerMetre;
     return 2 * Math.PI / Math.max(1e-6, wavelengthPx);
   }
+  function pxFromMm(mm, widthM, canvasPxW) {
+    return Math.max(0.35, mm / 1e3 * (canvasPxW / Math.max(1e-6, widthM)));
+  }
   function wavesAcross(wavelengthMm, widthM) {
     return widthM * 1e3 / wavelengthMm;
   }
@@ -1651,7 +1654,7 @@ var BPH = (() => {
       const n = Math.round(p.cellCount);
       const jitterAmt = p.jitter / 100;
       const pts = makeVoronoiSeeds(n, w, h, t, jitterAmt);
-      const memberW = p.memberWidth;
+      const memberW = pxFromMm(p.memberWidth, physicalWidthM(p, 40), w);
       forEachVoronoiCellPixel(w, h, pts, 5, (gx, gy, step, best, edge) => {
         const isMember = edge < memberW;
         ctx.fillStyle = isMember ? lerpColor(palette[2], palette[3], 0.6) : lerpColor(palette[0], palette[1], 0.3);
@@ -1699,7 +1702,7 @@ var BPH = (() => {
       const n = Math.round(p.cellCount);
       const pts = makeVoronoiSeeds(n, w, h, t, 0.3);
       const porosityT = clamp(p.porosity / 100, 0, 1);
-      const strutW = p.strutThickness * (1 - porosityT * 0.5);
+      const strutW = pxFromMm(p.strutThickness, physicalWidthM(p, 0.6), w) * (1 - porosityT * 0.5);
       ctx.fillStyle = palette[0];
       ctx.fillRect(0, 0, w, h);
       forEachVoronoiCellPixel(w, h, pts, 5, (gx, gy, step, best, edge) => {
@@ -1769,7 +1772,7 @@ var BPH = (() => {
       forEachPhyllotaxisPoint(cx, cy, count, scale, (i, x, y) => {
         if (x < 0 || x > w || y < 0 || y > h) return;
         const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + i * 0.3);
-        const rad = p.apertureScale * (0.5 + i / count * 0.6) * shimmer;
+        const rad = pxFromMm(p.apertureScale, physicalWidthM(p, 8), w) * (0.5 + i / count * 0.6) * shimmer;
         ctx.beginPath();
         ctx.arc(x, y, rad, 0, Math.PI * 2);
         ctx.fillStyle = lerpColor(palette[1], palette[3], i % 13 / 13);
@@ -1802,7 +1805,7 @@ var BPH = (() => {
       const cy = h / 2;
       const count = Math.round(p.louverCount);
       const scale = Math.min(w, h) * 0.05 * p.spacingScale;
-      const louverLen = p.louverLength;
+      const louverLen = pxFromMm(p.louverLength, physicalWidthM(p, 8), w);
       forEachPhyllotaxisPoint(cx, cy, count, scale, (i, x, y, r, angle) => {
         if (x < -louverLen || x > w + louverLen || y < -louverLen || y > h + louverLen) return;
         ctx.save();
@@ -2184,7 +2187,7 @@ var BPH = (() => {
         const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
         nodes = result.nodes;
         attractors = result.attractors;
-        drawVeinNetwork(ctx, w, h, nodes, palette, p.branchWidth);
+        drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.branchWidth, physicalWidthM(p, 8), w));
       }
     };
   };
@@ -2209,7 +2212,7 @@ var BPH = (() => {
         const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
         nodes = result.nodes;
         attractors = result.attractors;
-        drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+        drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.lineWidth, physicalWidthM(p, 2), w));
       }
     };
   };
@@ -2234,7 +2237,7 @@ var BPH = (() => {
         const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
         nodes = result.nodes;
         attractors = result.attractors;
-        drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+        drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.lineWidth, physicalWidthM(p, 2), w));
       }
     };
   };
@@ -2266,7 +2269,7 @@ var BPH = (() => {
         const result = stepSpaceColonization(nodes, attractors, influenceR, killR, stepLen, iterations);
         nodes = result.nodes;
         attractors = result.attractors;
-        drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+        drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.lineWidth, physicalWidthM(p, 8), w));
       }
     };
   };
@@ -2294,7 +2297,7 @@ var BPH = (() => {
         }
         pts.push(row);
       }
-      ctx.lineWidth = p.memberThickness;
+      ctx.lineWidth = pxFromMm(p.memberThickness, physicalWidthM(p, 40), w);
       for (let r = 0; r < rings; r++) {
         const rowA = pts[r];
         const rowB = pts[r + 1];
@@ -2359,7 +2362,7 @@ var BPH = (() => {
         ctx.moveTo(s.x1, s.y1);
         ctx.lineTo(s.x2, s.y2);
         ctx.strokeStyle = lerpColor(palette[2], palette[3], i / count);
-        ctx.lineWidth = p.memberThickness * 2;
+        ctx.lineWidth = pxFromMm(p.memberThickness, physicalWidthM(p, 8), w);
         ctx.lineCap = "round";
         ctx.stroke();
       }
@@ -2368,13 +2371,13 @@ var BPH = (() => {
   var honeycombPanel = () => ({
     draw(ctx, w, h, t, p, palette) {
       ctx.clearRect(0, 0, w, h);
-      const size = p.cellSize;
+      const size = pxFromMm(p.cellSize, physicalWidthM(p, 0.6), w);
       const wobbleAmt = p.wobbleAmount / 100;
       const hexW = size * 2;
       const hexH = Math.sqrt(3) * size;
       const cols = Math.ceil(w / (hexW * 0.75)) + 2;
       const rows = Math.ceil(h / hexH) + 2;
-      ctx.lineWidth = p.wallThickness;
+      ctx.lineWidth = pxFromMm(p.wallThickness, physicalWidthM(p, 0.6), w);
       for (let row = -1; row < rows; row++) {
         for (let col = -1; col < cols; col++) {
           const cx = col * hexW * 0.75;
@@ -2504,7 +2507,7 @@ var BPH = (() => {
         }
         ctx.closePath();
         ctx.strokeStyle = lerpColor(palette[1], palette[3], layerT);
-        ctx.lineWidth = p.lineWidth;
+        ctx.lineWidth = pxFromMm(p.lineWidth, physicalWidthM(p, 8), w);
         ctx.stroke();
       }
     }
@@ -3186,8 +3189,7 @@ void main() {
                     min: 1,
                     max: 6,
                     step: 0.5,
-                    default: 3,
-                    unit: "px"
+                    default: 3
                   }
                 ],
                 visualPrimitive: "多層水平正弦波輪廓帶堆疊而成的牆體剖面，波峰波谷間填色代表蓄熱量體",
@@ -3835,12 +3837,12 @@ void main() {
                   {
                     key: "memberWidth",
                     label: "Member Width",
-                    labelZh: "構件寬度",
-                    min: 1,
-                    max: 8,
-                    step: 0.5,
-                    default: 4,
-                    unit: "px"
+                    labelZh: "桿件寬度",
+                    min: 100,
+                    max: 800,
+                    step: 20,
+                    default: 400,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "僅保留泰森多邊形的邊界作為粗結構線條（承重構件），多邊形內部僅以低不透明度淡填色呈現，呼應結構外殼「線條即構件」的邏輯",
@@ -3929,12 +3931,12 @@ void main() {
                   {
                     key: "strutThickness",
                     label: "Strut Thickness",
-                    labelZh: "支撐粗細",
-                    min: 1,
-                    max: 6,
+                    labelZh: "骨小樑厚度",
+                    min: 1.5,
+                    max: 9.5,
                     step: 0.5,
-                    default: 3,
-                    unit: "px"
+                    default: 4.5,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "深色量體背景上，僅泰森多邊形邊界附近以柔和漸層亮起形成類似骨小樑的鏤空支撐網，而非鑲嵌鋪滿整個畫面",
@@ -4020,12 +4022,12 @@ void main() {
                   {
                     key: "apertureScale",
                     label: "Aperture Scale",
-                    labelZh: "孔徑尺度",
-                    min: 2,
-                    max: 12,
-                    step: 1,
-                    default: 6,
-                    unit: "px"
+                    labelZh: "孔洞半徑",
+                    min: 40,
+                    max: 250,
+                    step: 5,
+                    default: 125,
+                    unit: " mm"
                   },
                   {
                     key: "spiralDensity",
@@ -4116,11 +4118,11 @@ void main() {
                     key: "louverLength",
                     label: "Louver Length",
                     labelZh: "百葉長度",
-                    min: 6,
-                    max: 24,
-                    step: 1,
-                    default: 14,
-                    unit: "px"
+                    min: 125,
+                    max: 500,
+                    step: 5,
+                    default: 290,
+                    unit: " mm"
                   },
                   {
                     key: "spacingScale",
@@ -4561,12 +4563,12 @@ void main() {
                   {
                     key: "branchWidth",
                     label: "Branch Width",
-                    labelZh: "分支粗細",
-                    min: 1,
-                    max: 3,
-                    step: 0.5,
-                    default: 1.5,
-                    unit: "px"
+                    labelZh: "脈絡寬度",
+                    min: 20,
+                    max: 60,
+                    step: 1,
+                    default: 30,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "以空間殖民演算法（space colonization）從底部單一起點向上生長，吸引子分佈於橢圓形葉片範圍內，逐步長出分岔葉脈網絡",
@@ -4609,12 +4611,12 @@ void main() {
                   {
                     key: "lineWidth",
                     label: "Line Width",
-                    labelZh: "線條粗細",
-                    min: 1,
-                    max: 3,
+                    labelZh: "流線寬度",
+                    min: 5,
+                    max: 16,
                     step: 0.5,
-                    default: 1.5,
-                    unit: "px"
+                    default: 8,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "同一套空間殖民引擎，但起點改為左側邊界多個高度不同的點，吸引子平均分佈於整個畫布，形成由左向右流動的水平流線束",
@@ -4657,12 +4659,12 @@ void main() {
                   {
                     key: "lineWidth",
                     label: "Line Width",
-                    labelZh: "線條粗細",
-                    min: 1,
-                    max: 3,
+                    labelZh: "溝槽寬度",
+                    min: 5,
+                    max: 16,
                     step: 0.5,
-                    default: 1.5,
-                    unit: "px"
+                    default: 8,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "同一套空間殖民引擎，起點改為底部邊界的多個排水出口，吸引子分佈於整個屋頂範圍，向下collect 匯聚成分散的排水微血管網絡",
@@ -4703,12 +4705,12 @@ void main() {
                   {
                     key: "lineWidth",
                     label: "Line Width",
-                    labelZh: "線條粗細",
-                    min: 1,
-                    max: 3,
-                    step: 0.5,
-                    default: 2,
-                    unit: "px"
+                    labelZh: "構件寬度",
+                    min: 20,
+                    max: 60,
+                    step: 1,
+                    default: 40,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "同一套空間殖民引擎，但吸引子不再均勻鋪滿整個範圍，而是集中成 loadPointCount 組局部叢集（代表離散受力點），從底部支撐起點向上分岔連接至各叢集",
@@ -4758,12 +4760,12 @@ void main() {
                   {
                     key: "memberThickness",
                     label: "Member Thickness",
-                    labelZh: "構件粗細",
-                    min: 1,
-                    max: 3,
-                    step: 0.5,
-                    default: 1.5,
-                    unit: "px"
+                    labelZh: "桿件厚度",
+                    min: 100,
+                    max: 300,
+                    step: 10,
+                    default: 150,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "由頂點向外逐圈放射的三角網格穹頂剖面，環數與每環分段數決定三角形細分密度",
@@ -4816,12 +4818,12 @@ void main() {
                   {
                     key: "memberThickness",
                     label: "Member Thickness",
-                    labelZh: "構件粗細",
-                    min: 1,
-                    max: 3,
-                    step: 0.5,
-                    default: 1.5,
-                    unit: "px"
+                    labelZh: "壓桿厚度",
+                    min: 40,
+                    max: 125,
+                    step: 5,
+                    default: 60,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "多根不相接觸的懸浮壓力支柱環繞排列，支柱兩端以細索（張力元件）交叉連接至相鄰支柱，形成自撐平衡結構；支柱線寬由 memberThickness 控制，明顯粗於張力索",
@@ -4844,22 +4846,22 @@ void main() {
                   {
                     key: "cellSize",
                     label: "Cell Size",
-                    labelZh: "單元尺寸",
-                    min: 15,
-                    max: 45,
+                    labelZh: "蜂巢孔徑",
+                    min: 25,
+                    max: 70,
                     step: 1,
-                    default: 28,
-                    unit: "px"
+                    default: 44,
+                    unit: " mm"
                   },
                   {
                     key: "wallThickness",
                     label: "Wall Thickness",
-                    labelZh: "牆體厚度",
-                    min: 1,
-                    max: 4,
+                    labelZh: "孔壁厚度",
+                    min: 1.5,
+                    max: 6,
                     step: 0.5,
-                    default: 2,
-                    unit: "px"
+                    default: 3,
+                    unit: " mm"
                   },
                   {
                     key: "wobbleAmount",
@@ -4977,8 +4979,7 @@ void main() {
                     min: 2,
                     max: 12,
                     step: 0.5,
-                    default: 6,
-                    unit: "px"
+                    default: 6
                   }
                 ],
                 visualPrimitive: "多條垂直曲線分隔線取代直角邊界，線條沿高度以正弦曲線左右擺動",
@@ -5069,12 +5070,12 @@ void main() {
                   {
                     key: "lineWidth",
                     label: "Line Width",
-                    labelZh: "線條粗細",
-                    min: 1,
-                    max: 4,
-                    step: 0.5,
-                    default: 2,
-                    unit: "px"
+                    labelZh: "界層厚度",
+                    min: 20,
+                    max: 80,
+                    step: 2,
+                    default: 40,
+                    unit: " mm"
                   }
                 ],
                 visualPrimitive: "多層同心不規則波浪輪廓由外而內層層縮小，模擬巢穴層層內縮包覆",

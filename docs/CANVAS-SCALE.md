@@ -131,16 +131,91 @@ problems             0
 
 `npm run build` 通過、`tsc --noEmit` 乾淨、145/145 滑桿通過驗證、390px 水平溢出 0。
 
+## 厚度滑桿:px → mm(B0,已完成)
+
+原本 15 支滑桿的單位是 `px`,而且是**裝置像素**:同一個畫面上,1.5px 的桿件在 Retina 上只占畫布
+寬度的一半,在非 Retina 上占兩倍。畫布有了實體尺度之後這說不通 —— 150mm 的桿件在兩台螢幕上
+都是 150mm。
+
+`lib/scale.ts` 新增 `pxFromMm(mm, widthM, canvasPxW)`,把 mm 換成「這張畫布上的像素」。
+因為 generator 收到的 `w` 是**裝置像素**,dpr 自然被吸收進 px/公尺的比值裡,這正是修好的地方。
+
+### 15 支的分類:13 支換單位,2 支根本不是長度
+
+**先讀程式再改**,結果又一次和標籤不一致:
+
+| 類別 | 支數 | 處理 |
+|---|---|---|
+| 真的是長度 | 13 | 換成 mm,由 `pxFromMm` 轉換 |
+| **不是長度** | 2 | **只移除錯誤的 `px` 單位,機制不動** |
+
+不是長度的那兩支:
+
+- **`wave-section-wall` 的 `wallThickness`** —— 程式是 `rows = clamp(round(11 - x), 5, 10)`
+  再加一個 alpha。它是**反向的帶數**,不是厚度。給它 mm 會是在一個沒有物理意義的數字上標物理單位。
+- **`curvilinear-threshold` 的 `lineWidth`** —— 程式是 `p.lineWidth / bands + 1`,是分攤到各層的
+  「墨水預算」,不是單一線寬。
+
+**同一個 key 在不同 type 可以是不同東西**:`wallThickness` 在 `honeycomb-panel` 是真的
+`ctx.lineWidth`,在 `wave-section-wall` 是帶數。所以不能用 key 名稱批次改。
+
+### 修正前面寫錯的一句
+
+上一版這份文件說 `honeycomb-panel` 的 `cellSize` 需要歸進 `gridPitch` 那族、要改推導方式。
+**這是錯的。** 它的孔數本來就是從 `size` 算出來的(`cols = ceil(w / (hexW * 0.75))`),
+所以 `size` 一旦變成實體長度,孔數**自動**跟著尺度變 —— 只要換單位,不需要新的推導族。
+
+### 轉換表與校準
+
+mm 值取 `舊 px ÷ 384 × 畫布寬度(mm)`(384px 是這些數值當初被挑選時的基準),再**四捨五入到
+設計師會寫的數字**。所以預設畫面的粗細維持不變,變的是那個數字的意義:
+
+| type | 滑桿 | 舊 (px) | 新 (mm) | 384px 下的 px | 偏差 |
+|---|---|---|---|---|---|
+| structural-voronoi-shell | `memberWidth` | 1–8 def 4 | 100–800 def **400** | 3.84 | −4.0% |
+| bone-voronoi | `strutThickness` | 1–6 def 3 | 1.5–9.5 def **4.5** | 2.88 | −4.0% |
+| phyllotaxis-facade | `apertureScale` | 2–12 def 6 | 40–250 def **125** | 6.00 | 0% |
+| radial-fibonacci-louver | `louverLength` | 6–24 def 14 | 125–500 def **290** | 13.92 | −0.6% |
+| leaf-venation-structural | `branchWidth` | 1–3 def 1.5 | 20–60 def **30** | 1.44 | −4.0% |
+| fluid-dynamic-facade | `lineWidth` | 1–3 def 1.5 | 5–16 def **8** | 1.54 | +2.4% |
+| capillary-drainage | `lineWidth` | 1–3 def 1.5 | 5–16 def **8** | 1.54 | +2.4% |
+| branching-load-path | `lineWidth` | 1–3 def 2 | 20–60 def **40** | 1.92 | −4.0% |
+| geodesic-dome | `memberThickness` | 1–3 def 1.5 | 100–300 def **150** | 1.44 | −4.0% |
+| tensegrity | `memberThickness` | 1–3 def 1.5 | 40–125 def **60** | 2.88 | −4.0% |
+| honeycomb-panel | `cellSize` | 15–45 def 28 | 25–70 def **44** | 28.16 | +0.6% |
+| honeycomb-panel | `wallThickness` | 1–4 def 2 | 1.5–6 def **3** | 1.92 | −4.0% |
+| nested-enclosure | `lineWidth` | 1–4 def 2 | 20–80 def **40** | 1.92 | −4.0% |
+
+**最大偏差 4.0%,最大絕對位移 0.16px** —— 全部在次像素範圍內。
+
+`tensegrity` 的程式原本寫 `ctx.lineWidth = p.memberThickness * 2`,那個 ×2 已移除:滑桿現在就是
+壓桿的實際厚度,再乘 2 會畫出和它自己標示不同的東西。mm 範圍是照乘 2 之後的寬度校準的,
+所以外觀沒變。
+
+推導出的數字現在會隨尺度滑桿改變:40m 穹頂的 150mm 桿件是 1.44px,把尺度拉到 120m 就變 0.48px
+——`pxFromMm` 的下限 0.35px 是為了讓細桿件不要在拉遠時整根消失(消失會被讀成 generator 壞了,
+而不是「你把畫布拉遠了」)。
+
+### 驗證
+
+```
+GENERATOR PARITY  lib/ (current) vs 923fca8:standalone.html
+  types compared     48
+  pixel-identical    37/48   (3 frames each)
+  → 11 個有差異的全部是本次轉換的 type,差異來自上表那個刻意的四捨五入
+```
+
+**這一輪也修好了 `check:parity` 自己的一個缺陷。** 它原本把**同一組參數**餵給兩邊,而 B0 改變了
+參數的**意義**:舊程式收到現在的預設值 150(mm)會去畫一條 150 **像素**的線,於是報出「81% 像素
+不同」——一個真實但毫無意義的數字。現在每一邊各拿**自己那個 revision 宣告的預設值**,比對的問題
+才是「預設畫面看起來還一樣嗎」。參數語意會變的重構都會踩到這個,值得記著。
+
 ## 還沒做的(接手時看這裡)
 
-1. **px 單位滑桿仍是裝置像素:15 支、9 個 key、14 個 type**(數字是掃 JSON `unit === "px"` 得到的,
-   不要憑印象列):`lineWidth`(5 支)、`memberThickness`(2)、`wallThickness`(2)、`memberWidth`、
-   `strutThickness`、`branchWidth`、`cellSize`、`apertureScale`、`louverLength`。畫布有了實體尺度之後,
-   同一畫面在 Retina 與非 Retina 代表不同的實體厚度,應一併改成 mm。這是目前最明顯的不一致。
-
-   其中 **`honeycomb-panel` 的 `cellSize`(15–45px)本質是間距而非厚度**,應歸進 `gridPitch` 那族由
-   尺度推導,不是單純換單位 —— 它是這 15 支裡唯一需要改推導方式的。
-2. **臨界標記只做了 1 個 type**(見上 A4)。
-3. **時間軸相位帶未做**(見上 A4)。
-4. **`lib/data.ts` 備援滑桿沒有中文標籤**(B1,與本次改動無關但仍在)。備援路徑刻意不給尺度滑桿,
+1. **臨界標記只做了 1 個 type**(見上 A4)。
+2. **時間軸相位帶未做**(見上 A4)。
+3. **`lib/data.ts` 備援滑桿沒有中文標籤**(B1,與本次改動無關但仍在)。備援路徑刻意不給尺度滑桿,
    因為它沒有 `scaleTier`。
+4. **`wave-section-wall` 與 `curvilinear-threshold` 那兩支滑桿的機制沒動**,只移除了錯誤的單位。
+   若要讓它們也變成實體量:前者應改成像 `bistable-snap` 那樣的 `rowPitch`(帶高 mm 推導帶數),
+   後者要決定 `lineWidth` 到底是單層線寬還是總量。兩者都會改變外觀,所以沒有順手做掉。

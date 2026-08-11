@@ -267,8 +267,7 @@
                   "min": 1,
                   "max": 6,
                   "step": 0.5,
-                  "default": 3,
-                  "unit": "px"
+                  "default": 3
                 }
               ],
               "visualPrimitive": "多層水平正弦波輪廓帶堆疊而成的牆體剖面，波峰波谷間填色代表蓄熱量體",
@@ -916,12 +915,12 @@
                 {
                   "key": "memberWidth",
                   "label": "Member Width",
-                  "labelZh": "構件寬度",
-                  "min": 1,
-                  "max": 8,
-                  "step": 0.5,
-                  "default": 4,
-                  "unit": "px"
+                  "labelZh": "桿件寬度",
+                  "min": 100,
+                  "max": 800,
+                  "step": 20,
+                  "default": 400,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "僅保留泰森多邊形的邊界作為粗結構線條（承重構件），多邊形內部僅以低不透明度淡填色呈現，呼應結構外殼「線條即構件」的邏輯",
@@ -1010,12 +1009,12 @@
                 {
                   "key": "strutThickness",
                   "label": "Strut Thickness",
-                  "labelZh": "支撐粗細",
-                  "min": 1,
-                  "max": 6,
+                  "labelZh": "骨小樑厚度",
+                  "min": 1.5,
+                  "max": 9.5,
                   "step": 0.5,
-                  "default": 3,
-                  "unit": "px"
+                  "default": 4.5,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "深色量體背景上，僅泰森多邊形邊界附近以柔和漸層亮起形成類似骨小樑的鏤空支撐網，而非鑲嵌鋪滿整個畫面",
@@ -1101,12 +1100,12 @@
                 {
                   "key": "apertureScale",
                   "label": "Aperture Scale",
-                  "labelZh": "孔徑尺度",
-                  "min": 2,
-                  "max": 12,
-                  "step": 1.0,
-                  "default": 6,
-                  "unit": "px"
+                  "labelZh": "孔洞半徑",
+                  "min": 40,
+                  "max": 250,
+                  "step": 5,
+                  "default": 125,
+                  "unit": " mm"
                 },
                 {
                   "key": "spiralDensity",
@@ -1197,11 +1196,11 @@
                   "key": "louverLength",
                   "label": "Louver Length",
                   "labelZh": "百葉長度",
-                  "min": 6,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 14,
-                  "unit": "px"
+                  "min": 125,
+                  "max": 500,
+                  "step": 5,
+                  "default": 290,
+                  "unit": " mm"
                 },
                 {
                   "key": "spacingScale",
@@ -1642,12 +1641,12 @@
                 {
                   "key": "branchWidth",
                   "label": "Branch Width",
-                  "labelZh": "分支粗細",
-                  "min": 1,
-                  "max": 3,
-                  "step": 0.5,
-                  "default": 1.5,
-                  "unit": "px"
+                  "labelZh": "脈絡寬度",
+                  "min": 20,
+                  "max": 60,
+                  "step": 1,
+                  "default": 30,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "以空間殖民演算法（space colonization）從底部單一起點向上生長，吸引子分佈於橢圓形葉片範圍內，逐步長出分岔葉脈網絡",
@@ -1690,12 +1689,12 @@
                 {
                   "key": "lineWidth",
                   "label": "Line Width",
-                  "labelZh": "線條粗細",
-                  "min": 1,
-                  "max": 3,
+                  "labelZh": "流線寬度",
+                  "min": 5,
+                  "max": 16,
                   "step": 0.5,
-                  "default": 1.5,
-                  "unit": "px"
+                  "default": 8,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "同一套空間殖民引擎，但起點改為左側邊界多個高度不同的點，吸引子平均分佈於整個畫布，形成由左向右流動的水平流線束",
@@ -1738,12 +1737,12 @@
                 {
                   "key": "lineWidth",
                   "label": "Line Width",
-                  "labelZh": "線條粗細",
-                  "min": 1,
-                  "max": 3,
+                  "labelZh": "溝槽寬度",
+                  "min": 5,
+                  "max": 16,
                   "step": 0.5,
-                  "default": 1.5,
-                  "unit": "px"
+                  "default": 8,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "同一套空間殖民引擎，起點改為底部邊界的多個排水出口，吸引子分佈於整個屋頂範圍，向下collect 匯聚成分散的排水微血管網絡",
@@ -1784,12 +1783,12 @@
                 {
                   "key": "lineWidth",
                   "label": "Line Width",
-                  "labelZh": "線條粗細",
-                  "min": 1,
-                  "max": 3,
-                  "step": 0.5,
-                  "default": 2,
-                  "unit": "px"
+                  "labelZh": "構件寬度",
+                  "min": 20,
+                  "max": 60,
+                  "step": 1,
+                  "default": 40,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "同一套空間殖民引擎，但吸引子不再均勻鋪滿整個範圍，而是集中成 loadPointCount 組局部叢集（代表離散受力點），從底部支撐起點向上分岔連接至各叢集",
@@ -1839,12 +1838,12 @@
                 {
                   "key": "memberThickness",
                   "label": "Member Thickness",
-                  "labelZh": "構件粗細",
-                  "min": 1,
-                  "max": 3,
-                  "step": 0.5,
-                  "default": 1.5,
-                  "unit": "px"
+                  "labelZh": "桿件厚度",
+                  "min": 100,
+                  "max": 300,
+                  "step": 10,
+                  "default": 150,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "由頂點向外逐圈放射的三角網格穹頂剖面，環數與每環分段數決定三角形細分密度",
@@ -1897,12 +1896,12 @@
                 {
                   "key": "memberThickness",
                   "label": "Member Thickness",
-                  "labelZh": "構件粗細",
-                  "min": 1,
-                  "max": 3,
-                  "step": 0.5,
-                  "default": 1.5,
-                  "unit": "px"
+                  "labelZh": "壓桿厚度",
+                  "min": 40,
+                  "max": 125,
+                  "step": 5,
+                  "default": 60,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "多根不相接觸的懸浮壓力支柱環繞排列，支柱兩端以細索（張力元件）交叉連接至相鄰支柱，形成自撐平衡結構；支柱線寬由 memberThickness 控制，明顯粗於張力索",
@@ -1925,22 +1924,22 @@
                 {
                   "key": "cellSize",
                   "label": "Cell Size",
-                  "labelZh": "單元尺寸",
-                  "min": 15,
-                  "max": 45,
-                  "step": 1.0,
-                  "default": 28,
-                  "unit": "px"
+                  "labelZh": "蜂巢孔徑",
+                  "min": 25,
+                  "max": 70,
+                  "step": 1,
+                  "default": 44,
+                  "unit": " mm"
                 },
                 {
                   "key": "wallThickness",
                   "label": "Wall Thickness",
-                  "labelZh": "牆體厚度",
-                  "min": 1,
-                  "max": 4,
+                  "labelZh": "孔壁厚度",
+                  "min": 1.5,
+                  "max": 6,
                   "step": 0.5,
-                  "default": 2,
-                  "unit": "px"
+                  "default": 3,
+                  "unit": " mm"
                 },
                 {
                   "key": "wobbleAmount",
@@ -2058,8 +2057,7 @@
                   "min": 2,
                   "max": 12,
                   "step": 0.5,
-                  "default": 6,
-                  "unit": "px"
+                  "default": 6
                 }
               ],
               "visualPrimitive": "多條垂直曲線分隔線取代直角邊界，線條沿高度以正弦曲線左右擺動",
@@ -2150,12 +2148,12 @@
                 {
                   "key": "lineWidth",
                   "label": "Line Width",
-                  "labelZh": "線條粗細",
-                  "min": 1,
-                  "max": 4,
-                  "step": 0.5,
-                  "default": 2,
-                  "unit": "px"
+                  "labelZh": "界層厚度",
+                  "min": 20,
+                  "max": 80,
+                  "step": 2,
+                  "default": 40,
+                  "unit": " mm"
                 }
               ],
               "visualPrimitive": "多層同心不規則波浪輪廓由外而內層層縮小，模擬巢穴層層內縮包覆",

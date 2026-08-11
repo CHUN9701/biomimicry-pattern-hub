@@ -150,6 +150,27 @@ export function freqFromWavelength(wavelengthMm: number, widthM: number, canvasP
   return (2 * Math.PI) / Math.max(1e-6, wavelengthPx);
 }
 
+/**
+ * A physical length in mm, as pixels on this canvas.
+ *
+ * This is what makes a thickness slider mean something. The thickness sliders
+ * used to be in raw canvas pixels, which are DEVICE pixels: the same view showed
+ * a 1.5px member as half as thick, relative to the canvas, on a Retina display as
+ * on a non-Retina one. Once the canvas has a width in metres, that is
+ * indefensible — a 150mm structural member is 150mm on both screens.
+ *
+ * Both arguments are needed because pixels-per-metre is the ratio between them;
+ * neither the canvas size nor the extent means anything on its own here.
+ *
+ * Floored at 0.35px rather than 0 so a thin member stays visible when the extent
+ * is dragged out to a tier's maximum. Below roughly a third of a pixel Canvas2D
+ * antialiasing fades a stroke to nearly nothing, and a member silently vanishing
+ * reads as a broken generator rather than as "you zoomed out".
+ */
+export function pxFromMm(mm: number, widthM: number, canvasPxW: number): number {
+  return Math.max(0.35, (mm / 1000) * (canvasPxW / Math.max(1e-6, widthM)));
+}
+
 /** How many full waves of this wavelength fit across the canvas width. */
 export function wavesAcross(wavelengthMm: number, widthM: number): number {
   return (widthM * 1000) / wavelengthMm;

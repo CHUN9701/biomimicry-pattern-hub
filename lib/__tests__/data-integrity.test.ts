@@ -226,24 +226,56 @@ describe("physical scale wiring", () => {
     }
   });
 
-  it("locks the px-unit slider inventory that B0 has to convert", () => {
-    // OPEN-ITEMS B0 first shipped with these numbers wrong (9 sliders, 7 keys
-    // listed, apertureScale and louverLength missed). Asserting the measurement
-    // means the docs can be checked against something instead of trusted.
-    const px = sliders.filter((s) => s.unit === "px");
-    expect(px).toHaveLength(15);
-    expect([...new Set(px.map((s) => s.key))].sort()).toEqual([
-      "apertureScale",
-      "branchWidth",
-      "cellSize",
-      "lineWidth",
-      "louverLength",
-      "memberThickness",
-      "memberWidth",
-      "strutThickness",
-      "wallThickness",
-    ]);
-    const owners = types.filter((t) => (t.sliders ?? []).some((s) => s.unit === "px"));
-    expect(owners).toHaveLength(14);
+  it("has no device-pixel sliders left (B0)", () => {
+    // The inverse of the check this replaced. Once the canvas has a physical
+    // extent, a slider in canvas pixels means a different physical size on Retina
+    // than on non-Retina for the same view — so the invariant worth holding is
+    // that none come back, not that the old 15 are still catalogued.
+    expect(sliders.filter((s) => s.unit === "px")).toEqual([]);
+  });
+
+  it("keeps the 13 converted thickness sliders physical", () => {
+    // Each is a length in mm, so each needs a tier to convert against: pxFromMm
+    // divides by the extent, and a type with no extent has none to divide by.
+    const MM_THICKNESS: Array<[string, string]> = [
+      ["structural-voronoi-shell", "memberWidth"],
+      ["bone-voronoi", "strutThickness"],
+      ["phyllotaxis-facade", "apertureScale"],
+      ["radial-fibonacci-louver", "louverLength"],
+      ["leaf-venation-structural", "branchWidth"],
+      ["fluid-dynamic-facade", "lineWidth"],
+      ["capillary-drainage", "lineWidth"],
+      ["branching-load-path", "lineWidth"],
+      ["geodesic-dome", "memberThickness"],
+      ["tensegrity", "memberThickness"],
+      ["honeycomb-panel", "wallThickness"],
+      ["honeycomb-panel", "cellSize"],
+      ["nested-enclosure", "lineWidth"],
+    ];
+    for (const [slug, key] of MM_THICKNESS) {
+      const owner = types.find((t) => t.slug === slug);
+      const slider = (owner?.sliders ?? []).find((s) => s.key === key);
+      expect(slider, `${slug}/${key} exists`).toBeDefined();
+      expect(slider!.unit?.trim(), `${slug}/${key} in mm`).toBe("mm");
+      expect(owner?.scaleTier, `${slug} declares a tier to convert against`).toBeTruthy();
+    }
+  });
+
+  it("leaves the two sliders that were never lengths unitless", () => {
+    // Both were labelled px but neither is a distance: wave-section-wall's drives
+    // `rows = clamp(11 - x)` plus an alpha, and curvilinear-threshold's is divided
+    // across bands (`lineWidth / bands + 1`). Converting them to mm would have put
+    // a physical unit on a number that has no physical meaning, so the wrong unit
+    // was dropped and the mechanism left alone.
+    for (const [slug, key] of [
+      ["wave-section-wall", "wallThickness"],
+      ["curvilinear-threshold", "lineWidth"],
+    ]) {
+      const slider = (types.find((t) => t.slug === slug)?.sliders ?? []).find(
+        (s) => s.key === key
+      );
+      expect(slider, `${slug}/${key} exists`).toBeDefined();
+      expect(slider!.unit, `${slug}/${key} carries no unit`).toBeUndefined();
+    }
   });
 });

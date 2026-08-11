@@ -6,6 +6,7 @@ import {
   heightM,
   physicalWidthM,
   pointsInArea,
+  pxFromMm,
 } from "./scale";
 
 export type Palette = [string, string, string, string];
@@ -1297,7 +1298,7 @@ const structuralVoronoiShell: Factory = () => ({
     const n = Math.round(p.cellCount);
     const jitterAmt = p.jitter / 100;
     const pts = makeVoronoiSeeds(n, w, h, t, jitterAmt);
-    const memberW = p.memberWidth;
+    const memberW = pxFromMm(p.memberWidth, physicalWidthM(p, 40), w);
 
     forEachVoronoiCellPixel(w, h, pts, 5, (gx, gy, step, best, edge) => {
       const isMember = edge < memberW;
@@ -1349,7 +1350,7 @@ const boneVoronoi: Factory = () => ({
     const n = Math.round(p.cellCount);
     const pts = makeVoronoiSeeds(n, w, h, t, 0.3);
     const porosityT = clamp(p.porosity / 100, 0, 1);
-    const strutW = p.strutThickness * (1 - porosityT * 0.5);
+    const strutW = pxFromMm(p.strutThickness, physicalWidthM(p, 0.6), w) * (1 - porosityT * 0.5);
 
     ctx.fillStyle = palette[0];
     ctx.fillRect(0, 0, w, h);
@@ -1444,7 +1445,7 @@ const phyllotaxisFacade: Factory = () => ({
     forEachPhyllotaxisPoint(cx, cy, count, scale, (i, x, y) => {
       if (x < 0 || x > w || y < 0 || y > h) return;
       const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + i * 0.3);
-      const rad = p.apertureScale * (0.5 + (i / count) * 0.6) * shimmer;
+      const rad = pxFromMm(p.apertureScale, physicalWidthM(p, 8), w) * (0.5 + (i / count) * 0.6) * shimmer;
       ctx.beginPath();
       ctx.arc(x, y, rad, 0, Math.PI * 2);
       ctx.fillStyle = lerpColor(palette[1], palette[3], (i % 13) / 13);
@@ -1481,7 +1482,7 @@ const radialFibonacciLouver: Factory = () => ({
     const cy = h / 2;
     const count = Math.round(p.louverCount);
     const scale = Math.min(w, h) * 0.05 * p.spacingScale;
-    const louverLen = p.louverLength;
+    const louverLen = pxFromMm(p.louverLength, physicalWidthM(p, 8), w);
 
     forEachPhyllotaxisPoint(cx, cy, count, scale, (i, x, y, r, angle) => {
       if (x < -louverLen || x > w + louverLen || y < -louverLen || y > h + louverLen) return;
@@ -1987,7 +1988,7 @@ const leafVenationStructural: Factory = () => {
       nodes = result.nodes;
       attractors = result.attractors;
 
-      drawVeinNetwork(ctx, w, h, nodes, palette, p.branchWidth);
+      drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.branchWidth, physicalWidthM(p, 8), w));
     },
   };
 };
@@ -2016,7 +2017,7 @@ const fluidDynamicFacade: Factory = () => {
       nodes = result.nodes;
       attractors = result.attractors;
 
-      drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+      drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.lineWidth, physicalWidthM(p, 2), w));
     },
   };
 };
@@ -2045,7 +2046,7 @@ const capillaryDrainage: Factory = () => {
       nodes = result.nodes;
       attractors = result.attractors;
 
-      drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+      drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.lineWidth, physicalWidthM(p, 2), w));
     },
   };
 };
@@ -2096,7 +2097,7 @@ const branchingLoadPath: Factory = () => {
       nodes = result.nodes;
       attractors = result.attractors;
 
-      drawVeinNetwork(ctx, w, h, nodes, palette, p.lineWidth);
+      drawVeinNetwork(ctx, w, h, nodes, palette, pxFromMm(p.lineWidth, physicalWidthM(p, 8), w));
     },
   };
 };
@@ -2137,7 +2138,7 @@ const geodesicDome: Factory = () => ({
       pts.push(row);
     }
 
-    ctx.lineWidth = p.memberThickness;
+    ctx.lineWidth = pxFromMm(p.memberThickness, physicalWidthM(p, 40), w);
     for (let r = 0; r < rings; r++) {
       const rowA = pts[r];
       const rowB = pts[r + 1];
@@ -2208,7 +2209,7 @@ const tensegrity: Factory = () => ({
       ctx.strokeStyle = lerpColor(palette[2], palette[3], i / count);
       // memberThickness now has its own slider; the previous `? :` fallback to
       // a hardcoded 3 was silently pinning this because no slider supplied it.
-      ctx.lineWidth = p.memberThickness * 2;
+      ctx.lineWidth = pxFromMm(p.memberThickness, physicalWidthM(p, 8), w);
       ctx.lineCap = "round";
       ctx.stroke();
     }
@@ -2218,14 +2219,14 @@ const tensegrity: Factory = () => ({
 const honeycombPanel: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
-    const size = p.cellSize;
+    const size = pxFromMm(p.cellSize, physicalWidthM(p, 0.6), w);
     const wobbleAmt = p.wobbleAmount / 100;
     const hexW = size * 2;
     const hexH = Math.sqrt(3) * size;
     const cols = Math.ceil(w / (hexW * 0.75)) + 2;
     const rows = Math.ceil(h / hexH) + 2;
 
-    ctx.lineWidth = p.wallThickness;
+    ctx.lineWidth = pxFromMm(p.wallThickness, physicalWidthM(p, 0.6), w);
     for (let row = -1; row < rows; row++) {
       for (let col = -1; col < cols; col++) {
         const cx = col * hexW * 0.75;
@@ -2377,7 +2378,7 @@ const nestedEnclosure: Factory = () => ({
       }
       ctx.closePath();
       ctx.strokeStyle = lerpColor(palette[1], palette[3], layerT);
-      ctx.lineWidth = p.lineWidth;
+      ctx.lineWidth = pxFromMm(p.lineWidth, physicalWidthM(p, 8), w);
       ctx.stroke();
     }
   },

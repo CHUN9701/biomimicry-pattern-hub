@@ -134,18 +134,22 @@ import,**只剩一份,不可能不一致**。`scripts/embed-json.py` 已刪除,�
 
 ## 二、已知但尚未處理
 
-### B0. px 單位滑桿仍是裝置像素:15 支 / 9 個 key / 14 個 type ⬅ 尺度改動翻出來的
+### B0. px 單位滑桿 ✅ 已完成(2026-08-11)
 
-`lineWidth`(5 支)、`memberThickness`(2)、`wallThickness`(2)、`memberWidth`、`strutThickness`、
-`branchWidth`、`cellSize`、`apertureScale`、`louverLength` 的單位是 `px`,而且是**裝置像素**
-(受 `devicePixelRatio` 影響)。畫布現在有了實體尺度,同一個畫面在 Retina 與非 Retina 上代表
-不同的實體厚度——這是目前最明顯的不一致,應該一併改成 mm。
+15 支 `unit: "px"` 的滑桿已處理完:**13 支換成 mm**(由 `lib/scale.ts` 的 `pxFromMm` 轉換),
+**2 支只移除錯誤的單位**——因為它們根本不是長度。完整轉換表、校準方式與驗證結果見
+`docs/CANVAS-SCALE.md`。
 
-清單請用 `unit === "px"` 掃 JSON 取得,不要照抄本節——本節初版就漏了 `apertureScale` 與
-`louverLength`,把 15 支寫成 9 支(9 是 key 數不是滑桿數)。
+值得留在這裡的三件事:
 
-**`honeycomb-panel` 的 `cellSize`(15–45px)不是厚度而是間距**,應歸入 `gridPitch` 由尺度推導
-(見 `docs/CANVAS-SCALE.md`),是這 15 支裡唯一要改推導方式而非只換單位的。
+1. **又一次「看標籤 vs 看程式」**:`wave-section-wall` 的 `wallThickness` 實際是
+   `rows = clamp(round(11 - x), 5, 10)` 加一個 alpha —— 反向的帶數,不是厚度。
+   `curvilinear-threshold` 的 `lineWidth` 是 `p.lineWidth / bands + 1`,是分攤到各層的總量。
+   **同一個 key 在不同 type 可以是不同東西**,所以不能按 key 批次改。
+2. **本文件先前寫錯的一句已更正**:`cellSize` 不需要新的推導族。它的孔數本來就從 size 算出來,
+   換單位之後孔數自動跟著尺度變。
+3. **`npm test` 現在鎖的是反向條件**:「沒有任何 `unit === "px"` 的滑桿」。原本那條鎖定 15 支
+   清單的測試已被取代 —— 它的用途在轉換完成的那一刻就結束了。
 
 ### B4. CI 檔案還沒生效,停在 `docs/ci-workflow.yml` ⬅ 需要你動手一次
 
@@ -215,7 +219,8 @@ npm run check:parity      # generator 逐像素比對(需要 Chromium)
 | Console errors | 僅 favicon 404 |
 | git | `main` 與 `origin/main` 同步,working tree 乾淨 |
 | 路由 | 22 個頁面全部預先產生,**0 個 server-rendered**(兩個動態段 `fallback: false`) |
-| px 單位滑桿清單 | 15 支 / 9 個 key / 14 個 type(**自動**;B0 待處理,但數字已鎖住不會再寫錯) |
+| px 單位滑桿 | **0 支**(**自動**;B0 已完成,13 支轉 mm、2 支移除錯誤單位) |
+| generator 逐像素比對 | 37/48 相同;11 個有差異者全為 B0 轉換的 type,最大偏差 4.0% / 0.16px |
 | CI | `.github/workflows/ci.yml`:typecheck + test + check:standalone + build |
 
 ---

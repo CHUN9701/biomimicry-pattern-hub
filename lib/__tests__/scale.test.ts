@@ -11,6 +11,7 @@ import {
   isScaleTier,
   physicalWidthM,
   pointsInArea,
+  pxFromMm,
   resolveWidthM,
   scaleBarMetres,
   wavesAcross,
@@ -125,6 +126,49 @@ describe("count derivations", () => {
     // canvas means a lower frequency is backwards, and this is the conversion
     // the two per-pixel-frequency generators depend on.
     expect(freqFromWavelength(500, 4, 384)).toBeCloseTo(base * 2, 10);
+  });
+});
+
+describe("physical thickness (B0)", () => {
+  it("converts mm to pixels through pixels-per-metre", () => {
+    // 384px showing 2m is 192px/m, so 100mm is 19.2px.
+    expect(pxFromMm(100, 2, 384)).toBeCloseTo(19.2, 10);
+    // Same physical thickness on a 2x-density canvas is twice the device pixels —
+    // which is the entire point of the change: a 100mm member stays 100mm, and it
+    // is the pixel count that moves, not the physical size.
+    expect(pxFromMm(100, 2, 768)).toBeCloseTo(38.4, 10);
+    // Same canvas showing a wider extent means the member is a smaller fraction.
+    expect(pxFromMm(100, 8, 384)).toBeCloseTo(4.8, 10);
+  });
+
+  it("keeps a thin member visible at a tier's maximum extent", () => {
+    // A 100mm member on a 120m mass-tier canvas is 0.32px, which Canvas2D
+    // antialiases to nearly nothing; the floor keeps it drawn rather than letting
+    // it vanish and read as a broken generator.
+    expect(pxFromMm(100, 120, 384)).toBe(0.35);
+    expect(pxFromMm(0, 2, 384)).toBe(0.35);
+  });
+
+  it("matches the old pixel defaults at the 384px design baseline", () => {
+    // The mm defaults were calibrated so the first paint is unchanged at the size
+    // the values were originally chosen against, then rounded to numbers a
+    // designer would write. Each case: (mm default, tier width, old px default).
+    const CASES: Array<[string, number, number, number]> = [
+      ["geodesic-dome memberThickness", 150, 40, 1.5],
+      ["tensegrity memberThickness", 60, 8, 3], // old code doubled 1.5
+      ["honeycomb-panel cellSize", 44, 0.6, 28],
+      ["honeycomb-panel wallThickness", 3, 0.6, 2],
+      ["structural-voronoi-shell memberWidth", 400, 40, 4],
+      ["nested-enclosure lineWidth", 40, 8, 2],
+      ["fluid-dynamic-facade lineWidth", 8, 2, 1.5],
+    ];
+    for (const [label, mm, widthM, oldPx] of CASES) {
+      // Within 10%: the rounding to a sensible mm value is deliberate, so this
+      // asserts "the same weight on screen", not "bit-identical".
+      const ratio = pxFromMm(mm, widthM, 384) / oldPx;
+      expect(ratio, `${label} keeps its weight (ratio ${ratio.toFixed(3)})`).toBeGreaterThan(0.9);
+      expect(ratio, `${label} keeps its weight (ratio ${ratio.toFixed(3)})`).toBeLessThan(1.1);
+    }
   });
 });
 
