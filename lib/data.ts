@@ -74,6 +74,28 @@ export const AMBIENT_COLORS: [string, string, string, string] = [
   "#232323",
 ];
 
+/**
+ * The 4 categories and their 12 variants, including each variant's OWN baseline
+ * generator and sliders. That baseline is the fallback: a variant whose 4 JSON
+ * types are not all ready falls back to its own single generator, never to a
+ * generic stand-in. All 12 currently pass the readiness gate, so this path is not
+ * reached in practice — which is exactly why its defects are easy to miss.
+ *
+ * Two notes on these sliders:
+ *
+ *  - Every one now carries labelZh (OPEN-ITEMS B1). They had none, so a variant
+ *    that ever degraded would have dropped to an English-only panel — an
+ *    interface regression visible only when something else had already gone wrong.
+ *    Wording follows the JSON's 145 labels wherever the same key exists there, so
+ *    the two paths don't build separate vocabularies for the same quantity.
+ *
+ *  - Two of them still use `unit: "px"`, and deliberately: B0 converted the JSON's
+ *    thickness sliders to mm, but mm only means something when the canvas has a
+ *    physical extent to divide by. The fallback path declares no scaleTier, so it
+ *    has no extent, so there is nothing to convert against. px is the honest unit
+ *    here, and giving this path a tier just to satisfy a unit would invent a
+ *    physical scale the data never stated.
+ */
 export const categories: Category[] = [
   {
     slug: "static-climate",
@@ -93,9 +115,9 @@ export const categories: Category[] = [
           "Aperture size scales inversely with solar incidence, casting deep shadow wells that keep the interior cool.",
         generator: "selfShadingSkin",
         sliders: [
-          { key: "sunAngle", label: "Sun Angle", min: 0, max: 90, step: 1, default: 35, unit: "°" },
-          { key: "density", label: "Aperture Density", min: 8, max: 40, step: 1, default: 20 },
-          { key: "shadowDepth", label: "Shadow Depth", min: 0, max: 100, step: 1, default: 60, unit: "%" },
+          { key: "sunAngle", label: "Sun Angle", labelZh: "日照角度", min: 0, max: 90, step: 1, default: 35, unit: "°" },
+          { key: "density", label: "Aperture Density", labelZh: "孔徑密度", min: 8, max: 40, step: 1, default: 20 },
+          { key: "shadowDepth", label: "Shadow Depth", labelZh: "陰影深度", min: 0, max: 100, step: 1, default: 60, unit: "%" },
         ],
       },
       {
@@ -107,9 +129,9 @@ export const categories: Category[] = [
           "A thick relief skin that stores and releases heat slowly, its ripple depth tuned to ambient temperature.",
         generator: "thermalMassUndulation",
         sliders: [
-          { key: "temperature", label: "Temperature", min: -10, max: 45, step: 1, default: 22, unit: "°C" },
-          { key: "reliefDepth", label: "Relief Depth", min: 0, max: 100, step: 1, default: 50, unit: "%" },
-          { key: "thermalLag", label: "Thermal Lag", min: 0, max: 100, step: 1, default: 40, unit: "%" },
+          { key: "temperature", label: "Temperature", labelZh: "溫度", min: -10, max: 45, step: 1, default: 22, unit: "°C" },
+          { key: "reliefDepth", label: "Relief Depth", labelZh: "起伏深度", min: 0, max: 100, step: 1, default: 50, unit: "%" },
+          { key: "thermalLag", label: "Thermal Lag", labelZh: "熱遲滯", min: 0, max: 100, step: 1, default: 40, unit: "%" },
         ],
       },
     ],
@@ -132,9 +154,9 @@ export const categories: Category[] = [
           "A phyllotaxis array of petals that opens and closes in response to simulated wind load.",
         generator: "kineticFoldingPetals",
         sliders: [
-          { key: "windSpeed", label: "Wind Speed", min: 0, max: 30, step: 0.5, default: 8, unit: "m/s" },
-          { key: "petalCount", label: "Petal Count", min: 5, max: 18, step: 1, default: 10 },
-          { key: "foldAngle", label: "Base Fold Angle", min: 0, max: 90, step: 1, default: 30, unit: "°" },
+          { key: "windSpeed", label: "Wind Speed", labelZh: "風速", min: 0, max: 30, step: 0.5, default: 8, unit: "m/s" },
+          { key: "petalCount", label: "Petal Count", labelZh: "花瓣數量", min: 5, max: 18, step: 1, default: 10 },
+          { key: "foldAngle", label: "Base Fold Angle", labelZh: "基礎摺角", min: 0, max: 90, step: 1, default: 30, unit: "°" },
         ],
       },
       {
@@ -146,9 +168,9 @@ export const categories: Category[] = [
           "A grid of shape-memory alloy strips that curl progressively as temperature rises, self-shading the surface.",
         generator: "shapeMemoryMembrane",
         sliders: [
-          { key: "temperature", label: "Temperature", min: -10, max: 45, step: 1, default: 24, unit: "°C" },
-          { key: "stiffness", label: "Membrane Stiffness", min: 0, max: 100, step: 1, default: 50, unit: "%" },
-          { key: "curl", label: "Curl Amount", min: 0, max: 100, step: 1, default: 55, unit: "%" },
+          { key: "temperature", label: "Temperature", labelZh: "溫度", min: -10, max: 45, step: 1, default: 24, unit: "°C" },
+          { key: "stiffness", label: "Membrane Stiffness", labelZh: "膜面剛度", min: 0, max: 100, step: 1, default: 50, unit: "%" },
+          { key: "curl", label: "Curl Amount", labelZh: "捲曲程度", min: 0, max: 100, step: 1, default: 55, unit: "%" },
         ],
       },
     ],
@@ -170,9 +192,9 @@ export const categories: Category[] = [
         description: "Cellular tessellation grown from scattered seed points, echoing dragonfly wings and dried mud.",
         generator: "voronoi",
         sliders: [
-          { key: "cellCount", label: "Cell Count", min: 8, max: 80, step: 1, default: 32 },
-          { key: "jitter", label: "Jitter", min: 0, max: 100, step: 1, default: 45, unit: "%" },
-          { key: "lineWidth", label: "Line Width", min: 1, max: 6, step: 0.5, default: 1.5, unit: "px" },
+          { key: "cellCount", label: "Cell Count", labelZh: "胞格數量", min: 8, max: 80, step: 1, default: 32 },
+          { key: "jitter", label: "Jitter", labelZh: "擾動", min: 0, max: 100, step: 1, default: 45, unit: "%" },
+          { key: "lineWidth", label: "Line Width", labelZh: "線寬", min: 1, max: 6, step: 0.5, default: 1.5, unit: "px" },
         ],
       },
       {
@@ -183,9 +205,9 @@ export const categories: Category[] = [
         description: "Golden-angle phyllotaxis — the packing logic behind sunflower heads and pinecones.",
         generator: "fibonacci",
         sliders: [
-          { key: "angleOffset", label: "Golden Angle Offset", min: -10, max: 10, step: 0.1, default: 0, unit: "°" },
-          { key: "pointCount", label: "Point Count", min: 50, max: 800, step: 10, default: 300 },
-          { key: "growthRate", label: "Growth Rate", min: 2, max: 14, step: 0.5, default: 6 },
+          { key: "angleOffset", label: "Golden Angle Offset", labelZh: "黃金角偏移", min: -10, max: 10, step: 0.1, default: 0, unit: "°" },
+          { key: "pointCount", label: "Point Count", labelZh: "點數量", min: 50, max: 800, step: 10, default: 300 },
+          { key: "growthRate", label: "Growth Rate", labelZh: "生長速率", min: 2, max: 14, step: 0.5, default: 6 },
         ],
       },
       {
@@ -196,9 +218,9 @@ export const categories: Category[] = [
         description: "Recursive branching that mirrors vascular and arboreal growth patterns.",
         generator: "fractalTree",
         sliders: [
-          { key: "branchAngle", label: "Branch Angle", min: 5, max: 60, step: 1, default: 24, unit: "°" },
-          { key: "depth", label: "Recursion Depth", min: 3, max: 12, step: 1, default: 9 },
-          { key: "lengthRatio", label: "Length Ratio", min: 0.5, max: 0.85, step: 0.01, default: 0.72 },
+          { key: "branchAngle", label: "Branch Angle", labelZh: "分岔角度", min: 5, max: 60, step: 1, default: 24, unit: "°" },
+          { key: "depth", label: "Recursion Depth", labelZh: "遞迴層數", min: 3, max: 12, step: 1, default: 9 },
+          { key: "lengthRatio", label: "Length Ratio", labelZh: "長度比例", min: 0.5, max: 0.85, step: 0.01, default: 0.72 },
         ],
       },
       {
@@ -209,9 +231,9 @@ export const categories: Category[] = [
         description: "A Gray-Scott simulation — the chemistry behind zebra stripes and coral texture.",
         generator: "reactionDiffusion",
         sliders: [
-          { key: "feedRate", label: "Feed Rate", min: 0.02, max: 0.08, step: 0.001, default: 0.037 },
-          { key: "killRate", label: "Kill Rate", min: 0.05, max: 0.07, step: 0.001, default: 0.06 },
-          { key: "diffusionSpeed", label: "Diffusion Speed", min: 1, max: 8, step: 1, default: 4 },
+          { key: "feedRate", label: "Feed Rate", labelZh: "供給率", min: 0.02, max: 0.08, step: 0.001, default: 0.037 },
+          { key: "killRate", label: "Kill Rate", labelZh: "消耗率", min: 0.05, max: 0.07, step: 0.001, default: 0.06 },
+          { key: "diffusionSpeed", label: "Diffusion Speed", labelZh: "擴散速度", min: 1, max: 8, step: 1, default: 4 },
         ],
       },
       {
@@ -222,9 +244,9 @@ export const categories: Category[] = [
         description: "Space-colonization venation — the distribution logic of leaves and river deltas.",
         generator: "veinFlow",
         sliders: [
-          { key: "growthSpeed", label: "Growth Speed", min: 1, max: 10, step: 1, default: 5 },
-          { key: "branchProbability", label: "Branch Probability", min: 0, max: 100, step: 1, default: 35, unit: "%" },
-          { key: "density", label: "Attractor Density", min: 20, max: 200, step: 5, default: 90 },
+          { key: "growthSpeed", label: "Growth Speed", labelZh: "生長速度", min: 1, max: 10, step: 1, default: 5 },
+          { key: "branchProbability", label: "Branch Probability", labelZh: "分枝機率", min: 0, max: 100, step: 1, default: 35, unit: "%" },
+          { key: "density", label: "Attractor Density", labelZh: "吸引點密度", min: 20, max: 200, step: 5, default: 90 },
         ],
       },
       {
@@ -235,9 +257,9 @@ export const categories: Category[] = [
         description: "A triangulated load grid that deforms toward its applied load angle, like a diagrid facade.",
         generator: "structuralGeometry",
         sliders: [
-          { key: "loadAngle", label: "Load Angle", min: 0, max: 360, step: 1, default: 90, unit: "°" },
-          { key: "memberThickness", label: "Member Thickness", min: 1, max: 6, step: 0.5, default: 2, unit: "px" },
-          { key: "gridDensity", label: "Grid Density", min: 6, max: 24, step: 1, default: 12 },
+          { key: "loadAngle", label: "Load Angle", labelZh: "載重角度", min: 0, max: 360, step: 1, default: 90, unit: "°" },
+          { key: "memberThickness", label: "Member Thickness", labelZh: "桿件厚度", min: 1, max: 6, step: 0.5, default: 2, unit: "px" },
+          { key: "gridDensity", label: "Grid Density", labelZh: "網格密度", min: 6, max: 24, step: 1, default: 12 },
         ],
       },
     ],
@@ -259,9 +281,9 @@ export const categories: Category[] = [
         description: "A layered, curved partition that filters light and sound without a single hard corner.",
         generator: "organicBoundary",
         sliders: [
-          { key: "curvature", label: "Curvature", min: 0, max: 100, step: 1, default: 55, unit: "%" },
-          { key: "porosity", label: "Porosity", min: 0, max: 100, step: 1, default: 40, unit: "%" },
-          { key: "lightAngle", label: "Light Angle", min: 0, max: 180, step: 1, default: 45, unit: "°" },
+          { key: "curvature", label: "Curvature", labelZh: "曲率", min: 0, max: 100, step: 1, default: 55, unit: "%" },
+          { key: "porosity", label: "Porosity", labelZh: "孔隙率", min: 0, max: 100, step: 1, default: 40, unit: "%" },
+          { key: "lightAngle", label: "Light Angle", labelZh: "光線角度", min: 0, max: 180, step: 1, default: 45, unit: "°" },
         ],
       },
       {
@@ -272,9 +294,9 @@ export const categories: Category[] = [
         description: "A slow-drifting, blended texture tuned for visual calm — modeled on wood grain and stone.",
         generator: "sensoryHealingPattern",
         sliders: [
-          { key: "softness", label: "Softness", min: 0, max: 100, step: 1, default: 65, unit: "%" },
-          { key: "patternScale", label: "Pattern Scale", min: 1, max: 10, step: 0.5, default: 4 },
-          { key: "calmFactor", label: "Calm Factor", min: 0, max: 100, step: 1, default: 70, unit: "%" },
+          { key: "softness", label: "Softness", labelZh: "柔和度", min: 0, max: 100, step: 1, default: 65, unit: "%" },
+          { key: "patternScale", label: "Pattern Scale", labelZh: "圖樣尺度", min: 1, max: 10, step: 0.5, default: 4 },
+          { key: "calmFactor", label: "Calm Factor", labelZh: "平靜程度", min: 0, max: 100, step: 1, default: 70, unit: "%" },
         ],
       },
     ],

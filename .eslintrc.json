@@ -1,0 +1,10 @@
+{
+  "extends": "next/core-web-vitals",
+  "ignorePatterns": ["standalone.html", "standalone.template.html", ".next", "out"],
+  "overrides": [
+    {
+      "files": ["scripts/**/*.js", "scripts/**/*.mjs"],
+      "env": { "node": true }
+    }
+  ]
+}
