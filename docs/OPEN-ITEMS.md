@@ -1,6 +1,6 @@
 # 待處理事項與待決策清單
 
-最後更新:2026-07-30 · 對應 commit `30d573a`
+最後更新:2026-08-03 · 對應 commit `754579b` + 未 commit 的尺度改動
 線上站台:https://biomimicry-pattern-hub.vercel.app/(已驗證,見第四節)
 
 這份文件的用途:專案暫停時把「還沒做的」和「需要人決定的」寫下來,讓下次接手
@@ -10,6 +10,17 @@
 ---
 
 ## 一、需要你決定的問題
+
+> **2026-08-03:A1–A4 已全部定案並實作,細節見 `docs/CANVAS-SCALE.md`。**
+> 決定如下,本節保留原文以記錄推導過程:
+> - **A1** 不採每個 type 各自的寬度,改為**四個固定檔位**(材料 0.6m / 構件 2m / 空間 8m / 量體 40m),
+>   理由是畫布要能互相比較、要維護的數字從 48 降到 4。48 個 type 已全數指派,
+>   reaction-diffusion 那 4 個刻意不給尺度滑桿。
+> - **A2** 13 個 key 已轉成實體單位,但**分成五族而不是三族**——依 generator 實際在做什麼分,
+>   過程中修正了本節表格對 `bistable-snap`、`membrane-like-partition`、`flowing-boundary`、
+>   `tactile-nature-surface` 的誤判。
+> - **A3** 選「兩者都標」:標籤改為「緯度環數」,generator 不動,並註明與文獻 nV 不是同一個量。
+> - **A4** 比例尺 ✅、臨界標記機制 ✅(只套用在 1 個 type)、時間軸相位帶 ❌、參數地圖推廣不做。
 
 ### A1. 實體尺度:每個 type 的畫布代表多寬 ⬅ 最大的一項
 
@@ -118,6 +129,19 @@ veinDensity   60–200 點   →  20 – 67 點/m²
 ---
 
 ## 二、已知但尚未處理
+
+### B0. px 單位滑桿仍是裝置像素:15 支 / 9 個 key / 14 個 type ⬅ 尺度改動翻出來的
+
+`lineWidth`(5 支)、`memberThickness`(2)、`wallThickness`(2)、`memberWidth`、`strutThickness`、
+`branchWidth`、`cellSize`、`apertureScale`、`louverLength` 的單位是 `px`,而且是**裝置像素**
+(受 `devicePixelRatio` 影響)。畫布現在有了實體尺度,同一個畫面在 Retina 與非 Retina 上代表
+不同的實體厚度——這是目前最明顯的不一致,應該一併改成 mm。
+
+清單請用 `unit === "px"` 掃 JSON 取得,不要照抄本節——本節初版就漏了 `apertureScale` 與
+`louverLength`,把 15 支寫成 9 支(9 是 key 數不是滑桿數)。
+
+**`honeycomb-panel` 的 `cellSize`(15–45px)不是厚度而是間距**,應歸入 `gridPitch` 由尺度推導
+(見 `docs/CANVAS-SCALE.md`),是這 15 支裡唯一要改推導方式而非只換單位的。
 
 ### B1. `lib/data.ts` 的備援滑桿沒有中文標籤
 
