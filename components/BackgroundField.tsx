@@ -1,15 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { AMBIENT_COLORS } from "@/lib/data";
 import { useScene } from "./SceneProvider";
 import MeshGradientCanvas from "./MeshGradientCanvas";
-
-const AMBIENT_COLORS: [string, string, string, string] = [
-  "#0a0a0a",
-  "#161616",
-  "#1c1c1c",
-  "#232323",
-];
 
 export default function BackgroundField() {
   const { level, category } = useScene();

@@ -9,6 +9,23 @@ export const ZONE_LABELS: Record<GsZone, string> = {
 };
 
 /**
+ * Fill per zone for the parameter map. Lives beside the labels rather than in
+ * the React component because standalone.html draws the same map and has to
+ * agree with it — a legend swatch that disagrees between the two builds is the
+ * kind of drift nobody notices until a student compares screenshots.
+ *
+ * The two patternless zones are deliberately achromatic: they are absences,
+ * and reading them as "another pattern family" is the misreading to avoid.
+ */
+export const ZONE_FILL: Record<GsZone, string> = {
+  extinct: "rgba(255,255,255,0.05)",
+  uniform: "rgba(255,255,255,0.16)",
+  spots: "rgba(120,190,255,0.55)",
+  stripes: "rgba(90,240,220,0.6)",
+  coral: "rgba(190,150,255,0.5)",
+};
+
+/**
  * Pattern family at each sampled (feedRate, killRate) pair, covering the exact
  * ranges the sliders expose.
  *

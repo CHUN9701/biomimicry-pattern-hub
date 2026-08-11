@@ -1,6 +1,6 @@
 # 待處理事項與待決策清單
 
-最後更新:2026-08-03 · 對應 commit `754579b` + 未 commit 的尺度改動
+最後更新:2026-08-11 · 對應 commit `a0b40e4` + standalone 去重
 線上站台:https://biomimicry-pattern-hub.vercel.app/(已驗證,見第四節)
 
 這份文件的用途:專案暫停時把「還沒做的」和「需要人決定的」寫下來,讓下次接手
@@ -117,14 +117,18 @@ veinDensity   60–200 點   →  20 – 67 點/m²
    都沒有。其他 type 的參數是連續造型參數,畫成地圖只會是一片沒有分區的色塊,
    花成本卻不傳達資訊。
 
-### A5. 要不要把 `embed-json.py` 收進 repo
+### A5. 要不要把 `embed-json.py` 收進 repo ✅ 問題已消失(2026-08-11)
 
-`lib/biomimicry-subcategories.json` 與 `standalone.html` 內嵌的那份 JSON 必須
-逐字一致。目前是手動同步,**這已經是它們第三次漂移的根源**。
+原始問題:`lib/biomimicry-subcategories.json` 與 `standalone.html` 內嵌的那份 JSON
+必須逐字一致,手動同步**已經是它們第三次漂移的根源**,所以需要一支同步腳本。
 
-我寫了一支腳本做這件事並自我驗證 round-trip(讀回來比對,不一致就 assert
-失敗)。目前放在 session 的 scratchpad,**session 結束就消失**。建議收進
-`scripts/embed-json.py`。腳本內容附在本文件第五節,以免遺失。
+**這個問題不是被決定,是不見了。** `standalone.html` 現在由 `lib/` 打包產生
+(`npm run build:standalone`,見 `docs/STANDALONE-BUILD.md`),JSON 由 bundle 直接
+import,**只剩一份,不可能不一致**。`scripts/embed-json.py` 已刪除,本文件第五節
+附的那份腳本內容也一併移除——留著只會讓人以為還需要手動同步。
+
+同一次改動也解決了漂移的**根本原因**而不只是 JSON:standalone 裡那份 5,024 行的
+手寫第二份實作已經刪除,包含全部 60 個 generator。48/48 逐像素驗證無差異。
 
 ---
 
@@ -177,7 +181,8 @@ veinDensity   60–200 點   →  20 – 67 點/m²
 | 說明面板 | 48/48,三個欄位齊全 |
 | 「generator 讀取的參數」vs「滑桿宣告的參數」 | 48 個 type **零不符** |
 | 程式碼遺留標記 | `lib/*.ts`、`components/*.tsx`、`app/` 內 **無 TODO/FIXME** |
-| standalone.html 與 lib JSON | 逐字一致(round-trip 驗證) |
+| standalone.html 與 lib JSON | **結構上不可能不一致**(同一份,由 bundle import) |
+| standalone generator 與 lib generator | 48/48 逐像素相同(`npm run check:parity`,每個 3 frame) |
 | standalone 畫布寬度 | 12/12 都是 384px(防的是曾經塌成 2px 的那次回歸) |
 | 水平溢出 | desktop 1400px 與 mobile 390px 皆 0 |
 | Console errors | 僅 favicon 404 |
@@ -256,44 +261,16 @@ snapSharpness=35   trigger 0→100:  26 27 28 30 33 41 61 85 100  ← 先平,然
 暫態,全被標成 spots),以及 standalone 畫布塌成 2px 卻 145/145 通過(因為
 **沒有任何一條斷言在量畫布尺寸**)。
 
-### `embed-json.py`(A5 提到的腳本,存此以免遺失)
+### 一個已經消失的坑:兩份實作(2026-08-11)
 
-```python
-#!/usr/bin/env python3
-"""Re-embed lib/biomimicry-subcategories.json into standalone.html's inline copy.
-Doing this by hand is how the two builds drift, so it lives in one place and
-verifies the round-trip before writing."""
-import json, sys
-REPO = "/Users/chun/Desktop/專案/biomimicry/biomimicry-pattern-hub"
-SA, LIB = f"{REPO}/standalone.html", f"{REPO}/lib/biomimicry-subcategories.json"
+本節原本收著 `embed-json.py` 的完整內容「以免遺失」,而它存在的唯一理由是
+`standalone.html` 有一份手寫的第二份實作要跟 `lib/` 同步。那 5,024 行已經刪除,
+`standalone.html` 改為由 `lib/` 打包產生,所以腳本與這段內容一併移除。
 
-lines = open(SA, encoding="utf-8").read().split("\n")
-start = next(i for i, l in enumerate(lines) if l.strip().startswith("const subcategoryData = {"))
-depth, end = 0, None
-for i in range(start, len(lines)):
-    depth += lines[i].count("{") - lines[i].count("}")
-    if depth == 0 and i > start:
-        end = i; break
-if end is None: sys.exit("could not find end of subcategoryData block")
-
-data = json.load(open(LIB, encoding="utf-8"))
-# Match the file's existing format byte-for-byte: no extra base indent, or the
-# diff becomes a 4600-line indentation rewrite that buries the real change.
-emb = "  const subcategoryData = " + json.dumps(data, ensure_ascii=False, indent=2) + ";"
-lines[start:end + 1] = emb.split("\n")
-open(SA, "w", encoding="utf-8").write("\n".join(lines))
-
-# read it back the same way the browser would, and prove it equals the source
-lines = open(SA, encoding="utf-8").read().split("\n")
-depth, e2 = 0, None
-for i in range(start, len(lines)):
-    depth += lines[i].count("{") - lines[i].count("}")
-    if depth == 0 and i > start:
-        e2 = i; break
-back = json.loads("\n".join(lines[start:e2 + 1]).split("=", 1)[1].strip().rstrip(";"))
-assert back == data, "round-trip mismatch — standalone.html would disagree with lib"
-print(f"embedded ok: lines {start+1}-{e2+1}, {len(data['categories'])} categories, round-trip verified")
-```
+留下來的教訓:**上面「驗證工具的陷阱」裡有兩條是這件事的併發症**——重新內嵌 JSON
+多加縮排把 diff 炸成 4,675 行、以及兩份 build 的 JSON 漂移三次。維護兩份實作時,
+紀律與工具都只能減少漂移的頻率,不能消除;消除的方法是讓第二份不存在。
+作法見 `docs/STANDALONE-BUILD.md`。
 
 ---
 

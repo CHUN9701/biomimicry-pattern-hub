@@ -30,6 +30,22 @@ Category and variant metadata (titles, descriptions, color palettes,
 slider configs) live in `lib/data.ts`. The Canvas2D simulations live in
 `lib/generators.ts`; the WebGL shader source lives in `lib/shaders.ts`.
 
+## `standalone.html` is generated — don't edit it
+
+There is a second build: a single self-contained HTML file that runs the same
+48 pattern types offline from `file://`, with no server and no install. It is
+**generated** from `standalone.template.html` (the vanilla-JS UI shell) plus a
+bundle of `lib/`:
+
+```bash
+npm run build:standalone    # regenerate it
+npm run check:standalone    # CI: fail if it is out of date or hand-edited
+```
+
+It used to be a hand-written second implementation of everything in `lib/` —
+5,024 lines including all 60 generators — which is why every drift between the
+two builds happened. See `docs/STANDALONE-BUILD.md`.
+
 ## Running locally
 
 ```bash

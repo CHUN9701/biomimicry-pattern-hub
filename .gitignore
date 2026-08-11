@@ -6,3 +6,6 @@ out
 npm-debug.log*
 .env*.local
 *.tsbuildinfo
+
+# Written and removed by scripts/check-generator-parity.js; only survives a crash
+.parity-harness.html

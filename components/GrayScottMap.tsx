@@ -1,14 +1,6 @@
 "use client";
 
-import { GS_ZONES, ZONE_LABELS, type GsZone } from "@/lib/grayScottZones";
-
-const ZONE_FILL: Record<GsZone, string> = {
-  extinct: "rgba(255,255,255,0.05)",
-  uniform: "rgba(255,255,255,0.16)",
-  spots: "rgba(120,190,255,0.55)",
-  stripes: "rgba(90,240,220,0.6)",
-  coral: "rgba(190,150,255,0.5)",
-};
+import { GS_ZONES, ZONE_FILL, ZONE_LABELS, type GsZone } from "@/lib/grayScottZones";
 
 /**
  * Where the current feed/kill pair sits in Gray-Scott parameter space.

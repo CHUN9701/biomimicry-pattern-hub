@@ -62,6 +62,18 @@ export type Category = {
   variants: Variant[];
 };
 
+/**
+ * Background palette when no category is selected. Here rather than in
+ * BackgroundField.tsx because standalone.html paints the same field and the two
+ * builds must open on the same colour.
+ */
+export const AMBIENT_COLORS: [string, string, string, string] = [
+  "#0a0a0a",
+  "#161616",
+  "#1c1c1c",
+  "#232323",
+];
+
 export const categories: Category[] = [
   {
     slug: "static-climate",
