@@ -148,6 +148,24 @@ export function getSubcategoryTypes(variantSlug: string): SubcategoryPatternType
 }
 
 /**
+ * Every 分類2 and every pattern type, flat, for whole-dataset checks.
+ *
+ * Exists so audits go through this module's single typed view of the JSON. The
+ * alternative — importing the raw JSON and asserting a shape at the call site —
+ * is the mistake documented above: tsc infers the JSON's literal types, so
+ * optional fields like `scaleTier` are absent from the entries that lack them,
+ * and the only way to read them is a fresh `as` cast that asserts instead of
+ * checking. One cast in one place is the point.
+ */
+export function allSubcategories(): SubcategoryEntry[] {
+  return subcategoryData.categories.flatMap((c) => c.subcategories);
+}
+
+export function allPatternTypes(): SubcategoryPatternType[] {
+  return allSubcategories().flatMap((s) => s.types);
+}
+
+/**
  * Resolved sliders for one type, or null if the type has none or any of them
  * fail validation. Use this rather than reading `type.sliders` directly, so a
  * malformed slider can never reach the UI.

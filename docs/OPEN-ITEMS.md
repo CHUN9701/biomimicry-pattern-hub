@@ -1,6 +1,6 @@
 # 待處理事項與待決策清單
 
-最後更新:2026-08-11 · 對應 commit `a0b40e4` + standalone 去重
+最後更新:2026-08-11 · 對應 commit `74d2b54` + 測試/CI/靜態路由
 線上站台:https://biomimicry-pattern-hub.vercel.app/(已驗證,見第四節)
 
 這份文件的用途:專案暫停時把「還沒做的」和「需要人決定的」寫下來,讓下次接手
@@ -147,6 +147,25 @@ import,**只剩一份,不可能不一致**。`scripts/embed-json.py` 已刪除,�
 **`honeycomb-panel` 的 `cellSize`(15–45px)不是厚度而是間距**,應歸入 `gridPitch` 由尺度推導
 (見 `docs/CANVAS-SCALE.md`),是這 15 支裡唯一要改推導方式而非只換單位的。
 
+### B4. CI 檔案還沒生效,停在 `docs/ci-workflow.yml` ⬅ 需要你動手一次
+
+`.github/workflows/ci.yml` 已經寫好並測過(內容就是 `docs/ci-workflow.yml`,本機跑過
+typecheck + test + check:standalone + build 全綠),但**推不上去**:
+
+```
+! [remote rejected] main -> main (refusing to allow an OAuth App to create or
+  update workflow .github/workflows/ci.yml without `workflow` scope)
+```
+
+推送用的 OAuth token 沒有 `workflow` 權限。兩條路,選一條:
+
+1. `gh auth refresh -s workflow`(需要互動式終端),然後
+   `mkdir -p .github/workflows && git mv docs/ci-workflow.yml .github/workflows/ci.yml`
+2. 直接在 GitHub 網頁介面新增 `.github/workflows/ci.yml`,把檔案內容貼上
+
+**在這之前 CI 不會跑**,所有檢查仍然只在本機。放在 `docs/` 而不是留在某台機器的
+硬碟上,是因為上一支有用的腳本就是這樣差點消失(見 A5)。
+
 ### B1. `lib/data.ts` 的備援滑桿沒有中文標籤
 
 `SliderConfig` 的 `labelZh` 是選填。JSON 那 145 個滑桿都有,但 `lib/data.ts`
@@ -169,17 +188,25 @@ import,**只剩一份,不可能不一致**。`scripts/embed-json.py` 已刪除,�
 
 ---
 
-## 三、已驗證乾淨的基線(commit `30d573a`)
+## 三、已驗證乾淨的基線(commit `74d2b54` 之後)
 
-這些都是實測結果,不是推測。重跑稽核時可以拿來當對照。
+這些都是實測結果,不是推測。**標「自動」的項目已經變成測試,不必再手動重跑** —— 這一節原本
+是一張要靠人重新推導的數字表,而 B0 就是這樣寫錯的(15 支 px 滑桿被寫成 9 支)。
+
+```bash
+npm test                 # 36 個測試,約 0.3 秒,不需要瀏覽器
+npm run check:standalone  # 產物是否過期或被手改
+npm run check:scale       # 48 個 type 的尺度稽核(需要 Chromium)
+npm run check:parity      # generator 逐像素比對(需要 Chromium)
+```
 
 | 項目 | 狀態 |
 |---|---|
-| 分類2 完成度 | 12/12,每個 4 個 type = 48 個 type |
-| Generator registry | 60 個,**孤兒 0 個** |
-| 滑桿 | 145/145 通過(min/max/step/default 落在格點上) |
-| 說明面板 | 48/48,三個欄位齊全 |
-| 「generator 讀取的參數」vs「滑桿宣告的參數」 | 48 個 type **零不符** |
+| 分類2 完成度 | 12/12,每個 4 個 type = 48 個 type(**自動**) |
+| Generator registry | 60 個,**孤兒 0 個**(**自動**) |
+| 滑桿 | 145/145 通過(min/max/step/default 落在格點上)(**自動**) |
+| 說明面板 | 48/48,三個欄位齊全(**自動**) |
+| 「generator 讀取的參數」vs「滑桿宣告的參數」 | 48 個 type **零不符**(**自動**,靜態分析 60 個 factory) |
 | 程式碼遺留標記 | `lib/*.ts`、`components/*.tsx`、`app/` 內 **無 TODO/FIXME** |
 | standalone.html 與 lib JSON | **結構上不可能不一致**(同一份,由 bundle import) |
 | standalone generator 與 lib generator | 48/48 逐像素相同(`npm run check:parity`,每個 3 frame) |
@@ -187,6 +214,9 @@ import,**只剩一份,不可能不一致**。`scripts/embed-json.py` 已刪除,�
 | 水平溢出 | desktop 1400px 與 mobile 390px 皆 0 |
 | Console errors | 僅 favicon 404 |
 | git | `main` 與 `origin/main` 同步,working tree 乾淨 |
+| 路由 | 22 個頁面全部預先產生,**0 個 server-rendered**(兩個動態段 `fallback: false`) |
+| px 單位滑桿清單 | 15 支 / 9 個 key / 14 個 type(**自動**;B0 待處理,但數字已鎖住不會再寫錯) |
+| CI | `.github/workflows/ci.yml`:typecheck + test + check:standalone + build |
 
 ---
 

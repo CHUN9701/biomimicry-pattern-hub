@@ -2590,3 +2590,13 @@ export function createGenerator(key: string): GeneratorInstance {
 export function hasGenerator(key: string): boolean {
   return key in registry;
 }
+
+/**
+ * Every registered key. Exists so the orphan check ("is any generator no longer
+ * reachable from the data?") can be an assertion instead of a manual count —
+ * docs/OPEN-ITEMS.md tracked "60 registered, 0 orphans" as a number somebody had
+ * to re-derive by hand, which is how it goes stale.
+ */
+export function generatorKeys(): string[] {
+  return Object.keys(registry);
+}

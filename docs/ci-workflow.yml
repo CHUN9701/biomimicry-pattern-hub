@@ -1,0 +1,54 @@
+# NOT ACTIVE YET — this file has to be moved to .github/workflows/ci.yml to run.
+#
+#   git mv docs/ci-workflow.yml .github/workflows/ci.yml   # needs the dir first
+#
+# It is parked here because the push that added it was rejected: "refusing to
+# allow an OAuth App to create or update workflow .github/workflows/ci.yml
+# without `workflow` scope". Landing it needs either `gh auth refresh -s workflow`
+# (interactive) or adding the file through the GitHub web UI. Kept in version
+# control rather than left on one machine's disk, since that is how the last
+# useful script nearly got lost. See docs/OPEN-ITEMS.md B4.
+#
+# The checks that need no browser, so they can run on every push.
+#
+# Deliberately NOT here: check:scale, check:parity and check-production. Those
+# drive a real Chromium over CDP against a cached binary on the dev machine, and
+# they are the slow, high-value audits — see docs/OPEN-ITEMS.md §05 for how much
+# time has gone into keeping that browser cache working. Running them here would
+# mean maintaining a browser install in CI to re-verify what a local run already
+# covers. What CI is for is the fast invariants that used to be re-derived by
+# hand and went stale.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and data-integrity tests
+        run: npm test
+
+      # standalone.html is generated. This fails if lib/ or the template changed
+      # without a rebuild, or if the generated file was hand-edited — which is the
+      # exact failure mode that made the two builds drift for months.
+      - name: standalone.html is up to date
+        run: npm run check:standalone
+
+      - name: Production build
+        run: npm run build
