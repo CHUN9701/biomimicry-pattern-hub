@@ -1,3 +1,14 @@
+/**
+ * A mark on the slider track at a position where the BEHAVIOUR changes — not
+ * decoration (docs/OPEN-ITEMS.md A4). Without it, a student dragging
+ * bistable-snap's trigger from 0 to 35 sees nothing move and concludes the
+ * slider is broken, when in fact the whole snap happens in the next 15%.
+ */
+export type SliderTick = {
+  at: number;
+  labelZh: string;
+};
+
 export type SliderConfig = {
   key: string;
   label: string;
@@ -8,6 +19,27 @@ export type SliderConfig = {
   step: number;
   default: number;
   unit?: string;
+  /**
+   * How this slider's value combines with the canvas's physical extent to
+   * produce the count the generator actually draws. Present only on the
+   * count-derived sliders; a plain shaping slider (an angle, a percentage) has
+   * none.
+   *
+   *  gridPitch   spacing across a 2D grid — cols from width, rows from height
+   *  linePitch   spacing across the WIDTH (vertical ribs, grid lines)
+   *  rowPitch    spacing down the HEIGHT (stacked bands, grain lines)
+   *  wavelength  one full wave's length
+   *  areaDensity points per m², so the count follows the area
+   *
+   * Which one applies is decided by what the generator draws, not by what the
+   * slider used to be called.
+   */
+  derive?: "gridPitch" | "linePitch" | "rowPitch" | "wavelength" | "areaDensity";
+  /** Unit the derive value is expressed in. Defaults to mm. */
+  deriveUnit?: "mm" | "m";
+  ticks?: SliderTick[];
+  /** States what the ticks were computed from, so they aren't read as absolute. */
+  ticksNote?: string;
 };
 
 export type Variant = {

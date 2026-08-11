@@ -1,4 +1,12 @@
 import { clamp, lerpColor, mulberry32, rgba } from "./canvasUtils";
+import {
+  countAcross,
+  freqFromWavelength,
+  gridCountsFromPitch,
+  heightM,
+  physicalWidthM,
+  pointsInArea,
+} from "./scale";
 
 export type Palette = [string, string, string, string];
 export type GenParams = Record<string, number>;
@@ -649,6 +657,32 @@ const sensoryHealingPattern: Factory = () => ({
 // Each type below is a thin per-cell renderer reusing this same iteration
 // logic, rather than a from-scratch grid implementation.
 // ---------------------------------------------------------------------------
+function forEachApertureCellByCols(
+  w: number,
+  h: number,
+  colsRaw: number,
+  cb: (
+    cx: number,
+    cy: number,
+    cellW: number,
+    cellH: number,
+    row: number,
+    col: number,
+    rows: number,
+    cols: number
+  ) => void
+) {
+  const cols = Math.max(2, Math.round(colsRaw));
+  const rows = Math.max(2, Math.round(cols * (h / w)));
+  const cellW = w / cols;
+  const cellH = h / rows;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      cb(col * cellW + cellW / 2, row * cellH + cellH / 2, cellW, cellH, row, col, rows, cols);
+    }
+  }
+}
+
 function forEachApertureCell(
   w: number,
   h: number,
@@ -664,17 +698,9 @@ function forEachApertureCell(
     cols: number
   ) => void
 ) {
-  const cols = Math.max(4, Math.round(density));
-  const rows = Math.max(2, Math.round(cols * (h / w)));
-  const cellW = w / cols;
-  const cellH = h / rows;
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const cx = col * cellW + cellW / 2;
-      const cy = row * cellH + cellH / 2;
-      cb(cx, cy, cellW, cellH, row, col, rows, cols);
-    }
-  }
+  // Count-based path, still used by the types whose density slider hasn't been
+  // converted to a physical spacing yet. Floor of 4 columns is kept as it was.
+  forEachApertureCellByCols(w, h, Math.max(4, Math.round(density)), cb);
 }
 
 // Fixed Aperture Grid Type — apertures stay a constant size; only the
@@ -693,7 +719,16 @@ const fixedApertureGrid: Factory = () => ({
     // the defining property of a "Fixed" Aperture Grid.
     const elevationFactor = 1 - Math.sin(angleRad);
     const shadowStretch = 1 + elevationFactor * 1.8;
-    forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col, rows, cols) => {
+
+    // The slider now sets a physical aperture pitch in mm, and the COLUMN COUNT
+    // falls out of how wide the canvas claims to be (lib/scale.ts). Widening the
+    // extent at a fixed pitch therefore adds apertures, which is what a real
+    // facade does — the previous "aperture density" slider set a bare count that
+    // meant nothing without knowing the size of the thing being drawn.
+    const widthM = physicalWidthM(p, 2);
+    const { cols: derivedCols } = gridCountsFromPitch(widthM, p.aperturePitch, h / w);
+
+    forEachApertureCellByCols(w, h, derivedCols, (cx, cy, cellW, cellH, row, col, rows, cols) => {
       const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
       const r = Math.min(cellW, cellH) * 0.5 * (p.apertureSize / 100) * shimmer;
       const shadowLength = Math.min(cellW, cellH) * (0.12 + elevationFactor * 0.65);
@@ -722,7 +757,11 @@ const deepWellShadow: Factory = () => ({
     const depth = clamp(p.wellDepth / 100, 0, 1);
     const noonFactor = Math.sin(angleRad);
 
-    forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col) => {
+    // Wells are spaced by a physical pitch; how many fit follows from how wide
+    // the canvas says it is.
+    const wellCols = gridCountsFromPitch(physicalWidthM(p, 2), p.aperturePitch, h / w).cols;
+
+    forEachApertureCellByCols(w, h, wellCols, (cx, cy, cellW, cellH, row, col) => {
       const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
       const r = Math.min(cellW, cellH) * 0.42 * shimmer;
 
@@ -759,7 +798,9 @@ const directionalLouverAperture: Factory = () => ({
     const angleRad = (p.louverAngle / 180) * Math.PI;
     const slitFrac = clamp(p.slitWidth / 100, 0.05, 1);
 
-    forEachApertureCell(w, h, p.apertureDensity, (cx, cy, cellW, cellH, row, col) => {
+    const slitCols = gridCountsFromPitch(physicalWidthM(p, 2), p.slitPitch, h / w).cols;
+
+    forEachApertureCellByCols(w, h, slitCols, (cx, cy, cellW, cellH, row, col) => {
       const wobble = Math.sin(t * 0.4 + row * 0.6 + col * 0.3) * 0.02;
       const len = Math.min(cellW, cellH) * 0.85;
       const thick = Math.min(cellW, cellH) * 0.5 * slitFrac;
@@ -785,7 +826,9 @@ const graduatedPinhole: Factory = () => ({
     const dir = { x: Math.cos(angleRad), y: Math.sin(angleRad) };
     const contrast = clamp(p.contrastRange / 100, 0, 1);
 
-    forEachApertureCell(w, h, p.pinholeDensity, (cx, cy, cellW, cellH, row, col) => {
+    const pinCols = gridCountsFromPitch(physicalWidthM(p, 2), p.pinholePitch, h / w).cols;
+
+    forEachApertureCellByCols(w, h, pinCols, (cx, cy, cellW, cellH, row, col) => {
       const proj = (cx / w) * dir.x + (cy / h) * dir.y;
       const grade = clamp((proj + 1) / 2, 0, 1);
       const jitter = 1 + 0.05 * Math.sin(t * 0.5 + row + col);
@@ -856,7 +899,9 @@ const corrugatedThermalSkin: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
     const sharp = clamp(p.foldSharpness / 100, 0, 1);
-    const freq = (2 * Math.PI * p.foldDensity) / w;
+    // Wavelength in mm rather than a bare fold count: 250mm folds stay 250mm
+    // folds whether the panel is 1m or 5m wide — there are simply more of them.
+    const freq = freqFromWavelength(p.foldWavelength, physicalWidthM(p, 2), w);
     const amp = h * 0.26;
     const midY = h * 0.5;
 
@@ -873,7 +918,7 @@ const corrugatedThermalSkin: Factory = () => ({
 const ribbedMassBuffer: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
-    const ribCount = Math.max(4, Math.round(p.ribDensity));
+    const ribCount = countAcross(physicalWidthM(p, 2), p.ribPitch, 3);
     const ribW = w / ribCount;
     const gapFrac = clamp(p.airGapDepth / 100, 0.1, 0.8);
     const delaySpeed = 0.15 + (p.thermalDelay / 100) * 0.5;
@@ -1098,7 +1143,10 @@ const bistableSnap: Factory = () => ({
     const trigger = clamp(p.triggerLevel / 100, 0, 1);
     const sharpness = 1 + (p.snapSharpness / 100) * 30;
     const snapT = 1 / (1 + Math.exp(-sharpness * (trigger - 0.5)));
-    const rows = Math.max(1, Math.round(p.waveDensity));
+    // waveDensity counted the stacked bands, not waves along x — so the honest
+    // physical unit is each band's HEIGHT, measured down the canvas.
+    const widthM = physicalWidthM(p, 2);
+    const rows = countAcross(heightM(widthM, h / w), p.bandHeight, 1);
     const rowH = h / rows;
     const amp = rowH * 0.85 * snapT;
 
@@ -1914,7 +1962,11 @@ const leafVenationStructural: Factory = () => {
 
   return {
     draw(ctx, w, h, t, p, palette) {
-      const density = Math.round(p.veinDensity);
+      // The slider is now nodes per m², so the attractor COUNT follows the
+      // canvas area. Widening the extent reseeds and regrows the network — that
+      // is the honest consequence of asking for a bigger roof at the same node
+      // density, not a glitch.
+      const density = pointsInArea(p.veinDensity, physicalWidthM(p, 8), h / w);
       if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
         const rand = mulberry32(Math.floor(density * 97 + 7));
         attractors = [];
@@ -1947,7 +1999,7 @@ const fluidDynamicFacade: Factory = () => {
 
   return {
     draw(ctx, w, h, t, p, palette) {
-      const density = Math.round(p.streamDensity);
+      const density = pointsInArea(p.streamDensity, physicalWidthM(p, 2), h / w);
       if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
         const rand = mulberry32(Math.floor(density * 131 + 11));
         attractors = [];
@@ -1976,7 +2028,7 @@ const capillaryDrainage: Factory = () => {
 
   return {
     draw(ctx, w, h, t, p, palette) {
-      const density = Math.round(p.drainDensity);
+      const density = pointsInArea(p.drainDensity, physicalWidthM(p, 2), h / w);
       if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
         const rand = mulberry32(Math.floor(density * 71 + 13));
         attractors = [];
@@ -2199,7 +2251,9 @@ const honeycombPanel: Factory = () => ({
 const minimalSurfaceShell: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
-    const n = Math.round(p.gridDensity);
+    // One grid count for both axes, as before — but derived from the width, so
+    // the number on the slider is the mesh spacing a gridshell gets quoted at.
+    const n = countAcross(physicalWidthM(p, 8), p.gridSpacing, 3);
     const cellW = w / n;
     const cellH = h / n;
     const cx = w / 2;
@@ -2282,7 +2336,7 @@ const membraneLikePartition: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
     const amp = h * 0.18 * (p.membraneWaviness / 100);
-    const freq = 0.006 * p.waveFrequency;
+    const freq = freqFromWavelength(p.membraneWavelength, physicalWidthM(p, 2), w);
     const alpha = 1 - clamp(p.transparency / 100, 0, 1) * 0.75;
 
     drawWaveBand(ctx, w, h * 0.5, h, amp, t * 0.3, freq, 0, 0.3);
@@ -2333,7 +2387,7 @@ const flowingBoundary: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
     const amp = h * 0.22 * (p.flowAmplitude / 100);
-    const freq = 0.005 * p.flowFrequency;
+    const freq = freqFromWavelength(p.flowWavelength * 1000, physicalWidthM(p, 8), w);
     const sharp = clamp(p.transitionSharpness / 100, 0, 1);
 
     drawWaveBand(ctx, w, h * 0.62, h, amp, t * 0.25, freq, sharp, 0.2);
@@ -2416,7 +2470,9 @@ const acousticDiffusionPattern: Factory = () => ({
     const depthT = clamp(p.poreDepth / 100, 0, 1);
     const contrast = clamp(p.diffusionContrast / 100, 0, 1);
 
-    forEachApertureCell(w, h, p.cellDensity, (cx, cy, cellW, cellH, row, col, rows, cols) => {
+    const poreCols = gridCountsFromPitch(physicalWidthM(p, 0.6), p.cellPitch, h / w).cols;
+
+    forEachApertureCellByCols(w, h, poreCols, (cx, cy, cellW, cellH, row, col, rows, cols) => {
       const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + row * 0.7 + col * 0.9);
       const r = Math.min(cellW, cellH) * 0.5 * (0.4 + depthT * 0.5) * shimmer;
       ctx.beginPath();
@@ -2435,7 +2491,9 @@ const tactileNatureSurface: Factory = () => ({
   draw(ctx, w, h, t, p, palette) {
     ctx.clearRect(0, 0, w, h);
     const scale = p.grainScale;
-    const lineCount = Math.round(p.grainDensity);
+    // Grain lines run horizontally, so their spacing is read down the HEIGHT of
+    // the surface, not across its width.
+    const lineCount = countAcross(heightM(physicalWidthM(p, 0.6), h / w), p.grainPitch, 3);
     const roughness = p.roughness / 100;
 
     for (let i = 0; i < lineCount; i++) {

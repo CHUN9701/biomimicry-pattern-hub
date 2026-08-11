@@ -1,5 +1,6 @@
 import type { SliderConfig } from "./data";
 import { hasGenerator } from "./generators";
+import { isScaleTier, type ScaleTier } from "./scale";
 import rawSubcategoryData from "./biomimicry-subcategories.json";
 
 // The JSON is filled in per 分類2, so most fields below only exist on variants
@@ -17,6 +18,20 @@ export type SubcategoryPatternType = {
   spatialApplication?: string;
   generator?: string;
   climateInput?: string;
+  /**
+   * Which of the four physical-extent tiers this type's canvas belongs to
+   * (lib/scale.ts). A type without one simply has no scale slider and no scale
+   * bar — that is the honest state for the reaction-diffusion family, whose
+   * pattern scale comes from feed/kill rather than from any count.
+   */
+  scaleTier?: string;
+  /**
+   * States what the extent corresponds to when the canvas's WIDTH isn't the
+   * dimension a designer would quote — a tower's height, a foundation's depth,
+   * a dome's diameter. The slider stays one axis (width) so the derivation has
+   * a single source; this line stops the number being read as the wrong thing.
+   */
+  scaleNoteZh?: string;
   sliders?: SliderConfig[];
   visualPrimitive?: string;
   mappingRule?: string;
@@ -75,6 +90,23 @@ export function isValidSlider(s: unknown): s is SliderConfig {
   }
   if (o.unit !== undefined && typeof o.unit !== "string") return false;
   if (o.labelZh !== undefined && typeof o.labelZh !== "string") return false;
+  const DERIVE_KINDS = ["gridPitch", "linePitch", "rowPitch", "wavelength", "areaDensity"];
+  if (o.derive !== undefined && !DERIVE_KINDS.includes(o.derive as string)) return false;
+  if (o.deriveUnit !== undefined && o.deriveUnit !== "mm" && o.deriveUnit !== "m") return false;
+  if (o.ticksNote !== undefined && typeof o.ticksNote !== "string") return false;
+  if (o.ticks !== undefined) {
+    if (!Array.isArray(o.ticks)) return false;
+    // A tick outside the track would render off the slider, and one without a
+    // label is a mark the student can't interpret — both are worse than none.
+    const inRange = (n: unknown) =>
+      typeof n === "number" && Number.isFinite(n) &&
+      n >= (o.min as number) && n <= (o.max as number);
+    if (!o.ticks.every((t) => {
+      const tk = t as Record<string, unknown>;
+      return tk !== null && typeof tk === "object" && inRange(tk.at) &&
+        typeof tk.labelZh === "string" && tk.labelZh !== "";
+    })) return false;
+  }
 
   const min = o.min as number;
   const max = o.max as number;
@@ -122,6 +154,15 @@ export function getSubcategoryTypes(variantSlug: string): SubcategoryPatternType
  */
 export function getValidatedSliders(type: SubcategoryPatternType): SliderConfig[] | null {
   return validateSliders(type.sliders);
+}
+
+/**
+ * The type's scale tier, or null if it declares none / declares an unknown one.
+ * Unknown tiers fall to null rather than to a default, so a typo shows up as a
+ * missing scale bar instead of silently claiming the wrong physical size.
+ */
+export function getScaleTier(type: SubcategoryPatternType): ScaleTier | null {
+  return isScaleTier(type.scaleTier) ? type.scaleTier : null;
 }
 
 // The ONLY gate for showing the new 4-card explorer: this variant must have

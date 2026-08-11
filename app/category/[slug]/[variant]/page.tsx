@@ -6,19 +6,30 @@ import { motion } from "framer-motion";
 import { getVariant } from "@/lib/data";
 import type { SliderConfig } from "@/lib/data";
 import {
+  getScaleTier,
   getSubcategoryTypes,
   getValidatedSliders,
   isVariantExplorerReady,
 } from "@/lib/subcategoryTypes";
+import { SCALE_PARAM_KEY, SCALE_TIERS, type ScaleTier } from "@/lib/scale";
 import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
 import MechanismTypeList from "@/components/MechanismTypeList";
 import TypeInfoPanel from "@/components/TypeInfoPanel";
 
-// Build a fully-resolved default-params object from any slider list.
-function defaultParamsFromSliders(sliders: SliderConfig[]): Record<string, number> {
-  return Object.fromEntries(sliders.map((s) => [s.key, s.default]));
+// Build a fully-resolved default-params object from any slider list. The
+// physical extent is seeded here too: it isn't one of the type's own sliders
+// (it lives below the canvas, not in the parameter panel), but the generator
+// reads it from the same params object, so a type declaring a tier must start
+// with that tier's default width already present.
+function defaultParams(
+  sliders: SliderConfig[],
+  scaleTier?: ScaleTier | null
+): Record<string, number> {
+  const base = Object.fromEntries(sliders.map((s) => [s.key, s.default]));
+  if (scaleTier) base[SCALE_PARAM_KEY] = SCALE_TIERS[scaleTier].defaultM;
+  return base;
 }
 
 type ResolvedType = {
@@ -31,6 +42,8 @@ type ResolvedType = {
   spatialApplication?: string;
   generator: string;
   sliders: SliderConfig[];
+  scaleTier: ScaleTier | null;
+  scaleNoteZh?: string;
 };
 
 // The old universal 4-type taxonomies are not imported here — this page reads
@@ -59,6 +72,8 @@ function resolveExplorerTypes(variantSlug: string): ResolvedType[] {
         spatialApplication: t.spatialApplication,
         generator: t.generator,
         sliders,
+        scaleTier: getScaleTier(t),
+        scaleNoteZh: t.scaleNoteZh,
       },
     ];
   });
@@ -84,7 +99,7 @@ export default function VariantPage({
 
   const [activeTypeKey, setActiveTypeKey] = useState(initialKey);
   const [sliderParams, setSliderParams] = useState<Record<string, number>>(() =>
-    defaultParamsFromSliders(initialSliders)
+    defaultParams(initialSliders, explorerReady && initialType ? initialType.scaleTier : null)
   );
 
   useEffect(() => {
@@ -100,10 +115,11 @@ export default function VariantPage({
     const first = types[0];
     if (ready && first) {
       setActiveTypeKey(first.key);
-      setSliderParams(defaultParamsFromSliders(first.sliders));
+      setSliderParams(defaultParams(first.sliders, first.scaleTier));
     } else {
       setActiveTypeKey("__fallback__");
-      setSliderParams(defaultParamsFromSliders(variant?.sliders ?? []));
+      // The lib/data.ts fallback path declares no tier, so no scale slider.
+      setSliderParams(defaultParams(variant?.sliders ?? [], null));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug, params.variant]);
@@ -116,7 +132,7 @@ export default function VariantPage({
     const type = resolvedTypes.find((t) => t.key === key) ?? resolvedTypes[0];
     if (!type) return;
     setActiveTypeKey(key);
-    setSliderParams(defaultParamsFromSliders(type.sliders));
+    setSliderParams(defaultParams(type.sliders, type.scaleTier));
   };
 
   const activeMechanism = explorerReady
@@ -175,6 +191,8 @@ export default function VariantPage({
             sliders={activeSliders}
             params={sliderParams}
             onParamsChange={setSliderParams}
+            scaleTier={activeMechanism?.scaleTier ?? null}
+            scaleNoteZh={activeMechanism?.scaleNoteZh}
           />
         </div>
       </motion.div>

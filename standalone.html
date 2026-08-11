@@ -183,6 +183,38 @@
     cursor: pointer; transition: border-color 0.2s, background 0.2s; }
   .extinct-overlay .eo-btn:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); }
   .extinct-overlay .eo-btn:focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
+  /* Physical extent lives BELOW the canvas, in its own panel: it redefines
+     what the whole canvas means rather than adjusting one mechanism inside it,
+     so mixing it into PARAMETERS would read as just another parameter. */
+  .canvas-col { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  @media (min-width: 1024px) { .canvas-col { flex: 1; } }
+  .extent-panel { padding: 16px 20px; }
+  .extent-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .extent-head .eh-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; letter-spacing: 0.2em; color: rgba(255,255,255,0.5); }
+  .extent-head .eh-zh { margin-left: 8px; font-size: 14px; color: rgba(255,255,255,0.8); }
+  .extent-head .eh-val { flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px; color: rgba(255,255,255,0.9); font-variant-numeric: tabular-nums; }
+  .extent-panel input[type=range] { margin-top: 12px; }
+  .extent-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.7; color: rgba(255,255,255,0.45); }
+  .extent-hint .eh-tier { color: rgba(255,255,255,0.7); }
+  .extent-hint .eh-note { display: block; margin-top: 4px; color: rgba(255,255,255,0.6); }
+  .extent-hint .eh-fixed { display: block; margin-top: 4px; }
+  /* Drawn, not merely stated: a number needs mental arithmetic, a bar is read
+     at a glance. */
+  .scale-bar { position: absolute; bottom: 12px; left: 12px; pointer-events: none;
+    user-select: none; background: rgba(0,0,0,0.65); border-radius: 6px; padding: 6px 10px; }
+  .scale-bar .sb-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px; line-height: 1; letter-spacing: 0.15em; color: rgba(255,255,255,0.85);
+    margin-bottom: 4px; }
+  .scale-bar .sb-bar { position: relative; height: 7px; border-left: 1px solid rgba(255,255,255,0.85);
+    border-right: 1px solid rgba(255,255,255,0.85); border-bottom: 1px solid rgba(255,255,255,0.85); }
+  .param-ticks { position: relative; height: 6px; margin-top: 2px; pointer-events: none; }
+  .param-ticks i { position: absolute; top: 0; width: 1px; height: 6px; }
+  .param-note { margin: 4px 0 0; font-size: 10.9px; line-height: 1.7; color: rgba(255,255,255,0.4); }
+  .param-note .pn-ticks { color: rgba(255,255,255,0.55); }
+  .param-derive { margin: 4px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.9px; line-height: 1.7; color: rgba(255,255,255,0.45); }
   .params-panel { width: 100%; flex-shrink: 0; padding: 24px; }
   @media (min-width: 1024px) { .params-panel { width: 20rem; } }
   .params-title { font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; letter-spacing: 0.25em; color: rgba(255,255,255,0.5); }
@@ -570,6 +602,7 @@
               "slug": "fixed-aperture-grid",
               "generator": "fixedApertureGrid",
               "climateInput": "太陽角度 (sun angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "sunAngle",
@@ -579,16 +612,33 @@
                   "max": 90,
                   "step": 1.0,
                   "default": 35,
-                  "unit": "°"
+                  "unit": "°",
+                  "ticks": [
+                    {
+                      "at": 42,
+                      "labelZh": "冬至正午"
+                    },
+                    {
+                      "at": 65,
+                      "labelZh": "春秋分正午"
+                    },
+                    {
+                      "at": 88,
+                      "labelZh": "夏至正午"
+                    }
+                  ],
+                  "ticksNote": "刻痕為台北 25°N 的正午太陽高度角（90°−緯度±23.44°）；其他緯度需自行換算。"
                 },
                 {
-                  "key": "apertureDensity",
-                  "label": "Aperture Density",
-                  "labelZh": "孔徑密度",
-                  "min": 8,
-                  "max": 40,
-                  "step": 1.0,
-                  "default": 20
+                  "key": "aperturePitch",
+                  "label": "Aperture Pitch",
+                  "labelZh": "孔距",
+                  "min": 50,
+                  "max": 250,
+                  "step": 5.0,
+                  "default": 100,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 },
                 {
                   "key": "apertureSize",
@@ -602,7 +652,7 @@
                 }
               ],
               "visualPrimitive": "規則格網排列的固定大小圓形孔徑，陰影橢圓依日照角度偏移",
-              "mappingRule": "apertureDensity 越高 → 格數越多、孔徑越密；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
+              "mappingRule": "aperturePitch 設定的是實體孔距（mm），格數由畫布實體寬度推導（列數 = 寬度 ÷ 孔距）——所以把尺度從 2m 拉到 5m、孔距不動，孔數會真的變多，因為同樣孔距的更寬立面確實需要更多孔；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "傳統阿拉伯 Mashrabiya 木格窗 — 規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果"
             },
@@ -616,6 +666,7 @@
               "slug": "deep-well-shadow",
               "generator": "deepWellShadow",
               "climateInput": "太陽高度角 (solar altitude)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "sunAngle",
@@ -638,13 +689,15 @@
                   "unit": "%"
                 },
                 {
-                  "key": "apertureDensity",
-                  "label": "Aperture Density",
-                  "labelZh": "孔徑密度",
-                  "min": 8,
-                  "max": 30,
-                  "step": 1.0,
-                  "default": 14
+                  "key": "aperturePitch",
+                  "label": "Aperture Pitch",
+                  "labelZh": "孔距",
+                  "min": 60,
+                  "max": 250,
+                  "step": 10.0,
+                  "default": 140,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 }
               ],
               "visualPrimitive": "格網孔徑，每個孔洞內縮出多層同心暗環模擬井壁，井底一塊隨光線角度變亮的圓面代表可見的井底",
@@ -662,6 +715,7 @@
               "slug": "directional-louver-aperture",
               "generator": "directionalLouverAperture",
               "climateInput": "方位角 (azimuth / directional angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "louverAngle",
@@ -684,17 +738,19 @@
                   "unit": "%"
                 },
                 {
-                  "key": "apertureDensity",
-                  "label": "Aperture Density",
-                  "labelZh": "孔徑密度",
-                  "min": 6,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 12
+                  "key": "slitPitch",
+                  "label": "Slit Pitch",
+                  "labelZh": "縫距",
+                  "min": 80,
+                  "max": 340,
+                  "step": 10.0,
+                  "default": 170,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 }
               ],
               "visualPrimitive": "格網排列的斜向長條縫隙（非圓孔），縫隙方向整體依 louverAngle 旋轉",
-              "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；apertureDensity 控制格數／每列縫隙數量。",
+              "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；slitPitch 控制格數／每列縫隙數量。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "恆定角度太陽能遮陽格柵 — 孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽"
             },
@@ -708,6 +764,7 @@
               "slug": "graduated-pinhole",
               "generator": "graduatedPinhole",
               "climateInput": "表面曲率／日照強度梯度 (surface curvature / solar intensity gradient)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "gradientAngle",
@@ -720,13 +777,15 @@
                   "unit": "°"
                 },
                 {
-                  "key": "pinholeDensity",
-                  "label": "Pinhole Density",
-                  "labelZh": "針孔密度",
-                  "min": 20,
-                  "max": 80,
-                  "step": 1.0,
-                  "default": 45
+                  "key": "pinholePitch",
+                  "label": "Pinhole Pitch",
+                  "labelZh": "針孔孔距",
+                  "min": 25,
+                  "max": 100,
+                  "step": 5.0,
+                  "default": 45,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 },
                 {
                   "key": "contrastRange",
@@ -740,7 +799,7 @@
                 }
               ],
               "visualPrimitive": "密集針孔狀孔徑場，孔徑大小依 gradientAngle 方向連續漸變（沿用既有 Graded Porosity / Density-Graded Voronoi 的漸層演算法）",
-              "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholeDensity 控制孔徑總數／場的精細度。",
+              "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholePitch 控制孔徑總數／場的精細度。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "沖孔金屬板立面（perforated metal facade） — 孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果"
             }
@@ -761,6 +820,7 @@
               "slug": "wave-section-wall",
               "generator": "waveSectionWall",
               "climateInput": "日夜溫差 (diurnal temperature swing)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "tempSwing",
@@ -808,15 +868,18 @@
               "slug": "corrugated-thermal-skin",
               "generator": "corrugatedThermalSkin",
               "climateInput": "日照強度／摺板自遮蔭比例 (solar radiation intensity)",
+              "scaleTier": "component",
               "sliders": [
                 {
-                  "key": "foldDensity",
-                  "label": "Fold Density",
-                  "labelZh": "摺板密度",
-                  "min": 4,
-                  "max": 16,
-                  "step": 1.0,
-                  "default": 8
+                  "key": "foldWavelength",
+                  "label": "Fold Wavelength",
+                  "labelZh": "摺板波長",
+                  "min": 125,
+                  "max": 500,
+                  "step": 25.0,
+                  "default": 250,
+                  "unit": " mm",
+                  "derive": "wavelength"
                 },
                 {
                   "key": "foldSharpness",
@@ -840,7 +903,7 @@
                 }
               ],
               "visualPrimitive": "規律重複的摺板波形剖面，正面填色代表受光面、疊加一道相位偏移的暗色波形代表相鄰摺板投下的陰影面",
-              "mappingRule": "foldDensity 決定摺板數量（波形頻率）；foldSharpness 越高 → 波形從平滑正弦趨近尖銳三角摺線，模擬摺板角度加大；shadowDepth 越高 → 陰影疊層的不透明度越深、對比越強，代表自遮蔭效果越明顯、直射熱量吸收越低。",
+              "mappingRule": "foldWavelength 決定摺板數量（波形頻率）；foldSharpness 越高 → 波形從平滑正弦趨近尖銳三角摺線，模擬摺板角度加大；shadowDepth 越高 → 陰影疊層的不透明度越深、對比越強，代表自遮蔭效果越明顯、直射熱量吸收越低。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "沙漠建築的摺板式外牆 — 規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收"
             },
@@ -854,15 +917,18 @@
               "slug": "ribbed-mass-buffer",
               "generator": "ribbedMassBuffer",
               "climateInput": "熱傳導延遲時間 (thermal conduction lag)",
+              "scaleTier": "component",
               "sliders": [
                 {
-                  "key": "ribDensity",
-                  "label": "Rib Density",
-                  "labelZh": "肋條密度",
-                  "min": 6,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 12
+                  "key": "ribPitch",
+                  "label": "Rib Pitch",
+                  "labelZh": "肋距",
+                  "min": 80,
+                  "max": 340,
+                  "step": 10.0,
+                  "default": 170,
+                  "unit": " mm",
+                  "derive": "linePitch"
                 },
                 {
                   "key": "airGapDepth",
@@ -886,7 +952,7 @@
                 }
               ],
               "visualPrimitive": "一排垂直肋條量體，肋條間留有暗色縫隙代表空氣間層，肋條亮度依序產生相位差、形成緩慢橫向掃過的亮度波代表熱量傳導延遲",
-              "mappingRule": "ribDensity 控制肋條數量；airGapDepth 越大 → 肋條之間的空氣間層（暗色縫隙）比例越寬，代表間層越厚、隔熱效果越好；thermalDelay 越高 → 肋條間亮度相位差的移動速度越慢、跨肋條延遲越明顯，模擬熱傳導延遲時間拉長。",
+              "mappingRule": "ribPitch 控制肋條數量；airGapDepth 越大 → 肋條之間的空氣間層（暗色縫隙）比例越寬，代表間層越厚、隔熱效果越好；thermalDelay 越高 → 肋條間亮度相位差的移動速度越慢、跨肋條延遲越明顯，模擬熱傳導延遲時間拉長。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "傳統土坯建築的肋狀牆體構造 — 肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間"
             },
@@ -900,6 +966,7 @@
               "slug": "rolling-topography",
               "generator": "rollingTopography",
               "climateInput": "風場與地形起伏 (wind exposure / terrain relief)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "terrainRelief",
@@ -961,6 +1028,7 @@
               "slug": "radial-bloom",
               "generator": "radialBloom",
               "climateInput": "光照角度 (light incidence angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "petalCount",
@@ -1007,6 +1075,7 @@
               "slug": "origami-fold",
               "generator": "origamiFold",
               "climateInput": "摺疊角度 (fold actuation angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "foldAngle",
@@ -1053,6 +1122,7 @@
               "slug": "layered-petal-cascade",
               "generator": "layeredPetalCascade",
               "climateInput": "展開進度／時序落差 (unfold progress / cascade delay)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "layerCount",
@@ -1099,6 +1169,7 @@
               "slug": "pneumatic-petal",
               "generator": "pneumaticPetal",
               "climateInput": "氣壓 (pneumatic pressure)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "pressure",
@@ -1152,6 +1223,7 @@
               "slug": "curling-strip-array",
               "generator": "curlingStripArray",
               "climateInput": "溫度 (actuation temperature)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "temperature",
@@ -1198,6 +1270,7 @@
               "slug": "iris-aperture",
               "generator": "irisAperture",
               "climateInput": "光圈收合程度 (aperture closure level)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "closureLevel",
@@ -1244,6 +1317,7 @@
               "slug": "bistable-snap",
               "generator": "bistableSnap",
               "climateInput": "觸發位準 (bistable trigger level)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "triggerLevel",
@@ -1266,17 +1340,19 @@
                   "unit": "%"
                 },
                 {
-                  "key": "waveDensity",
-                  "label": "Wave Density",
-                  "labelZh": "波形密度",
-                  "min": 1,
-                  "max": 6,
-                  "step": 1.0,
-                  "default": 3
+                  "key": "bandHeight",
+                  "label": "Band Height",
+                  "labelZh": "帶高",
+                  "min": 330,
+                  "max": 2000,
+                  "step": 10.0,
+                  "default": 670,
+                  "unit": " mm",
+                  "derive": "rowPitch"
                 }
               ],
               "visualPrimitive": "薄膜波形帶，triggerLevel 跨越中點時以陡峭的邏輯函數瞬間從平坦切換至強烈捲曲狀態，而非漸進過渡",
-              "mappingRule": "triggerLevel 跨過 50% 附近的臨界點時，因套用陡峭的邏輯函數，薄膜振幅在極短區間內從近乎平坦瞬間跳變為強烈捲曲，模擬雙穩態瞬間切換、不需連續能量輸入即可維持開或關；snapSharpness 越高，跳變區間越窄（實測畫布振幅：85% 時約佔滑桿行程 15%，下界 35% 時亦約 15%，但 35% 以下的平坦段會開始爬升而失去臨界點）；waveDensity 決定波形帶層數。",
+              "mappingRule": "triggerLevel 跨過 50% 附近的臨界點時，因套用陡峭的邏輯函數，薄膜振幅在極短區間內從近乎平坦瞬間跳變為強烈捲曲，模擬雙穩態瞬間切換、不需連續能量輸入即可維持開或關；snapSharpness 越高，跳變區間越窄（實測畫布振幅：85% 時約佔滑桿行程 15%，下界 35% 時亦約 15%，但 35% 以下的平坦段會開始爬升而失去臨界點）；bandHeight 決定波形帶層數。",
               "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
               "refNote": "雙穩態形狀記憶合金天窗 — 合金薄膜在兩個穩定形態間瞬間切換，不需連續能量輸入即可維持開或關"
             },
@@ -1290,6 +1366,7 @@
               "slug": "gradient-thickness-membrane",
               "generator": "gradientThicknessMembrane",
               "climateInput": "厚度梯度／反應延遲 (thickness gradient / response lag)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "thicknessGradient",
@@ -1350,6 +1427,7 @@
               "slug": "cellular-skin-voronoi",
               "generator": "cellularSkinVoronoi",
               "climateInput": "細胞密度／孔隙不透明度 (cell density / pore opacity)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "cellCount",
@@ -1396,6 +1474,7 @@
               "slug": "structural-voronoi-shell",
               "generator": "structuralVoronoiShell",
               "climateInput": "結構受力分佈 (structural load distribution)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "cellCount",
@@ -1442,6 +1521,7 @@
               "slug": "density-graded-voronoi",
               "generator": "densityGradedVoronoi",
               "climateInput": "結構受力梯度／日照強度梯度 (stress or solar intensity gradient)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "gradientAngle",
@@ -1488,6 +1568,7 @@
               "slug": "bone-voronoi",
               "generator": "boneVoronoi",
               "climateInput": "孔隙率 (porosity)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "cellCount",
@@ -1541,6 +1622,7 @@
               "slug": "logarithmic-shell-spiral",
               "generator": "logarithmicShellSpiral",
               "climateInput": "螺旋生長比例 (logarithmic growth ratio)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "growthRate",
@@ -1574,7 +1656,8 @@
               "visualPrimitive": "由中心向外連續延伸的對數螺旋曲線，並以放射狀分隔線標示鸚鵡螺殼腔室分節",
               "mappingRule": "growthRate 越大 → 螺旋半徑隨角度增加的速率越快，殼形越快速外擴（對應鸚鵡螺殼的生長比例）；turns 決定螺旋總圈數；chamberCount 決定放射狀腔室分隔線的數量，線條顏色沿螺旋方向漸層，呼應腔室由內而外依序生成。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "螺旋狀樓梯/中庭採光井設計 — 依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構"
+              "refNote": "螺旋狀樓梯/中庭採光井設計 — 依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構",
+              "scaleNoteZh": "畫布寬度即螺旋外徑。"
             },
             {
               "id": 2,
@@ -1586,6 +1669,7 @@
               "slug": "phyllotaxis-facade",
               "generator": "phyllotaxisFacade",
               "climateInput": "開孔數量／螺旋間距 (aperture count / spiral spacing)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "apertureCount",
@@ -1632,6 +1716,7 @@
               "slug": "spiral-growth-tower",
               "generator": "spiralGrowthTower",
               "climateInput": "逐層旋轉角度／收分比例 (twist-per-floor / taper ratio)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "floorCount",
@@ -1666,7 +1751,8 @@
               "visualPrimitive": "多層樓板堆疊而成的塔樓立面剖面，每層樓板隨高度依 twistPerFloor 角度水平偏移、寬度隨 taperRatio 逐漸收分",
               "mappingRule": "twistPerFloor 預設即為費氏數列對應的黃金角（≈137.5°），決定每層樓板相對於下一層的水平偏移量，模擬逐層旋轉生成的視覺韻律；taperRatio 越高 → 樓層寬度隨高度收分幅度越大，呼應塔樓量體向上逐漸收窄；floorCount 決定樓層數量。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "螺旋形高層建築量體邏輯 — 塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律"
+              "refNote": "螺旋形高層建築量體邏輯 — 塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律",
+              "scaleNoteZh": "畫布寬度為量體寬度；塔高約為畫布高度（寬度 × 畫布長寬比）。"
             },
             {
               "id": 4,
@@ -1678,6 +1764,7 @@
               "slug": "radial-fibonacci-louver",
               "generator": "radialFibonacciLouver",
               "climateInput": "百葉數量／間距比例 (louver count / spacing scale)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "louverCount",
@@ -1731,6 +1818,7 @@
               "slug": "branching-structural-column",
               "generator": "branchingStructuralColumn",
               "climateInput": "分岔角度／深度 (branch angle / recursion depth)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "depth",
@@ -1765,7 +1853,8 @@
               "visualPrimitive": "由畫布底部中央向上遞迴分岔的樹狀線條，線寬隨深度遞減、顏色隨深度漸層，模擬柱體向上分岔承重",
               "mappingRule": "depth 決定遞迴分岔層數，越多層則分岔越茂密；branchAngle 決定每次分岔的左右夾角；lengthRatio 決定每一層分支相對上一層的長度縮減比例，越小則分岔收束越快。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱 — 柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距"
+              "refNote": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱 — 柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距",
+              "scaleNoteZh": "畫布寬度為柱冠展開寬度；柱高約為畫布高度。"
             },
             {
               "id": 2,
@@ -1777,6 +1866,7 @@
               "slug": "recursive-canopy",
               "generator": "recursiveCanopy",
               "climateInput": "分岔數量／展開角度 (branch count / spread angle)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "depth",
@@ -1810,7 +1900,8 @@
               "visualPrimitive": "由畫布頂部中央向下延伸的多分支遞迴結構，末端分支加上半透明圓點代表葉冠遮蔭範圍",
               "mappingRule": "branchCount 決定每次分岔的分支數量（2-4），越多分支則覆蓋範圍越密集，模擬大跨距遮蔽；spreadAngle 決定分支展開的最大夾角；depth 決定遞迴層數。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "機場/車站樹狀屋頂結構 — 屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽"
+              "refNote": "機場/車站樹狀屋頂結構 — 屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽",
+              "scaleNoteZh": "畫布寬度為屋頂跨距。"
             },
             {
               "id": 3,
@@ -1822,6 +1913,7 @@
               "slug": "fractal-ventilation",
               "generator": "fractalVentilation",
               "climateInput": "流速／分岔角度 (flow speed / branch angle)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "depth",
@@ -1868,6 +1960,7 @@
               "slug": "root-system-foundation",
               "generator": "rootSystemFoundation",
               "climateInput": "地基穩定性／展開角度 (foundation stability / spread angle)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "depth",
@@ -1901,7 +1994,8 @@
               "visualPrimitive": "由頂部地面線向下延伸的根系分岔結構，根部隨深度變細並逐漸淡出，呼應根系向外擴散穩定地基的邏輯",
               "mappingRule": "spreadAngle 決定根系向外擴散的夾角範圍，越大則地基覆蓋範圍越廣；branchCount 決定每次分岔數量；depth 決定根系分岔層數，末端根鬚隨深度增加而變細、透明度降低，模擬逐漸消散的細根。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "生物啟發式深基礎設計原型 — 基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性"
+              "refNote": "生物啟發式深基礎設計原型 — 基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性",
+              "scaleNoteZh": "畫布寬度為根系水平展開範圍；深度約為畫布高度。"
             }
           ]
         },
@@ -2105,15 +2199,18 @@
               "slug": "leaf-venation-structural",
               "generator": "leafVenationStructural",
               "climateInput": "脈絡密度／生長速度 (vein density / growth speed)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "veinDensity",
-                  "label": "Vein Density",
-                  "labelZh": "脈絡密度",
-                  "min": 60,
-                  "max": 200,
-                  "step": 1.0,
-                  "default": 120
+                  "label": "Vein Node Density",
+                  "labelZh": "脈絡節點密度",
+                  "min": 0.6,
+                  "max": 1.9,
+                  "step": 0.1,
+                  "default": 1.6,
+                  "unit": " 點/m²",
+                  "derive": "areaDensity"
                 },
                 {
                   "key": "growthSpeed",
@@ -2150,15 +2247,18 @@
               "slug": "fluid-dynamic-facade",
               "generator": "fluidDynamicFacade",
               "climateInput": "流線密度／流速 (streamline density / flow speed)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "streamDensity",
-                  "label": "Stream Density",
-                  "labelZh": "流線密度",
-                  "min": 60,
-                  "max": 200,
+                  "label": "Stream Node Density",
+                  "labelZh": "流線節點密度",
+                  "min": 8,
+                  "max": 30,
                   "step": 1.0,
-                  "default": 130
+                  "default": 28,
+                  "unit": " 點/m²",
+                  "derive": "areaDensity"
                 },
                 {
                   "key": "growthSpeed",
@@ -2195,15 +2295,18 @@
               "slug": "capillary-drainage",
               "generator": "capillaryDrainage",
               "climateInput": "排水點密度／逕流速度 (drainage density / runoff speed)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "drainDensity",
-                  "label": "Drain Density",
+                  "label": "Drain Point Density",
                   "labelZh": "排水點密度",
-                  "min": 60,
-                  "max": 200,
+                  "min": 6,
+                  "max": 30,
                   "step": 1.0,
-                  "default": 110
+                  "default": 24,
+                  "unit": " 點/m²",
+                  "derive": "areaDensity"
                 },
                 {
                   "key": "growthSpeed",
@@ -2240,6 +2343,7 @@
               "slug": "branching-load-path",
               "generator": "branchingLoadPath",
               "climateInput": "受力點數量／生長速度 (load point count / growth speed)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "loadPointCount",
@@ -2287,21 +2391,23 @@
               "name": "Geodesic Dome Type",
               "description": "三角形網格構成短程線穹頂，以最少材料達最大跨距",
               "example": "Buckminster Fuller 的 Geodesic Dome",
-              "principle": "把球面切成三角形網格，是因為三角形是唯一不需要斜撐就不會變形的多邊形。力沿著桿件軸向傳遞而非彎曲，所以桿件可以做得很細——這是「最少材料、最大跨距」的來源。細分頻率越高越接近真球，但桿件與節點的種類也越多。frequency 控制緯度環數（細分頻率），segments 控制每環的經度分段數，memberThickness 控制桿件粗細。",
+              "principle": "把球面切成三角形網格，是因為三角形是唯一不需要斜撐就不會變形的多邊形。力沿著桿件軸向傳遞而非彎曲，所以桿件可以做得很細——這是「最少材料、最大跨距」的來源。細分頻率越高越接近真球，但桿件與節點的種類也越多。frequency 在本模擬中控制的是緯度環數（不是文獻的邊細分數 nV），segments 控制每環的經度分段數，memberThickness 控制桿件粗細。",
               "spatialApplication": "Buckminster Fuller 的 Geodesic Dome 是原型，常見於展館、溫室與臨時構造。自重輕、可預製、組裝快，適合需要快速搭建或大跨距無柱空間的場合。實務上的痛點是防水：節點數量多，每一個都是潛在漏水點，開口與門窗也不易融入三角網格。",
               "slug": "geodesic-dome",
               "generator": "geodesicDome",
               "climateInput": "細分頻率／跨距 (subdivision frequency / span)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "frequency",
-                  "label": "Frequency",
-                  "labelZh": "細分頻率",
+                  "label": "Latitude Rings",
+                  "labelZh": "緯度環數",
                   "min": 3,
                   "max": 8,
                   "step": 1.0,
                   "default": 5,
-                  "unit": " 環"
+                  "unit": " 環",
+                  "ticksNote": "此處數的是緯度環數，與文獻中測地線穹頂的 frequency（nV，每條邊的細分數）不是同一個量；查閱文獻時勿直接對照。"
                 },
                 {
                   "key": "segments",
@@ -2324,9 +2430,10 @@
                 }
               ],
               "visualPrimitive": "由頂點向外逐圈放射的三角網格穹頂剖面，環數與每環分段數決定三角形細分密度",
-              "mappingRule": "frequency 決定緯度環數（細分頻率），越高則三角網格越細密、越接近真實測地線穹頂；segments 決定每環經度分段數；memberThickness 決定桿件基礎粗細。",
+              "mappingRule": "frequency 決定緯度環數，越高則三角網格越細密、越接近真實測地線穹頂；segments 決定每環經度分段數；memberThickness 決定桿件基礎粗細。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "Buckminster Fuller 的 Geodesic Dome — 三角形網格構成短程線穹頂，以最少材料達最大跨距"
+              "refNote": "Buckminster Fuller 的 Geodesic Dome — 三角形網格構成短程線穹頂，以最少材料達最大跨距",
+              "scaleNoteZh": "畫布寬度即穹頂直徑。"
             },
             {
               "id": 2,
@@ -2338,6 +2445,7 @@
               "slug": "tensegrity",
               "generator": "tensegrity",
               "climateInput": "支柱數量／扭轉角度 (strut count / twist angle)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "strutCount",
@@ -2394,6 +2502,7 @@
               "slug": "honeycomb-panel",
               "generator": "honeycombPanel",
               "climateInput": "蜂巢尺寸／壁厚 (cell size / wall thickness)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "cellSize",
@@ -2441,15 +2550,18 @@
               "slug": "minimal-surface-shell",
               "generator": "minimalSurfaceShell",
               "climateInput": "曲率／波紋數 (curvature / wave count)",
+              "scaleTier": "space",
               "sliders": [
                 {
-                  "key": "gridDensity",
-                  "label": "Grid Density",
-                  "labelZh": "網格密度",
-                  "min": 8,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 14
+                  "key": "gridSpacing",
+                  "label": "Grid Spacing",
+                  "labelZh": "網格間距",
+                  "min": 330,
+                  "max": 1000,
+                  "step": 10.0,
+                  "default": 570,
+                  "unit": " mm",
+                  "derive": "linePitch"
                 },
                 {
                   "key": "curvature",
@@ -2472,7 +2584,7 @@
                 }
               ],
               "visualPrimitive": "規則方格網依正弦鞍形函數上下起伏形變，形成類似肥皂膜最小曲面的薄殼網格",
-              "mappingRule": "curvature 越高 → 網格起伏幅度越大，曲面感越強烈；waveCount 決定曲面起伏的波數（鞍形分段數）；gridDensity 決定網格精細度，網格顏色依起伏高低漸層呈現曲面深淺。",
+              "mappingRule": "curvature 越高 → 網格起伏幅度越大，曲面感越強烈；waveCount 決定曲面起伏的波數（鞍形分段數）；gridSpacing 決定網格精細度，網格顏色依起伏高低漸層呈現曲面深淺。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
               "refNote": "肥皂膜啟發的薄殼屋頂設計 — 依最小曲面數學原理生成薄殼結構，兼具結構效率與有機造型"
             }
@@ -2500,6 +2612,7 @@
               "slug": "curvilinear-threshold",
               "generator": "curvilinearThreshold",
               "climateInput": "曲率／分隔數量 (curvature / partition count)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "bandCount",
@@ -2546,6 +2659,7 @@
               "slug": "membrane-like-partition",
               "generator": "membraneLikePartition",
               "climateInput": "薄膜波動／穿透度 (membrane waviness / transparency)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "membraneWaviness",
@@ -2568,17 +2682,19 @@
                   "unit": "%"
                 },
                 {
-                  "key": "waveFrequency",
-                  "label": "Wave Frequency",
-                  "labelZh": "波紋頻率",
-                  "min": 1,
-                  "max": 5,
-                  "step": 1.0,
-                  "default": 2
+                  "key": "membraneWavelength",
+                  "label": "Wave Length",
+                  "labelZh": "波長",
+                  "min": 1000,
+                  "max": 5500,
+                  "step": 100.0,
+                  "default": 2700,
+                  "unit": " mm",
+                  "derive": "wavelength"
                 }
               ],
               "visualPrimitive": "兩片上下交疊的半透明波浪狀薄膜，依 transparency 疊層混色模擬穿透感",
-              "mappingRule": "transparency 越高 → 薄膜疊層的不透明度越低，模糊室內外邊界的滲透感越明顯；membraneWaviness 決定薄膜起伏幅度；waveFrequency 決定波紋密度。",
+              "mappingRule": "transparency 越高 → 薄膜疊層的不透明度越低，模糊室內外邊界的滲透感越明顯；membraneWaviness 決定薄膜起伏幅度；membraneWavelength 決定波紋密度。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "仿生半透膜式室內隔屏 — 隔間如生物薄膜般半透明、可滲透，模糊室內外邊界"
             },
@@ -2592,6 +2708,7 @@
               "slug": "nested-enclosure",
               "generator": "nestedEnclosure",
               "climateInput": "層數／波動感 (layer count / waviness)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "layerCount",
@@ -2638,6 +2755,7 @@
               "slug": "flowing-boundary",
               "generator": "flowingBoundary",
               "climateInput": "流動振幅／過渡銳利度 (flow amplitude / transition sharpness)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "flowAmplitude",
@@ -2650,13 +2768,16 @@
                   "unit": "%"
                 },
                 {
-                  "key": "flowFrequency",
-                  "label": "Flow Frequency",
-                  "labelZh": "流動頻率",
-                  "min": 1,
-                  "max": 4,
-                  "step": 1.0,
-                  "default": 2
+                  "key": "flowWavelength",
+                  "label": "Flow Wavelength",
+                  "labelZh": "流動波長",
+                  "min": 6,
+                  "max": 26,
+                  "step": 0.5,
+                  "default": 13,
+                  "unit": " m",
+                  "derive": "wavelength",
+                  "deriveUnit": "m"
                 },
                 {
                   "key": "transitionSharpness",
@@ -2670,7 +2791,7 @@
                 }
               ],
               "visualPrimitive": "地坪與牆面以單一連續波形曲面過渡，並疊加地板到天花的漸層色模擬材質連續轉換",
-              "mappingRule": "flowAmplitude 越高 → 地坪與牆面之間的曲面起伏越大，邊界感越模糊；transitionSharpness 越高 → 波形從平滑正弦趨近尖銳轉折，過渡感由柔和轉為明快；flowFrequency 決定波形密度。",
+              "mappingRule": "flowAmplitude 越高 → 地坪與牆面之間的曲面起伏越大，邊界感越模糊；transitionSharpness 越高 → 波形從平滑正弦趨近尖銳轉折，過渡感由柔和轉為明快；flowWavelength 決定波形密度。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "仿生流動式室內空間設計 — 地坪、牆面、天花以連續曲面過渡，消弭傳統房間邊界感"
             }
@@ -2691,6 +2812,7 @@
               "slug": "biomorphic-texture",
               "generator": "biomorphicTexture",
               "climateInput": "噪訊尺度／流動速度 (noise scale / flow speed)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "noiseScale",
@@ -2737,6 +2859,7 @@
               "slug": "fractal-visual-rhythm",
               "generator": "fractalVisualRhythm",
               "climateInput": "噪訊尺度／節奏帶數 (noise scale / rhythm band count)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "noiseScale",
@@ -2783,15 +2906,18 @@
               "slug": "acoustic-diffusion-pattern",
               "generator": "acousticDiffusionPattern",
               "climateInput": "孔隙密度／擴散對比 (pore density / diffusion contrast)",
+              "scaleTier": "material",
               "sliders": [
                 {
-                  "key": "cellDensity",
-                  "label": "Cell Density",
-                  "labelZh": "孔洞密度",
-                  "min": 10,
-                  "max": 30,
-                  "step": 1.0,
-                  "default": 18
+                  "key": "cellPitch",
+                  "label": "Cell Pitch",
+                  "labelZh": "孔洞間距",
+                  "min": 20,
+                  "max": 60,
+                  "step": 2.0,
+                  "default": 34,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 },
                 {
                   "key": "poreDepth",
@@ -2815,7 +2941,7 @@
                 }
               ],
               "visualPrimitive": "規則格網排列的圓形孔洞陣列，模擬珊瑚/蜂巢多孔材質的聲學擴散表面",
-              "mappingRule": "poreDepth 越深 → 孔徑相對格子的比例越大，聲學擴散表面積越大；diffusionContrast 決定孔洞陰影的對比強度；cellDensity 決定格網密度。",
+              "mappingRule": "poreDepth 越深 → 孔徑相對格子的比例越大，聲學擴散表面積越大；diffusionContrast 決定孔洞陰影的對比強度；cellPitch 決定格網密度。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "仿生聲學牆板設計 — 表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果"
             },
@@ -2824,20 +2950,23 @@
               "name": "Tactile Nature Surface Type",
               "description": "觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗",
               "example": "療癒空間觸覺牆面設計",
-              "principle": "以密集的細紋線條模擬樹皮、葉脈或石紋的觸覺質地。觸覺與視覺不同：它需要的是可被指尖分辨的尺度差異，約在零點幾毫米到幾毫米之間。粗糙度越高，紋理起伏越大、觸感越明顯，但也越容易積灰。grainDensity 控制紋理線密度，roughness 控制每條線的起伏幅度，grainScale 決定起伏的空間頻率。",
+              "principle": "以密集的細紋線條模擬樹皮、葉脈或石紋的觸覺質地。觸覺與視覺不同：它需要的是可被指尖分辨的尺度差異，約在零點幾毫米到幾毫米之間。粗糙度越高，紋理起伏越大、觸感越明顯，但也越容易積灰。grainPitch 控制紋理線密度，roughness 控制每條線的起伏幅度，grainScale 決定起伏的空間頻率。",
               "spatialApplication": "療癒空間的觸覺牆面設計，用於強化親生物體驗中常被忽略的觸覺面向。適合人手會實際接觸的位置：扶手、門把周邊、座位靠背與可觸及高度的牆面。實務上要平衡觸感與清潔：紋理越深越好摸，但在醫療等需要頻繁消毒的環境會成為負擔。",
               "slug": "tactile-nature-surface",
               "generator": "tactileNatureSurface",
               "climateInput": "紋理密度／粗糙度 (grain density / roughness)",
+              "scaleTier": "material",
               "sliders": [
                 {
-                  "key": "grainDensity",
-                  "label": "Grain Density",
-                  "labelZh": "紋理密度",
-                  "min": 15,
-                  "max": 50,
+                  "key": "grainPitch",
+                  "label": "Grain Pitch",
+                  "labelZh": "紋理間距",
+                  "min": 12,
+                  "max": 40,
                   "step": 1.0,
-                  "default": 30
+                  "default": 20,
+                  "unit": " mm",
+                  "derive": "rowPitch"
                 },
                 {
                   "key": "grainScale",
@@ -2861,7 +2990,7 @@
                 }
               ],
               "visualPrimitive": "與噪訊場共用同一套 fbm 演算法，但以密集水平細紋線呈現，模擬樹皮/石紋的觸覺紋理",
-              "mappingRule": "grainDensity 決定紋理線條密度；roughness 越高 → 每條紋理線的噪訊起伏幅度越大，觸感粗糙感越明顯；grainScale 決定紋理起伏的空間頻率。",
+              "mappingRule": "grainPitch 決定紋理線條密度；roughness 越高 → 每條紋理線的噪訊起伏幅度越大，觸感粗糙感越明顯；grainScale 決定紋理起伏的空間頻率。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "療癒空間觸覺牆面設計 — 觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗"
             }
@@ -3103,6 +3232,70 @@
     };
   }
 
+
+  // -------------------------------------------------------------------------
+  // Physical scale of the canvas — mirrors lib/scale.ts. Four fixed tiers, so
+  // the canvas stays comparable across the 48 types; a type's tier comes from
+  // its `scaleTier` field in the data above, and the count-based sliders became
+  // spacing sliders whose counts are derived from the extent.
+  // -------------------------------------------------------------------------
+  const SCALE_PARAM_KEY = "canvasWidthM";
+  const SCALE_TIERS = {
+    material:  { labelZh: "材料", hintZh: "一片板材 / 表面的一塊", defaultM: 0.6, min: 0.15, max: 1.2, step: 0.05 },
+    component: { labelZh: "構件", hintZh: "一個立面單元 / 一片牆", defaultM: 2,   min: 0.5,  max: 5,   step: 0.1 },
+    space:     { labelZh: "空間", hintZh: "一個房間 / 一跨結構",   defaultM: 8,   min: 2,    max: 20,  step: 0.5 },
+    mass:      { labelZh: "量體", hintZh: "整棟建築 / 一片地景",   defaultM: 40,  min: 10,   max: 120, step: 1 }
+  };
+  function physicalWidthM(p, fallbackM) {
+    const v = p[SCALE_PARAM_KEY];
+    return (typeof v === "number" && isFinite(v) && v > 0) ? v : fallbackM;
+  }
+  function heightM(widthM, aspect) { return widthM * aspect; }
+  function countAcross(extentM, pitchMm, min) {
+    return Math.max(min === undefined ? 2 : min, Math.round((extentM * 1000) / pitchMm));
+  }
+  function gridColsFromPitch(widthM, pitchMm) {
+    return Math.max(2, Math.round((widthM * 1000) / pitchMm));
+  }
+  function gridCountsFromPitch(widthM, pitchMm, aspect) {
+    const cols = gridColsFromPitch(widthM, pitchMm);
+    const rows = Math.max(2, Math.round(cols * aspect));
+    return { cols: cols, rows: rows, total: cols * rows };
+  }
+  function freqFromWavelength(wavelengthMm, widthM, canvasPxW) {
+    const wavelengthPx = (wavelengthMm / 1000) * (canvasPxW / widthM);
+    return (2 * Math.PI) / Math.max(1e-6, wavelengthPx);
+  }
+  function wavesAcross(wavelengthMm, widthM) { return (widthM * 1000) / wavelengthMm; }
+  function pointsInArea(densityPerM2, widthM, aspect) {
+    return Math.max(4, Math.round(densityPerM2 * widthM * heightM(widthM, aspect)));
+  }
+  const BAR_STEPS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
+  function scaleBarMetres(widthM) {
+    const target = widthM * 0.3;
+    let best = BAR_STEPS[0];
+    BAR_STEPS.forEach(function (x) { if (x <= target) best = x; });
+    return best;
+  }
+  function formatMetres(m) {
+    return m < 1 ? Math.round(m * 100) + " cm" : (Number.isInteger(m) ? m : m.toFixed(1)) + " m";
+  }
+  function formatMm(mm) {
+    return mm >= 1000 ? (mm / 1000).toFixed(1) + " m" : Math.round(mm) + " mm";
+  }
+
+  // Column-count variant of the grid helper: the pitch-family sliders derive a
+  // column count from the physical extent rather than declaring one.
+  function forEachApertureCellByCols(w, h, colsRaw, cb) {
+    const cols = Math.max(2, Math.round(colsRaw));
+    const rows = Math.max(2, Math.round(cols * (h / w)));
+    const cellW = w / cols, cellH = h / rows;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        cb(col * cellW + cellW / 2, row * cellH + cellH / 2, cellW, cellH, row, col, rows, cols);
+      }
+    }
+  }
 
   // Shared grid-iteration helper — the actual "CellularLattice engine" for
   // self-shading-skin's 4 types below. Each factory is a thin per-cell
@@ -3567,7 +3760,7 @@
         draw: function (ctx, w, h, t, p, palette) {
           ctx.clearRect(0, 0, w, h);
           const sharp = clamp(p.foldSharpness / 100, 0, 1);
-          const freq = (2 * Math.PI * p.foldDensity) / w;
+          const freq = freqFromWavelength(p.foldWavelength, physicalWidthM(p, 2), w);
           const amp = h * 0.26;
           const midY = h * 0.5;
           drawWaveBand(ctx, w, midY, h, amp, t * 0.2, freq, sharp);
@@ -3584,7 +3777,7 @@
       return {
         draw: function (ctx, w, h, t, p, palette) {
           ctx.clearRect(0, 0, w, h);
-          const ribCount = Math.max(4, Math.round(p.ribDensity));
+          const ribCount = countAcross(physicalWidthM(p, 2), p.ribPitch, 3);
           const ribW = w / ribCount;
           const gapFrac = clamp(p.airGapDepth / 100, 0.1, 0.8);
           const delaySpeed = 0.15 + (p.thermalDelay / 100) * 0.5;
@@ -3767,7 +3960,7 @@
           const trigger = clamp(p.triggerLevel / 100, 0, 1);
           const sharpness = 1 + (p.snapSharpness / 100) * 30;
           const snapT = 1 / (1 + Math.exp(-sharpness * (trigger - 0.5)));
-          const rows = Math.max(1, Math.round(p.waveDensity));
+          const rows = countAcross(heightM(physicalWidthM(p, 2), h / w), p.bandHeight, 1);
           const rowH = h / rows;
           const amp = rowH * 0.85 * snapT;
           for (let row = 0; row < rows; row++) {
@@ -4448,7 +4641,7 @@
       let lastDensity = -1;
       return {
         draw: function (ctx, w, h, t, p, palette) {
-          const density = Math.round(p.veinDensity);
+          const density = pointsInArea(p.veinDensity, physicalWidthM(p, 8), h / w);
           if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
             const rand = mulberry32(Math.floor(density * 97 + 7));
             attractors = [];
@@ -4475,7 +4668,7 @@
       let lastDensity = -1;
       return {
         draw: function (ctx, w, h, t, p, palette) {
-          const density = Math.round(p.streamDensity);
+          const density = pointsInArea(p.streamDensity, physicalWidthM(p, 2), h / w);
           if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
             const rand = mulberry32(Math.floor(density * 131 + 11));
             attractors = [];
@@ -4501,7 +4694,7 @@
       let lastDensity = -1;
       return {
         draw: function (ctx, w, h, t, p, palette) {
-          const density = Math.round(p.drainDensity);
+          const density = pointsInArea(p.drainDensity, physicalWidthM(p, 2), h / w);
           if (Math.abs(density - lastDensity) > 0.5 || nodes.length === 0) {
             const rand = mulberry32(Math.floor(density * 71 + 13));
             attractors = [];
@@ -4780,7 +4973,7 @@
       return {
         draw: function (ctx, w, h, t, p, palette) {
           ctx.clearRect(0, 0, w, h);
-          const n = Math.round(p.gridDensity);
+          const n = countAcross(physicalWidthM(p, 8), p.gridSpacing, 3);
           const cellW = w / n;
           const cellH = h / n;
           const cx = w / 2;
@@ -4907,7 +5100,7 @@
         draw: function (ctx, w, h, t, p, palette) {
           ctx.clearRect(0, 0, w, h);
           const amp = h * 0.18 * (p.membraneWaviness / 100);
-          const freq = 0.006 * p.waveFrequency;
+          const freq = freqFromWavelength(p.membraneWavelength, physicalWidthM(p, 2), w);
           const alpha = 1 - clamp(p.transparency / 100, 0, 1) * 0.75;
           drawWaveBand(ctx, w, h * 0.5, h, amp, t * 0.3, freq, 0, 0.3);
           ctx.fillStyle = lerpColor(palette[1], palette[3], 0.4);
@@ -4959,7 +5152,7 @@
         draw: function (ctx, w, h, t, p, palette) {
           ctx.clearRect(0, 0, w, h);
           const amp = h * 0.22 * (p.flowAmplitude / 100);
-          const freq = 0.005 * p.flowFrequency;
+          const freq = freqFromWavelength(p.flowWavelength * 1000, physicalWidthM(p, 8), w);
           const sharp = clamp(p.transitionSharpness / 100, 0, 1);
           drawWaveBand(ctx, w, h * 0.62, h, amp, t * 0.25, freq, sharp, 0.2);
           const grad = ctx.createLinearGradient(0, h * 0.3, 0, h);
@@ -5056,7 +5249,7 @@
           ctx.clearRect(0, 0, w, h);
           const depthT = clamp(p.poreDepth / 100, 0, 1);
           const contrast = clamp(p.diffusionContrast / 100, 0, 1);
-          forEachApertureCell(w, h, p.cellDensity, function (cx, cy, cellW, cellH, row, col, rows, cols) {
+          forEachApertureCellByCols(w, h, gridColsFromPitch(physicalWidthM(p, 0.6), p.cellPitch), function (cx, cy, cellW, cellH, row, col, rows, cols) {
             const shimmer = 1 + 0.05 * Math.sin(t * 0.5 + row * 0.7 + col * 0.9);
             const r = Math.min(cellW, cellH) * 0.5 * (0.4 + depthT * 0.5) * shimmer;
             ctx.beginPath();
@@ -5077,7 +5270,7 @@
         draw: function (ctx, w, h, t, p, palette) {
           ctx.clearRect(0, 0, w, h);
           const scale = p.grainScale;
-          const lineCount = Math.round(p.grainDensity);
+          const lineCount = countAcross(heightM(physicalWidthM(p, 0.6), h / w), p.grainPitch, 3);
           const roughness = p.roughness / 100;
           for (let i = 0; i < lineCount; i++) {
             const baseY = (i / lineCount) * h;
@@ -5147,7 +5340,7 @@
           const angleRad = (p.sunAngle / 180) * Math.PI;
           const elevationFactor = 1 - Math.sin(angleRad);
           const shadowStretch = 1 + elevationFactor * 1.8;
-          forEachApertureCell(w, h, p.apertureDensity, function (cx, cy, cellW, cellH, row, col, rows, cols) {
+          forEachApertureCellByCols(w, h, gridColsFromPitch(physicalWidthM(p, 2), p.aperturePitch), function (cx, cy, cellW, cellH, row, col, rows, cols) {
             const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
             const r = Math.min(cellW, cellH) * 0.5 * (p.apertureSize / 100) * shimmer;
             const shadowLength = Math.min(cellW, cellH) * (0.12 + elevationFactor * 0.65);
@@ -5173,7 +5366,7 @@
           const angleRad = (p.sunAngle / 180) * Math.PI;
           const depth = clamp(p.wellDepth / 100, 0, 1);
           const noonFactor = Math.sin(angleRad);
-          forEachApertureCell(w, h, p.apertureDensity, function (cx, cy, cellW, cellH, row, col) {
+          forEachApertureCellByCols(w, h, gridColsFromPitch(physicalWidthM(p, 2), p.aperturePitch), function (cx, cy, cellW, cellH, row, col) {
             const shimmer = 1 + 0.03 * Math.sin(t * 0.5 + col * 0.9 + row * 1.3);
             const r = Math.min(cellW, cellH) * 0.42 * shimmer;
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fill();
@@ -5198,7 +5391,7 @@
           ctx.clearRect(0, 0, w, h);
           const angleRad = (p.louverAngle / 180) * Math.PI;
           const slitFrac = clamp(p.slitWidth / 100, 0.05, 1);
-          forEachApertureCell(w, h, p.apertureDensity, function (cx, cy, cellW, cellH, row, col) {
+          forEachApertureCellByCols(w, h, gridColsFromPitch(physicalWidthM(p, 2), p.slitPitch), function (cx, cy, cellW, cellH, row, col) {
             const wobble = Math.sin(t * 0.4 + row * 0.6 + col * 0.3) * 0.02;
             const len = Math.min(cellW, cellH) * 0.85;
             const thick = Math.min(cellW, cellH) * 0.5 * slitFrac;
@@ -5219,7 +5412,7 @@
           const angleRad = (p.gradientAngle / 180) * Math.PI;
           const dir = { x: Math.cos(angleRad), y: Math.sin(angleRad) };
           const contrast = clamp(p.contrastRange / 100, 0, 1);
-          forEachApertureCell(w, h, p.pinholeDensity, function (cx, cy, cellW, cellH, row, col) {
+          forEachApertureCellByCols(w, h, gridColsFromPitch(physicalWidthM(p, 2), p.pinholePitch), function (cx, cy, cellW, cellH, row, col) {
             const proj = (cx / w) * dir.x + (cy / h) * dir.y;
             const grade = clamp((proj + 1) / 2, 0, 1);
             const jitter = 1 + 0.05 * Math.sin(t * 0.5 + row + col);
@@ -5373,12 +5566,17 @@
         spatialApplication: t.spatialApplication,
         generator: t.generator,
         sliders: t.sliders,
+        scaleTier: SCALE_TIERS[t.scaleTier] ? t.scaleTier : null,
+        scaleNoteZh: t.scaleNoteZh,
       };
     });
 
     const fallbackGenerator = v.generator;
     const fallbackSliders = v.sliders;
     const explorerSliders = explorerReady ? explorerTypes[0].sliders : fallbackSliders;
+    // The lib/data.ts-equivalent fallback path declares no tier, so no extent.
+    const explorerTier = explorerReady ? explorerTypes[0].scaleTier : null;
+    const explorerNote = explorerReady ? explorerTypes[0].scaleNoteZh : undefined;
 
     appEl.innerHTML =
       '<div class="variant-screen">' +
@@ -5397,12 +5595,18 @@
         : "") +
       '<div class="playground-col"' + (explorerReady ? "" : ' style="width:100%;"') + '>' +
       '<div class="playground">' +
+      '<div class="canvas-col">' +
       '<div class="glass-panel playground-canvas-wrap"><canvas id="playground-canvas"></canvas>' +
+      '<div class="scale-bar" id="scale-bar" hidden>' +
+      '<div class="sb-label" id="sb-label"></div><div class="sb-bar" id="sb-bar"></div>' +
+      '</div>' +
       '<div class="extinct-overlay" id="extinct-overlay" hidden>' +
       '<p class="eo-tag" id="eo-tag"></p>' +
       '<p class="eo-body" id="eo-body"></p>' +
       '<button type="button" class="eo-btn" id="extinct-reseed">重新播種 · Reseed</button>' +
       '</div></div>' +
+      '<div class="glass-panel extent-panel" id="extent-panel" hidden></div>' +
+      '</div>' +
       '<div class="glass-panel params-panel">' +
       '<div class="params-title">PARAMETERS</div>' +
       '<div id="params-list"></div>' +
@@ -5521,10 +5725,117 @@
       });
     }
 
+    // Spell out the arithmetic the generator is about to do, in the slider's own
+    // terms. Each derive kind gets its own sentence because they are genuinely
+    // different operations, not one formula with different labels.
+    function deriveReadout(slider, value, widthM, aspect) {
+      if (widthM === null || !isFinite(value)) return "";
+      const hM = heightM(widthM, aspect);
+      const w1 = widthM.toFixed(1), h1 = hM.toFixed(1);
+      if (slider.derive === "gridPitch") {
+        const g = gridCountsFromPitch(widthM, value, aspect);
+        return "→ " + w1 + "m ÷ " + value + "mm = " + g.cols + " 列 × " + g.rows + " 排 = " + g.total + " 個";
+      }
+      if (slider.derive === "linePitch") {
+        return "→ " + w1 + "m ÷ " + value + "mm = " + countAcross(widthM, value, 3) + " 道（沿寬度）";
+      }
+      if (slider.derive === "rowPitch") {
+        return "→ 畫布高 " + h1 + "m ÷ " + value + "mm = " + countAcross(hM, value, 1) + " 道（沿高度）";
+      }
+      if (slider.derive === "wavelength") {
+        const mm = slider.deriveUnit === "m" ? value * 1000 : value;
+        return "→ " + w1 + "m ÷ " + formatMm(mm) + " = " + wavesAcross(mm, widthM).toFixed(1) + " 個波長／畫布寬";
+      }
+      if (slider.derive === "areaDensity") {
+        return "→ " + value + " 點/m² × " + (widthM * hM).toFixed(1) + "m² = " +
+               pointsInArea(value, widthM, aspect) + " 點";
+      }
+      return "";
+    }
+
+    function canvasAspect() {
+      const rect = canvasEl().getBoundingClientRect();
+      return rect.width > 0 ? rect.height / rect.width : 0.75;
+    }
+    function canvasEl() { return document.getElementById("playground-canvas"); }
+    function currentWidthM() {
+      if (!activeTier) return null;
+      const spec = SCALE_TIERS[activeTier];
+      const v = params[SCALE_PARAM_KEY];
+      return isFinite(v) ? Math.min(spec.max, Math.max(spec.min, v)) : spec.defaultM;
+    }
+
+    function refreshDerivedReadouts(sliders) {
+      const widthM = currentWidthM();
+      const aspect = canvasAspect();
+      sliders.forEach(function (s) {
+        if (!s.derive) return;
+        const el = document.getElementById("derive-" + s.key);
+        if (el) el.textContent = deriveReadout(s, params[s.key], widthM, aspect);
+      });
+    }
+
+    // The extent panel and the on-canvas scale bar: both hidden for the types
+    // that legitimately have no physical scale (the Gray-Scott family), rather
+    // than showing a slider that would do nothing.
+    function renderExtentPanel(sliders) {
+      const panel = document.getElementById("extent-panel");
+      const bar = document.getElementById("scale-bar");
+      if (!panel || !bar) return;
+      if (!activeTier) { panel.hidden = true; panel.innerHTML = ""; bar.hidden = true; return; }
+      const spec = SCALE_TIERS[activeTier];
+      const widthM = currentWidthM();
+      panel.hidden = false;
+      panel.innerHTML =
+        '<div class="extent-head"><div><span class="eh-label">PHYSICAL EXTENT</span>' +
+        '<span class="eh-zh">畫布實體寬度</span></div>' +
+        '<span class="eh-val" id="extent-val">' + widthM.toFixed(spec.step < 0.1 ? 2 : 1) + " m</span></div>" +
+        '<input type="range" id="extent-input" min="' + spec.min + '" max="' + spec.max +
+        '" step="' + spec.step + '" value="' + widthM + '" aria-label="畫布實體寬度">' +
+        '<p class="extent-hint"><span class="eh-tier">' + spec.labelZh + "尺度</span> · " +
+        spec.hintZh + " · 檔位範圍 " + formatMetres(spec.min) + "–" + formatMetres(spec.max) +
+        (activeNote ? '<span class="eh-note"></span>' : "") +
+        '<span class="eh-fixed">四個固定檔位（材料 / 構件 / 空間 / 量體）讓 48 個 type 的畫布維持可互相比較；' +
+        '同一檔位內的畫布代表同一種尺度。</span></p>';
+      if (activeNote) panel.querySelector(".eh-note").textContent = activeNote;
+      panel.querySelector("#extent-input").addEventListener("input", function (e) {
+        params[SCALE_PARAM_KEY] = parseFloat(e.target.value);
+        const spec2 = SCALE_TIERS[activeTier];
+        document.getElementById("extent-val").textContent =
+          params[SCALE_PARAM_KEY].toFixed(spec2.step < 0.1 ? 2 : 1) + " m";
+        refreshScaleBar();
+        refreshDerivedReadouts(sliders);
+      });
+      refreshScaleBar();
+    }
+
+    function refreshScaleBar() {
+      const bar = document.getElementById("scale-bar");
+      if (!bar) return;
+      const widthM = currentWidthM();
+      const rect = canvasEl().getBoundingClientRect();
+      if (widthM === null || rect.width === 0) { bar.hidden = true; return; }
+      const barM = scaleBarMetres(widthM);
+      const barPx = (barM / widthM) * rect.width;
+      if (barPx <= 24) { bar.hidden = true; return; }
+      bar.hidden = false;
+      document.getElementById("sb-label").textContent = formatMetres(barM);
+      document.getElementById("sb-bar").style.width = barPx + "px";
+    }
+
+    // Which tier the SELECTED type declares. Held here rather than looked up on
+    // demand so the extent panel, the scale bar and the derived readouts can
+    // never disagree about which type they are describing.
+    let activeTier = explorerTier;
+    let activeNote = explorerNote;
+    let currentSliders = explorerSliders;
+
     function rebuildParamsPanel(sliders) {
+      currentSliders = sliders;
       const list = document.getElementById("params-list");
       list.innerHTML = "";
       Object.keys(params).forEach(function (k) { delete params[k]; });
+      if (activeTier) params[SCALE_PARAM_KEY] = SCALE_TIERS[activeTier].defaultM;
       sliders.forEach(function (s) {
         params[s.key] = s.default;
         const row = document.createElement("div");
@@ -5534,16 +5845,39 @@
           (s.labelZh ? '<span class="param-label-zh">' + s.labelZh + '</span>' : '') +
           '</label><span class="param-value" id="val-' + s.key + '">' +
           formatVal(params[s.key], s) + "</span></div>" +
-          '<input type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + params[s.key] + '" id="input-' + s.key + '">';
+          '<input type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + params[s.key] + '" id="input-' + s.key + '">' +
+          // Marks where the BEHAVIOUR changes, not decoration — and the 8px
+          // inset is half a thumb, so a mark at max sits under the thumb centre.
+          (s.ticks && s.ticks.length
+            ? '<div class="param-ticks">' + s.ticks.map(function (tk) {
+                const frac = (tk.at - s.min) / (s.max - s.min);
+                return '<i style="left:calc(8px + ' + (frac * 100).toFixed(3) + '% - ' +
+                       (frac * 16).toFixed(2) + 'px);background:' + cat.colors[3] + '"></i>';
+              }).join("") + '</div>'
+            : "") +
+          ((s.ticks && s.ticks.length) || s.ticksNote
+            ? '<p class="param-note">' +
+              (s.ticks && s.ticks.length
+                ? '<span class="pn-ticks">' + s.ticks.map(function (tk) {
+                    return tk.labelZh + " " + tk.at + (s.unit || "");
+                  }).join(" · ") + "</span>"
+                : "") +
+              (s.ticksNote ? '<span class="eh-note">' + s.ticksNote + "</span>" : "") +
+              "</p>"
+            : "") +
+          (s.derive ? '<p class="param-derive" id="derive-' + s.key + '"></p>' : "");
         list.appendChild(row);
         row.querySelector("input").addEventListener("input", function (e) {
           const val = parseFloat(e.target.value);
           params[s.key] = val;
           document.getElementById("val-" + s.key).textContent = formatVal(val, s);
           if (s.key === "feedRate" || s.key === "killRate") updateGsMarker();
+          if (s.derive) refreshDerivedReadouts(sliders);
         });
       });
       renderGsMap(sliders);
+      renderExtentPanel(sliders);
+      refreshDerivedReadouts(sliders);
     }
     rebuildParamsPanel(explorerSliders);
 
@@ -5557,6 +5891,10 @@
       const rect = canvas.getBoundingClientRect();
       canvas.width = Math.max(1, Math.floor(rect.width * dpr));
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      // The bar is drawn in CSS pixels and the derived row count depends on the
+      // canvas proportions, so both follow the laid-out size.
+      refreshScaleBar();
+      refreshDerivedReadouts(currentSliders);
     }
     resize();
     const resizeObserver = new ResizeObserver(resize);
@@ -5653,6 +5991,8 @@
       card.addEventListener("click", function () {
         if (activeTypeKey === type.key) return;
         activeTypeKey = type.key;
+        activeTier = type.scaleTier;
+        activeNote = type.scaleNoteZh;
         Object.keys(cardButtons).forEach(function (k) { cardButtons[k].classList.toggle("active", k === activeTypeKey); });
         rebuildParamsPanel(type.sliders);
         startMainCanvas(type.generator);
@@ -5669,6 +6009,7 @@
       // a slider key that belongs to whichever type is currently active.
       const miniParams = {};
       type.sliders.forEach(function (s) { miniParams[s.key] = s.default; });
+      if (type.scaleTier) miniParams[SCALE_PARAM_KEY] = SCALE_TIERS[type.scaleTier].defaultM;
 
       const miniCanvas = card.querySelector("canvas");
       const miniCtx = miniCanvas.getContext("2d");

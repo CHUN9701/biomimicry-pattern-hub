@@ -20,6 +20,7 @@
               "slug": "fixed-aperture-grid",
               "generator": "fixedApertureGrid",
               "climateInput": "太陽角度 (sun angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "sunAngle",
@@ -29,16 +30,33 @@
                   "max": 90,
                   "step": 1.0,
                   "default": 35,
-                  "unit": "°"
+                  "unit": "°",
+                  "ticks": [
+                    {
+                      "at": 42,
+                      "labelZh": "冬至正午"
+                    },
+                    {
+                      "at": 65,
+                      "labelZh": "春秋分正午"
+                    },
+                    {
+                      "at": 88,
+                      "labelZh": "夏至正午"
+                    }
+                  ],
+                  "ticksNote": "刻痕為台北 25°N 的正午太陽高度角（90°−緯度±23.44°）；其他緯度需自行換算。"
                 },
                 {
-                  "key": "apertureDensity",
-                  "label": "Aperture Density",
-                  "labelZh": "孔徑密度",
-                  "min": 8,
-                  "max": 40,
-                  "step": 1.0,
-                  "default": 20
+                  "key": "aperturePitch",
+                  "label": "Aperture Pitch",
+                  "labelZh": "孔距",
+                  "min": 50,
+                  "max": 250,
+                  "step": 5.0,
+                  "default": 100,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 },
                 {
                   "key": "apertureSize",
@@ -52,7 +70,7 @@
                 }
               ],
               "visualPrimitive": "規則格網排列的固定大小圓形孔徑，陰影橢圓依日照角度偏移",
-              "mappingRule": "apertureDensity 越高 → 格數越多、孔徑越密；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
+              "mappingRule": "aperturePitch 設定的是實體孔距（mm），格數由畫布實體寬度推導（列數 = 寬度 ÷ 孔距）——所以把尺度從 2m 拉到 5m、孔距不動，孔數會真的變多，因為同樣孔距的更寬立面確實需要更多孔；apertureSize 決定孔徑固定大小，不隨 sunAngle 縮放（呼應「Fixed」）；sunAngle 只驅動每個孔徑投射的陰影橢圓偏移方向與長度，孔徑本身大小維持不變——這是與同分類2其他 3 個 type 的關鍵區別：孔徑固定、只有陰影會動。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "傳統阿拉伯 Mashrabiya 木格窗 — 規則排列的固定孔徑陣列，孔徑大小維持不變，僅靠孔洞深度與角度產生自遮蔭效果"
             },
@@ -66,6 +84,7 @@
               "slug": "deep-well-shadow",
               "generator": "deepWellShadow",
               "climateInput": "太陽高度角 (solar altitude)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "sunAngle",
@@ -88,13 +107,15 @@
                   "unit": "%"
                 },
                 {
-                  "key": "apertureDensity",
-                  "label": "Aperture Density",
-                  "labelZh": "孔徑密度",
-                  "min": 8,
-                  "max": 30,
-                  "step": 1.0,
-                  "default": 14
+                  "key": "aperturePitch",
+                  "label": "Aperture Pitch",
+                  "labelZh": "孔距",
+                  "min": 60,
+                  "max": 250,
+                  "step": 10.0,
+                  "default": 140,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 }
               ],
               "visualPrimitive": "格網孔徑，每個孔洞內縮出多層同心暗環模擬井壁，井底一塊隨光線角度變亮的圓面代表可見的井底",
@@ -112,6 +133,7 @@
               "slug": "directional-louver-aperture",
               "generator": "directionalLouverAperture",
               "climateInput": "方位角 (azimuth / directional angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "louverAngle",
@@ -134,17 +156,19 @@
                   "unit": "%"
                 },
                 {
-                  "key": "apertureDensity",
-                  "label": "Aperture Density",
-                  "labelZh": "孔徑密度",
-                  "min": 6,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 12
+                  "key": "slitPitch",
+                  "label": "Slit Pitch",
+                  "labelZh": "縫距",
+                  "min": 80,
+                  "max": 340,
+                  "step": 10.0,
+                  "default": 170,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 }
               ],
               "visualPrimitive": "格網排列的斜向長條縫隙（非圓孔），縫隙方向整體依 louverAngle 旋轉",
-              "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；apertureDensity 控制格數／每列縫隙數量。",
+              "mappingRule": "louverAngle 決定每個縫隙孔徑的旋轉角度，模擬僅允許特定方位角光線穿透、其餘角度自動被百葉葉片遮蔽；slitWidth 越窄 → 縫隙開口比例越小，允許穿透的角度容許範圍越小（遮蔽效果越強）；slitPitch 控制格數／每列縫隙數量。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "恆定角度太陽能遮陽格柵 — 孔徑呈斜向切割，僅允許特定方位角的光線穿透，其餘角度自動遮蔽"
             },
@@ -158,6 +182,7 @@
               "slug": "graduated-pinhole",
               "generator": "graduatedPinhole",
               "climateInput": "表面曲率／日照強度梯度 (surface curvature / solar intensity gradient)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "gradientAngle",
@@ -170,13 +195,15 @@
                   "unit": "°"
                 },
                 {
-                  "key": "pinholeDensity",
-                  "label": "Pinhole Density",
-                  "labelZh": "針孔密度",
-                  "min": 20,
-                  "max": 80,
-                  "step": 1.0,
-                  "default": 45
+                  "key": "pinholePitch",
+                  "label": "Pinhole Pitch",
+                  "labelZh": "針孔孔距",
+                  "min": 25,
+                  "max": 100,
+                  "step": 5.0,
+                  "default": 45,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 },
                 {
                   "key": "contrastRange",
@@ -190,7 +217,7 @@
                 }
               ],
               "visualPrimitive": "密集針孔狀孔徑場，孔徑大小依 gradientAngle 方向連續漸變（沿用既有 Graded Porosity / Density-Graded Voronoi 的漸層演算法）",
-              "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholeDensity 控制孔徑總數／場的精細度。",
+              "mappingRule": "gradientAngle 決定漸變的方向軸；contrastRange 越大 → 該方向軸上最大孔徑與最小孔徑的尺寸差距越大（漸層越明顯）；pinholePitch 控制孔徑總數／場的精細度。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "沖孔金屬板立面（perforated metal facade） — 孔徑如針孔般細密，依表面曲率漸變大小，形成連續漸層的遮光效果"
             }
@@ -211,6 +238,7 @@
               "slug": "wave-section-wall",
               "generator": "waveSectionWall",
               "climateInput": "日夜溫差 (diurnal temperature swing)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "tempSwing",
@@ -258,15 +286,18 @@
               "slug": "corrugated-thermal-skin",
               "generator": "corrugatedThermalSkin",
               "climateInput": "日照強度／摺板自遮蔭比例 (solar radiation intensity)",
+              "scaleTier": "component",
               "sliders": [
                 {
-                  "key": "foldDensity",
-                  "label": "Fold Density",
-                  "labelZh": "摺板密度",
-                  "min": 4,
-                  "max": 16,
-                  "step": 1.0,
-                  "default": 8
+                  "key": "foldWavelength",
+                  "label": "Fold Wavelength",
+                  "labelZh": "摺板波長",
+                  "min": 125,
+                  "max": 500,
+                  "step": 25.0,
+                  "default": 250,
+                  "unit": " mm",
+                  "derive": "wavelength"
                 },
                 {
                   "key": "foldSharpness",
@@ -290,7 +321,7 @@
                 }
               ],
               "visualPrimitive": "規律重複的摺板波形剖面，正面填色代表受光面、疊加一道相位偏移的暗色波形代表相鄰摺板投下的陰影面",
-              "mappingRule": "foldDensity 決定摺板數量（波形頻率）；foldSharpness 越高 → 波形從平滑正弦趨近尖銳三角摺線，模擬摺板角度加大；shadowDepth 越高 → 陰影疊層的不透明度越深、對比越強，代表自遮蔭效果越明顯、直射熱量吸收越低。",
+              "mappingRule": "foldWavelength 決定摺板數量（波形頻率）；foldSharpness 越高 → 波形從平滑正弦趨近尖銳三角摺線，模擬摺板角度加大；shadowDepth 越高 → 陰影疊層的不透明度越深、對比越強，代表自遮蔭效果越明顯、直射熱量吸收越低。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "沙漠建築的摺板式外牆 — 規律凹凸摺板增加陰影自遮蔽面積，降低直射熱量吸收"
             },
@@ -304,15 +335,18 @@
               "slug": "ribbed-mass-buffer",
               "generator": "ribbedMassBuffer",
               "climateInput": "熱傳導延遲時間 (thermal conduction lag)",
+              "scaleTier": "component",
               "sliders": [
                 {
-                  "key": "ribDensity",
-                  "label": "Rib Density",
-                  "labelZh": "肋條密度",
-                  "min": 6,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 12
+                  "key": "ribPitch",
+                  "label": "Rib Pitch",
+                  "labelZh": "肋距",
+                  "min": 80,
+                  "max": 340,
+                  "step": 10.0,
+                  "default": 170,
+                  "unit": " mm",
+                  "derive": "linePitch"
                 },
                 {
                   "key": "airGapDepth",
@@ -336,7 +370,7 @@
                 }
               ],
               "visualPrimitive": "一排垂直肋條量體，肋條間留有暗色縫隙代表空氣間層，肋條亮度依序產生相位差、形成緩慢橫向掃過的亮度波代表熱量傳導延遲",
-              "mappingRule": "ribDensity 控制肋條數量；airGapDepth 越大 → 肋條之間的空氣間層（暗色縫隙）比例越寬，代表間層越厚、隔熱效果越好；thermalDelay 越高 → 肋條間亮度相位差的移動速度越慢、跨肋條延遲越明顯，模擬熱傳導延遲時間拉長。",
+              "mappingRule": "ribPitch 控制肋條數量；airGapDepth 越大 → 肋條之間的空氣間層（暗色縫隙）比例越寬，代表間層越厚、隔熱效果越好；thermalDelay 越高 → 肋條間亮度相位差的移動速度越慢、跨肋條延遲越明顯，模擬熱傳導延遲時間拉長。",
               "colorSource": "category.colors[0..3]（static-climate 的橙紅色系）",
               "refNote": "傳統土坯建築的肋狀牆體構造 — 肋條狀量體在牆體內形成空氣間層，延遲熱傳導時間"
             },
@@ -350,6 +384,7 @@
               "slug": "rolling-topography",
               "generator": "rollingTopography",
               "climateInput": "風場與地形起伏 (wind exposure / terrain relief)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "terrainRelief",
@@ -411,6 +446,7 @@
               "slug": "radial-bloom",
               "generator": "radialBloom",
               "climateInput": "光照角度 (light incidence angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "petalCount",
@@ -457,6 +493,7 @@
               "slug": "origami-fold",
               "generator": "origamiFold",
               "climateInput": "摺疊角度 (fold actuation angle)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "foldAngle",
@@ -503,6 +540,7 @@
               "slug": "layered-petal-cascade",
               "generator": "layeredPetalCascade",
               "climateInput": "展開進度／時序落差 (unfold progress / cascade delay)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "layerCount",
@@ -549,6 +587,7 @@
               "slug": "pneumatic-petal",
               "generator": "pneumaticPetal",
               "climateInput": "氣壓 (pneumatic pressure)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "pressure",
@@ -602,6 +641,7 @@
               "slug": "curling-strip-array",
               "generator": "curlingStripArray",
               "climateInput": "溫度 (actuation temperature)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "temperature",
@@ -648,6 +688,7 @@
               "slug": "iris-aperture",
               "generator": "irisAperture",
               "climateInput": "光圈收合程度 (aperture closure level)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "closureLevel",
@@ -694,6 +735,7 @@
               "slug": "bistable-snap",
               "generator": "bistableSnap",
               "climateInput": "觸發位準 (bistable trigger level)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "triggerLevel",
@@ -716,17 +758,19 @@
                   "unit": "%"
                 },
                 {
-                  "key": "waveDensity",
-                  "label": "Wave Density",
-                  "labelZh": "波形密度",
-                  "min": 1,
-                  "max": 6,
-                  "step": 1.0,
-                  "default": 3
+                  "key": "bandHeight",
+                  "label": "Band Height",
+                  "labelZh": "帶高",
+                  "min": 330,
+                  "max": 2000,
+                  "step": 10.0,
+                  "default": 670,
+                  "unit": " mm",
+                  "derive": "rowPitch"
                 }
               ],
               "visualPrimitive": "薄膜波形帶，triggerLevel 跨越中點時以陡峭的邏輯函數瞬間從平坦切換至強烈捲曲狀態，而非漸進過渡",
-              "mappingRule": "triggerLevel 跨過 50% 附近的臨界點時，因套用陡峭的邏輯函數，薄膜振幅在極短區間內從近乎平坦瞬間跳變為強烈捲曲，模擬雙穩態瞬間切換、不需連續能量輸入即可維持開或關；snapSharpness 越高，跳變區間越窄（實測畫布振幅：85% 時約佔滑桿行程 15%，下界 35% 時亦約 15%，但 35% 以下的平坦段會開始爬升而失去臨界點）；waveDensity 決定波形帶層數。",
+              "mappingRule": "triggerLevel 跨過 50% 附近的臨界點時，因套用陡峭的邏輯函數，薄膜振幅在極短區間內從近乎平坦瞬間跳變為強烈捲曲，模擬雙穩態瞬間切換、不需連續能量輸入即可維持開或關；snapSharpness 越高，跳變區間越窄（實測畫布振幅：85% 時約佔滑桿行程 15%，下界 35% 時亦約 15%，但 35% 以下的平坦段會開始爬升而失去臨界點）；bandHeight 決定波形帶層數。",
               "colorSource": "category.colors[0..3]（kinetic-responsive 的藍紫色系）",
               "refNote": "雙穩態形狀記憶合金天窗 — 合金薄膜在兩個穩定形態間瞬間切換，不需連續能量輸入即可維持開或關"
             },
@@ -740,6 +784,7 @@
               "slug": "gradient-thickness-membrane",
               "generator": "gradientThicknessMembrane",
               "climateInput": "厚度梯度／反應延遲 (thickness gradient / response lag)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "thicknessGradient",
@@ -800,6 +845,7 @@
               "slug": "cellular-skin-voronoi",
               "generator": "cellularSkinVoronoi",
               "climateInput": "細胞密度／孔隙不透明度 (cell density / pore opacity)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "cellCount",
@@ -846,6 +892,7 @@
               "slug": "structural-voronoi-shell",
               "generator": "structuralVoronoiShell",
               "climateInput": "結構受力分佈 (structural load distribution)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "cellCount",
@@ -892,6 +939,7 @@
               "slug": "density-graded-voronoi",
               "generator": "densityGradedVoronoi",
               "climateInput": "結構受力梯度／日照強度梯度 (stress or solar intensity gradient)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "gradientAngle",
@@ -938,6 +986,7 @@
               "slug": "bone-voronoi",
               "generator": "boneVoronoi",
               "climateInput": "孔隙率 (porosity)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "cellCount",
@@ -991,6 +1040,7 @@
               "slug": "logarithmic-shell-spiral",
               "generator": "logarithmicShellSpiral",
               "climateInput": "螺旋生長比例 (logarithmic growth ratio)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "growthRate",
@@ -1024,7 +1074,8 @@
               "visualPrimitive": "由中心向外連續延伸的對數螺旋曲線，並以放射狀分隔線標示鸚鵡螺殼腔室分節",
               "mappingRule": "growthRate 越大 → 螺旋半徑隨角度增加的速率越快，殼形越快速外擴（對應鸚鵡螺殼的生長比例）；turns 決定螺旋總圈數；chamberCount 決定放射狀腔室分隔線的數量，線條顏色沿螺旋方向漸層，呼應腔室由內而外依序生成。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "螺旋狀樓梯/中庭採光井設計 — 依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構"
+              "refNote": "螺旋狀樓梯/中庭採光井設計 — 依對數螺旋比例生成量體或開孔漸變，模擬鸚鵡螺殼結構",
+              "scaleNoteZh": "畫布寬度即螺旋外徑。"
             },
             {
               "id": 2,
@@ -1036,6 +1087,7 @@
               "slug": "phyllotaxis-facade",
               "generator": "phyllotaxisFacade",
               "climateInput": "開孔數量／螺旋間距 (aperture count / spiral spacing)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "apertureCount",
@@ -1082,6 +1134,7 @@
               "slug": "spiral-growth-tower",
               "generator": "spiralGrowthTower",
               "climateInput": "逐層旋轉角度／收分比例 (twist-per-floor / taper ratio)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "floorCount",
@@ -1116,7 +1169,8 @@
               "visualPrimitive": "多層樓板堆疊而成的塔樓立面剖面，每層樓板隨高度依 twistPerFloor 角度水平偏移、寬度隨 taperRatio 逐漸收分",
               "mappingRule": "twistPerFloor 預設即為費氏數列對應的黃金角（≈137.5°），決定每層樓板相對於下一層的水平偏移量，模擬逐層旋轉生成的視覺韻律；taperRatio 越高 → 樓層寬度隨高度收分幅度越大，呼應塔樓量體向上逐漸收窄；floorCount 決定樓層數量。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "螺旋形高層建築量體邏輯 — 塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律"
+              "refNote": "螺旋形高層建築量體邏輯 — 塔樓量體依費氏數列比例逐層旋轉生成，兼具結構穩定與視覺韻律",
+              "scaleNoteZh": "畫布寬度為量體寬度；塔高約為畫布高度（寬度 × 畫布長寬比）。"
             },
             {
               "id": 4,
@@ -1128,6 +1182,7 @@
               "slug": "radial-fibonacci-louver",
               "generator": "radialFibonacciLouver",
               "climateInput": "百葉數量／間距比例 (louver count / spacing scale)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "louverCount",
@@ -1181,6 +1236,7 @@
               "slug": "branching-structural-column",
               "generator": "branchingStructuralColumn",
               "climateInput": "分岔角度／深度 (branch angle / recursion depth)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "depth",
@@ -1215,7 +1271,8 @@
               "visualPrimitive": "由畫布底部中央向上遞迴分岔的樹狀線條，線寬隨深度遞減、顏色隨深度漸層，模擬柱體向上分岔承重",
               "mappingRule": "depth 決定遞迴分岔層數，越多層則分岔越茂密；branchAngle 決定每次分岔的左右夾角；lengthRatio 決定每一層分支相對上一層的長度縮減比例，越小則分岔收束越快。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱 — 柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距"
+              "refNote": "Sagrada Família 樹狀柱、Stuttgart Airport 樹形柱 — 柱體向上分岔成樹枝狀結構，分散載重並減少樑跨距",
+              "scaleNoteZh": "畫布寬度為柱冠展開寬度；柱高約為畫布高度。"
             },
             {
               "id": 2,
@@ -1227,6 +1284,7 @@
               "slug": "recursive-canopy",
               "generator": "recursiveCanopy",
               "climateInput": "分岔數量／展開角度 (branch count / spread angle)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "depth",
@@ -1260,7 +1318,8 @@
               "visualPrimitive": "由畫布頂部中央向下延伸的多分支遞迴結構，末端分支加上半透明圓點代表葉冠遮蔭範圍",
               "mappingRule": "branchCount 決定每次分岔的分支數量（2-4），越多分支則覆蓋範圍越密集，模擬大跨距遮蔽；spreadAngle 決定分支展開的最大夾角；depth 決定遞迴層數。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "機場/車站樹狀屋頂結構 — 屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽"
+              "refNote": "機場/車站樹狀屋頂結構 — 屋頂結構以自相似分岔邏輯層層延伸，形成大跨距遮蔽",
+              "scaleNoteZh": "畫布寬度為屋頂跨距。"
             },
             {
               "id": 3,
@@ -1272,6 +1331,7 @@
               "slug": "fractal-ventilation",
               "generator": "fractalVentilation",
               "climateInput": "流速／分岔角度 (flow speed / branch angle)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "depth",
@@ -1318,6 +1378,7 @@
               "slug": "root-system-foundation",
               "generator": "rootSystemFoundation",
               "climateInput": "地基穩定性／展開角度 (foundation stability / spread angle)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "depth",
@@ -1351,7 +1412,8 @@
               "visualPrimitive": "由頂部地面線向下延伸的根系分岔結構，根部隨深度變細並逐漸淡出，呼應根系向外擴散穩定地基的邏輯",
               "mappingRule": "spreadAngle 決定根系向外擴散的夾角範圍，越大則地基覆蓋範圍越廣；branchCount 決定每次分岔數量；depth 決定根系分岔層數，末端根鬚隨深度增加而變細、透明度降低，模擬逐漸消散的細根。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "生物啟發式深基礎設計原型 — 基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性"
+              "refNote": "生物啟發式深基礎設計原型 — 基礎結構模擬樹根系統向外擴散分岔，提升地基穩定性",
+              "scaleNoteZh": "畫布寬度為根系水平展開範圍；深度約為畫布高度。"
             }
           ]
         },
@@ -1555,15 +1617,18 @@
               "slug": "leaf-venation-structural",
               "generator": "leafVenationStructural",
               "climateInput": "脈絡密度／生長速度 (vein density / growth speed)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "veinDensity",
-                  "label": "Vein Density",
-                  "labelZh": "脈絡密度",
-                  "min": 60,
-                  "max": 200,
-                  "step": 1.0,
-                  "default": 120
+                  "label": "Vein Node Density",
+                  "labelZh": "脈絡節點密度",
+                  "min": 0.6,
+                  "max": 1.9,
+                  "step": 0.1,
+                  "default": 1.6,
+                  "unit": " 點/m²",
+                  "derive": "areaDensity"
                 },
                 {
                   "key": "growthSpeed",
@@ -1600,15 +1665,18 @@
               "slug": "fluid-dynamic-facade",
               "generator": "fluidDynamicFacade",
               "climateInput": "流線密度／流速 (streamline density / flow speed)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "streamDensity",
-                  "label": "Stream Density",
-                  "labelZh": "流線密度",
-                  "min": 60,
-                  "max": 200,
+                  "label": "Stream Node Density",
+                  "labelZh": "流線節點密度",
+                  "min": 8,
+                  "max": 30,
                   "step": 1.0,
-                  "default": 130
+                  "default": 28,
+                  "unit": " 點/m²",
+                  "derive": "areaDensity"
                 },
                 {
                   "key": "growthSpeed",
@@ -1645,15 +1713,18 @@
               "slug": "capillary-drainage",
               "generator": "capillaryDrainage",
               "climateInput": "排水點密度／逕流速度 (drainage density / runoff speed)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "drainDensity",
-                  "label": "Drain Density",
+                  "label": "Drain Point Density",
                   "labelZh": "排水點密度",
-                  "min": 60,
-                  "max": 200,
+                  "min": 6,
+                  "max": 30,
                   "step": 1.0,
-                  "default": 110
+                  "default": 24,
+                  "unit": " 點/m²",
+                  "derive": "areaDensity"
                 },
                 {
                   "key": "growthSpeed",
@@ -1690,6 +1761,7 @@
               "slug": "branching-load-path",
               "generator": "branchingLoadPath",
               "climateInput": "受力點數量／生長速度 (load point count / growth speed)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "loadPointCount",
@@ -1737,21 +1809,23 @@
               "name": "Geodesic Dome Type",
               "description": "三角形網格構成短程線穹頂，以最少材料達最大跨距",
               "example": "Buckminster Fuller 的 Geodesic Dome",
-              "principle": "把球面切成三角形網格，是因為三角形是唯一不需要斜撐就不會變形的多邊形。力沿著桿件軸向傳遞而非彎曲，所以桿件可以做得很細——這是「最少材料、最大跨距」的來源。細分頻率越高越接近真球，但桿件與節點的種類也越多。frequency 控制緯度環數（細分頻率），segments 控制每環的經度分段數，memberThickness 控制桿件粗細。",
+              "principle": "把球面切成三角形網格，是因為三角形是唯一不需要斜撐就不會變形的多邊形。力沿著桿件軸向傳遞而非彎曲，所以桿件可以做得很細——這是「最少材料、最大跨距」的來源。細分頻率越高越接近真球，但桿件與節點的種類也越多。frequency 在本模擬中控制的是緯度環數（不是文獻的邊細分數 nV），segments 控制每環的經度分段數，memberThickness 控制桿件粗細。",
               "spatialApplication": "Buckminster Fuller 的 Geodesic Dome 是原型，常見於展館、溫室與臨時構造。自重輕、可預製、組裝快，適合需要快速搭建或大跨距無柱空間的場合。實務上的痛點是防水：節點數量多，每一個都是潛在漏水點，開口與門窗也不易融入三角網格。",
               "slug": "geodesic-dome",
               "generator": "geodesicDome",
               "climateInput": "細分頻率／跨距 (subdivision frequency / span)",
+              "scaleTier": "mass",
               "sliders": [
                 {
                   "key": "frequency",
-                  "label": "Frequency",
-                  "labelZh": "細分頻率",
+                  "label": "Latitude Rings",
+                  "labelZh": "緯度環數",
                   "min": 3,
                   "max": 8,
                   "step": 1.0,
                   "default": 5,
-                  "unit": " 環"
+                  "unit": " 環",
+                  "ticksNote": "此處數的是緯度環數，與文獻中測地線穹頂的 frequency（nV，每條邊的細分數）不是同一個量；查閱文獻時勿直接對照。"
                 },
                 {
                   "key": "segments",
@@ -1774,9 +1848,10 @@
                 }
               ],
               "visualPrimitive": "由頂點向外逐圈放射的三角網格穹頂剖面，環數與每環分段數決定三角形細分密度",
-              "mappingRule": "frequency 決定緯度環數（細分頻率），越高則三角網格越細密、越接近真實測地線穹頂；segments 決定每環經度分段數；memberThickness 決定桿件基礎粗細。",
+              "mappingRule": "frequency 決定緯度環數，越高則三角網格越細密、越接近真實測地線穹頂；segments 決定每環經度分段數；memberThickness 決定桿件基礎粗細。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
-              "refNote": "Buckminster Fuller 的 Geodesic Dome — 三角形網格構成短程線穹頂，以最少材料達最大跨距"
+              "refNote": "Buckminster Fuller 的 Geodesic Dome — 三角形網格構成短程線穹頂，以最少材料達最大跨距",
+              "scaleNoteZh": "畫布寬度即穹頂直徑。"
             },
             {
               "id": 2,
@@ -1788,6 +1863,7 @@
               "slug": "tensegrity",
               "generator": "tensegrity",
               "climateInput": "支柱數量／扭轉角度 (strut count / twist angle)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "strutCount",
@@ -1844,6 +1920,7 @@
               "slug": "honeycomb-panel",
               "generator": "honeycombPanel",
               "climateInput": "蜂巢尺寸／壁厚 (cell size / wall thickness)",
+              "scaleTier": "material",
               "sliders": [
                 {
                   "key": "cellSize",
@@ -1891,15 +1968,18 @@
               "slug": "minimal-surface-shell",
               "generator": "minimalSurfaceShell",
               "climateInput": "曲率／波紋數 (curvature / wave count)",
+              "scaleTier": "space",
               "sliders": [
                 {
-                  "key": "gridDensity",
-                  "label": "Grid Density",
-                  "labelZh": "網格密度",
-                  "min": 8,
-                  "max": 24,
-                  "step": 1.0,
-                  "default": 14
+                  "key": "gridSpacing",
+                  "label": "Grid Spacing",
+                  "labelZh": "網格間距",
+                  "min": 330,
+                  "max": 1000,
+                  "step": 10.0,
+                  "default": 570,
+                  "unit": " mm",
+                  "derive": "linePitch"
                 },
                 {
                   "key": "curvature",
@@ -1922,7 +2002,7 @@
                 }
               ],
               "visualPrimitive": "規則方格網依正弦鞍形函數上下起伏形變，形成類似肥皂膜最小曲面的薄殼網格",
-              "mappingRule": "curvature 越高 → 網格起伏幅度越大，曲面感越強烈；waveCount 決定曲面起伏的波數（鞍形分段數）；gridDensity 決定網格精細度，網格顏色依起伏高低漸層呈現曲面深淺。",
+              "mappingRule": "curvature 越高 → 網格起伏幅度越大，曲面感越強烈；waveCount 決定曲面起伏的波數（鞍形分段數）；gridSpacing 決定網格精細度，網格顏色依起伏高低漸層呈現曲面深淺。",
               "colorSource": "category.colors[0..3]（algorithmic-generative 的青藍色系）",
               "refNote": "肥皂膜啟發的薄殼屋頂設計 — 依最小曲面數學原理生成薄殼結構，兼具結構效率與有機造型"
             }
@@ -1950,6 +2030,7 @@
               "slug": "curvilinear-threshold",
               "generator": "curvilinearThreshold",
               "climateInput": "曲率／分隔數量 (curvature / partition count)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "bandCount",
@@ -1996,6 +2077,7 @@
               "slug": "membrane-like-partition",
               "generator": "membraneLikePartition",
               "climateInput": "薄膜波動／穿透度 (membrane waviness / transparency)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "membraneWaviness",
@@ -2018,17 +2100,19 @@
                   "unit": "%"
                 },
                 {
-                  "key": "waveFrequency",
-                  "label": "Wave Frequency",
-                  "labelZh": "波紋頻率",
-                  "min": 1,
-                  "max": 5,
-                  "step": 1.0,
-                  "default": 2
+                  "key": "membraneWavelength",
+                  "label": "Wave Length",
+                  "labelZh": "波長",
+                  "min": 1000,
+                  "max": 5500,
+                  "step": 100.0,
+                  "default": 2700,
+                  "unit": " mm",
+                  "derive": "wavelength"
                 }
               ],
               "visualPrimitive": "兩片上下交疊的半透明波浪狀薄膜，依 transparency 疊層混色模擬穿透感",
-              "mappingRule": "transparency 越高 → 薄膜疊層的不透明度越低，模糊室內外邊界的滲透感越明顯；membraneWaviness 決定薄膜起伏幅度；waveFrequency 決定波紋密度。",
+              "mappingRule": "transparency 越高 → 薄膜疊層的不透明度越低，模糊室內外邊界的滲透感越明顯；membraneWaviness 決定薄膜起伏幅度；membraneWavelength 決定波紋密度。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "仿生半透膜式室內隔屏 — 隔間如生物薄膜般半透明、可滲透，模糊室內外邊界"
             },
@@ -2042,6 +2126,7 @@
               "slug": "nested-enclosure",
               "generator": "nestedEnclosure",
               "climateInput": "層數／波動感 (layer count / waviness)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "layerCount",
@@ -2088,6 +2173,7 @@
               "slug": "flowing-boundary",
               "generator": "flowingBoundary",
               "climateInput": "流動振幅／過渡銳利度 (flow amplitude / transition sharpness)",
+              "scaleTier": "space",
               "sliders": [
                 {
                   "key": "flowAmplitude",
@@ -2100,13 +2186,16 @@
                   "unit": "%"
                 },
                 {
-                  "key": "flowFrequency",
-                  "label": "Flow Frequency",
-                  "labelZh": "流動頻率",
-                  "min": 1,
-                  "max": 4,
-                  "step": 1.0,
-                  "default": 2
+                  "key": "flowWavelength",
+                  "label": "Flow Wavelength",
+                  "labelZh": "流動波長",
+                  "min": 6,
+                  "max": 26,
+                  "step": 0.5,
+                  "default": 13,
+                  "unit": " m",
+                  "derive": "wavelength",
+                  "deriveUnit": "m"
                 },
                 {
                   "key": "transitionSharpness",
@@ -2120,7 +2209,7 @@
                 }
               ],
               "visualPrimitive": "地坪與牆面以單一連續波形曲面過渡，並疊加地板到天花的漸層色模擬材質連續轉換",
-              "mappingRule": "flowAmplitude 越高 → 地坪與牆面之間的曲面起伏越大，邊界感越模糊；transitionSharpness 越高 → 波形從平滑正弦趨近尖銳轉折，過渡感由柔和轉為明快；flowFrequency 決定波形密度。",
+              "mappingRule": "flowAmplitude 越高 → 地坪與牆面之間的曲面起伏越大，邊界感越模糊；transitionSharpness 越高 → 波形從平滑正弦趨近尖銳轉折，過渡感由柔和轉為明快；flowWavelength 決定波形密度。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "仿生流動式室內空間設計 — 地坪、牆面、天花以連續曲面過渡，消弭傳統房間邊界感"
             }
@@ -2141,6 +2230,7 @@
               "slug": "biomorphic-texture",
               "generator": "biomorphicTexture",
               "climateInput": "噪訊尺度／流動速度 (noise scale / flow speed)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "noiseScale",
@@ -2187,6 +2277,7 @@
               "slug": "fractal-visual-rhythm",
               "generator": "fractalVisualRhythm",
               "climateInput": "噪訊尺度／節奏帶數 (noise scale / rhythm band count)",
+              "scaleTier": "component",
               "sliders": [
                 {
                   "key": "noiseScale",
@@ -2233,15 +2324,18 @@
               "slug": "acoustic-diffusion-pattern",
               "generator": "acousticDiffusionPattern",
               "climateInput": "孔隙密度／擴散對比 (pore density / diffusion contrast)",
+              "scaleTier": "material",
               "sliders": [
                 {
-                  "key": "cellDensity",
-                  "label": "Cell Density",
-                  "labelZh": "孔洞密度",
-                  "min": 10,
-                  "max": 30,
-                  "step": 1.0,
-                  "default": 18
+                  "key": "cellPitch",
+                  "label": "Cell Pitch",
+                  "labelZh": "孔洞間距",
+                  "min": 20,
+                  "max": 60,
+                  "step": 2.0,
+                  "default": 34,
+                  "unit": " mm",
+                  "derive": "gridPitch"
                 },
                 {
                   "key": "poreDepth",
@@ -2265,7 +2359,7 @@
                 }
               ],
               "visualPrimitive": "規則格網排列的圓形孔洞陣列，模擬珊瑚/蜂巢多孔材質的聲學擴散表面",
-              "mappingRule": "poreDepth 越深 → 孔徑相對格子的比例越大，聲學擴散表面積越大；diffusionContrast 決定孔洞陰影的對比強度；cellDensity 決定格網密度。",
+              "mappingRule": "poreDepth 越深 → 孔徑相對格子的比例越大，聲學擴散表面積越大；diffusionContrast 決定孔洞陰影的對比強度；cellPitch 決定格網密度。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "仿生聲學牆板設計 — 表面凹凸紋理模擬自然多孔材質（珊瑚、蜂巢），兼具聲學擴散與療癒視覺效果"
             },
@@ -2274,20 +2368,23 @@
               "name": "Tactile Nature Surface Type",
               "description": "觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗",
               "example": "療癒空間觸覺牆面設計",
-              "principle": "以密集的細紋線條模擬樹皮、葉脈或石紋的觸覺質地。觸覺與視覺不同：它需要的是可被指尖分辨的尺度差異，約在零點幾毫米到幾毫米之間。粗糙度越高，紋理起伏越大、觸感越明顯，但也越容易積灰。grainDensity 控制紋理線密度，roughness 控制每條線的起伏幅度，grainScale 決定起伏的空間頻率。",
+              "principle": "以密集的細紋線條模擬樹皮、葉脈或石紋的觸覺質地。觸覺與視覺不同：它需要的是可被指尖分辨的尺度差異，約在零點幾毫米到幾毫米之間。粗糙度越高，紋理起伏越大、觸感越明顯，但也越容易積灰。grainPitch 控制紋理線密度，roughness 控制每條線的起伏幅度，grainScale 決定起伏的空間頻率。",
               "spatialApplication": "療癒空間的觸覺牆面設計，用於強化親生物體驗中常被忽略的觸覺面向。適合人手會實際接觸的位置：扶手、門把周邊、座位靠背與可觸及高度的牆面。實務上要平衡觸感與清潔：紋理越深越好摸，但在醫療等需要頻繁消毒的環境會成為負擔。",
               "slug": "tactile-nature-surface",
               "generator": "tactileNatureSurface",
               "climateInput": "紋理密度／粗糙度 (grain density / roughness)",
+              "scaleTier": "material",
               "sliders": [
                 {
-                  "key": "grainDensity",
-                  "label": "Grain Density",
-                  "labelZh": "紋理密度",
-                  "min": 15,
-                  "max": 50,
+                  "key": "grainPitch",
+                  "label": "Grain Pitch",
+                  "labelZh": "紋理間距",
+                  "min": 12,
+                  "max": 40,
                   "step": 1.0,
-                  "default": 30
+                  "default": 20,
+                  "unit": " mm",
+                  "derive": "rowPitch"
                 },
                 {
                   "key": "grainScale",
@@ -2311,7 +2408,7 @@
                 }
               ],
               "visualPrimitive": "與噪訊場共用同一套 fbm 演算法，但以密集水平細紋線呈現，模擬樹皮/石紋的觸覺紋理",
-              "mappingRule": "grainDensity 決定紋理線條密度；roughness 越高 → 每條紋理線的噪訊起伏幅度越大，觸感粗糙感越明顯；grainScale 決定紋理起伏的空間頻率。",
+              "mappingRule": "grainPitch 決定紋理線條密度；roughness 越高 → 每條紋理線的噪訊起伏幅度越大，觸感粗糙感越明顯；grainScale 決定紋理起伏的空間頻率。",
               "colorSource": "category.colors[0..3]（biophilic-sensory 的橄欖綠色系）",
               "refNote": "療癒空間觸覺牆面設計 — 觸覺紋理模擬樹皮、葉脈、石紋等自然材質觸感，強化親生物空間體驗"
             }

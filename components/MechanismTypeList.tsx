@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createGenerator } from "@/lib/generators";
 import type { SliderConfig } from "@/lib/data";
+import { SCALE_PARAM_KEY, SCALE_TIERS, type ScaleTier } from "@/lib/scale";
 
 // `sliders` is now required — the caller (page.tsx) is responsible for
 // resolving each type to a concrete slider list (its own, or a fallback)
@@ -14,6 +15,7 @@ type ExplorerType = {
   description?: string;
   generator: string;
   sliders: SliderConfig[];
+  scaleTier?: ScaleTier | null;
 };
 
 type Palette = [string, string, string, string];
@@ -26,9 +28,14 @@ function MiniPreview({ type, colors }: { type: ExplorerType; colors: Palette }) 
   // type happens to be active. This guarantees this card's generator always
   // receives the param keys it actually expects, regardless of which of the
   // other 3 cards is selected.
-  const defaultParamsRef = useRef<Record<string, number>>(
-    Object.fromEntries(type.sliders.map((s) => [s.key, s.default]))
-  );
+  // The extent is seeded here as well as on the page: these previews render
+  // the same generators, which now derive their counts from it. Without it
+  // every card would fall back to the generator's defensive default and could
+  // disagree with the canvas it previews.
+  const defaultParamsRef = useRef<Record<string, number>>({
+    ...Object.fromEntries(type.sliders.map((s) => [s.key, s.default])),
+    ...(type.scaleTier ? { [SCALE_PARAM_KEY]: SCALE_TIERS[type.scaleTier].defaultM } : {}),
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
