@@ -297,8 +297,15 @@ const READ_PLAYGROUND = `(() => {
  *
  * A genuinely blank canvas stays blank, so retrying costs nothing but removes a
  * false failure. Only `painted` is retried: it is the one field with a transient.
+ *
+ * The budget (8 tries over ~4s) is deliberately generous because it is asymmetric.
+ * On a loaded machine the first draw can be late: running this immediately after
+ * `next build` reported 40 of 48 types as painting nothing, all of them fine when
+ * re-run on an idle machine. Waiting longer costs seconds only when a canvas is
+ * genuinely blank; not waiting long enough costs a debugging session chasing a
+ * product bug that does not exist.
  */
-async function readPlayground(ev, { retries = 3, gap = 450 } = {}) {
+async function readPlayground(ev, { retries = 8, gap = 500 } = {}) {
   let dom = await ev(READ_PLAYGROUND);
   for (let i = 1; i < retries && dom.painted === 0; i++) {
     await sleep(gap);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import { getVariant } from "@/lib/data";
@@ -12,11 +12,13 @@ import {
   isVariantExplorerReady,
 } from "@/lib/subcategoryTypes";
 import { SCALE_PARAM_KEY, SCALE_TIERS, type ScaleTier } from "@/lib/scale";
+import { decodeState, encodeState, hasState } from "@/lib/urlState";
 import { useScene } from "@/components/SceneProvider";
 import BackButton from "@/components/BackButton";
 import PlaygroundCanvas from "@/components/PlaygroundCanvas";
 import MechanismTypeList from "@/components/MechanismTypeList";
 import TypeInfoPanel from "@/components/TypeInfoPanel";
+import ShareLink from "@/components/ShareLink";
 
 // Build a fully-resolved default-params object from any slider list. The
 // physical extent is seeded here too: it isn't one of the type's own sliders
@@ -103,6 +105,10 @@ export default function VariantScreen({
   const [sliderParams, setSliderParams] = useState<Record<string, number>>(() =>
     defaultParams(initialSliders, explorerReady && initialType ? initialType.scaleTier : null)
   );
+  const [linkNotes, setLinkNotes] = useState<string[]>([]);
+  // Until a shared link has been applied, writing state back to the URL would
+  // overwrite the very thing we are about to read.
+  const restored = useRef(false);
 
   useEffect(() => {
     if (category && variant) setScene({ level: "variant", category, variant });
@@ -111,18 +117,45 @@ export default function VariantScreen({
 
   // Navigated to a different variant entirely — recompute readiness fresh
   // and reset selection + params for whichever mode this variant is in.
+  //
+  // A shared link is applied here too, rather than in useState, because reading
+  // location.search during the first render would disagree with the prerendered
+  // HTML and trip hydration. One frame at defaults is invisible next to a canvas
+  // that animates anyway.
   useEffect(() => {
+    restored.current = false;
     const ready = isVariantExplorerReady(variantSlug);
     const types = ready ? resolveExplorerTypes(variantSlug) : [];
     const first = types[0];
+
     if (ready && first) {
-      setActiveTypeKey(first.key);
-      setSliderParams(defaultParams(first.sliders, first.scaleTier));
+      const shared =
+        typeof window !== "undefined" && hasState(window.location.search)
+          ? decodeState(
+              window.location.search,
+              types.map((t) => ({ slug: t.key, sliders: t.sliders, scaleTier: t.scaleTier }))
+            )
+          : null;
+
+      if (shared) {
+        const target = types.find((t) => t.key === shared.typeSlug) ?? first;
+        setActiveTypeKey(target.key);
+        // Merge over the type's own defaults so a link that predates a new slider
+        // still opens: the missing key takes its default instead of undefined.
+        setSliderParams({ ...defaultParams(target.sliders, target.scaleTier), ...shared.params });
+        setLinkNotes(shared.notes);
+      } else {
+        setActiveTypeKey(first.key);
+        setSliderParams(defaultParams(first.sliders, first.scaleTier));
+        setLinkNotes([]);
+      }
     } else {
       setActiveTypeKey("__fallback__");
       // The lib/data.ts fallback path declares no tier, so no scale slider.
       setSliderParams(defaultParams(variant?.sliders ?? [], null));
+      setLinkNotes([]);
     }
+    restored.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, variantSlug]);
 
@@ -140,6 +173,28 @@ export default function VariantScreen({
   const activeMechanism = explorerReady
     ? resolvedTypes.find((t) => t.key === activeTypeKey) ?? resolvedTypes[0]
     : null;
+
+  // Keep the address bar showing the current state, so the link in the bar is
+  // always the link worth copying.
+  //
+  // replaceState, not pushState: dragging one slider fires dozens of changes, and
+  // pushing each would make Back unusable. Debounced for the same reason.
+  // The fallback path is deliberately excluded — it has no type slug to encode.
+  useEffect(() => {
+    if (!restored.current || !activeMechanism || typeof window === "undefined") return;
+    const id = window.setTimeout(() => {
+      const search = encodeState(
+        {
+          slug: activeMechanism.key,
+          sliders: activeMechanism.sliders,
+          scaleTier: activeMechanism.scaleTier,
+        },
+        sliderParams
+      );
+      window.history.replaceState(null, "", `${window.location.pathname}?${search}`);
+    }, 250);
+    return () => window.clearTimeout(id);
+  }, [activeMechanism, sliderParams]);
 
   const activeGeneratorKey = activeMechanism?.generator ?? fallbackGenerator;
   const activeSliders = activeMechanism?.sliders ?? fallbackSliders;
@@ -196,6 +251,8 @@ export default function VariantScreen({
             scaleTier={activeMechanism?.scaleTier ?? null}
             scaleNoteZh={activeMechanism?.scaleNoteZh}
           />
+
+          {activeMechanism && <ShareLink notes={linkNotes} />}
         </div>
       </motion.div>
 
